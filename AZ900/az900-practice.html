@@ -301,7 +301,7 @@ mark.hl{
 .ro .oico{
   flex:0 0 auto;width:20px;height:20px;object-fit:contain;margin-right:2px;
 }
-/* 題幹裡的表格（原題就有一張表，例如 #187） */
+/* 題目裡的表格（原題就有一張表，例如 #187） */
 .qtbl{border-collapse:collapse;margin:8px 0 2px;font-size:.9rem}
 .qtbl th,.qtbl td{border:1px solid var(--line-strong);padding:5px 12px;text-align:left}
 .qtbl th{background:var(--sunken);font-weight:650}
@@ -1679,7 +1679,7 @@ const BANK_DOC = [
  q:"你的公司打算訂閱 Azure 支援方案，而且⟦必須能夠開立新的支援要求⟧。下列哪些支援方案做得到？",
  o:["Basic","Developer","Standard","Professional Direct","Premier"],
  a:[0,1,2,3],
- e:"Azure 支援方案由低到高：\n・Basic — 免費，所有帳戶都有。可開立帳單與訂用帳戶管理的支援要求，另含文件、社群論壇、Azure Advisor 與 Service Health，但沒有技術問題的支援案例。\n・Developer — 最便宜的付費方案。上班時段的技術支援（嚴重性 C，8 小時內回應），架構方面提供一般性指引，適合非正式環境。\n・Standard — 全年無休技術支援，嚴重性 A 一小時內回應，架構方面同樣是一般性指引。正式環境的最低建議。\n・Professional Direct — 涵蓋 Standard 全部內容，再加專屬服務交付經理、依你實際使用情境提供的架構指引、營運支援與訓練。\n・Premier（現為 Unified Support）— 企業級客製方案，價格最高，含指定的技術客戶經理。\n技術支援案例要 Developer 以上才有，但「開立支援要求」本身 Basic 也做得到（帳單與訂用帳戶類）。\n陷阱：這題答案取決於題幹有沒有「技術（technical）」兩個字。\n・只寫「支援要求 support requests」（本題就是）— Basic 要算進去，答案是 Basic、Developer、Standard、Professional Direct。\n・寫成「技術支援要求 technical support requests」— Basic 出局，答案是 Developer、Standard、Professional Direct（＋Premier）。\n往後看到支援方案的複選題，先掃題幹有沒有 technical，再決定要不要勾 Basic。\n注意：原始文件把 Basic、Developer、Standard、Professional Direct 框為答案而未框 Premier，這個標記在社群有爭議 — Premier／Unified 同樣可以開立支援要求，沒被選中多半只是因為拖放題的答案區只有四格。",
+ e:"Azure 支援方案由低到高：\n・Basic — 免費，所有帳戶都有。可開立帳單與訂用帳戶管理的支援要求，另含文件、社群論壇、Azure Advisor 與 Service Health，但沒有技術問題的支援案例。\n・Developer — 最便宜的付費方案。上班時段的技術支援（嚴重性 C，8 小時內回應），架構方面提供一般性指引，適合非正式環境。\n・Standard — 全年無休技術支援，嚴重性 A 一小時內回應，架構方面同樣是一般性指引。正式環境的最低建議。\n・Professional Direct — 涵蓋 Standard 全部內容，再加專屬服務交付經理、依你實際使用情境提供的架構指引、營運支援與訓練。\n・Premier（現為 Unified Support）— 企業級客製方案，價格最高，含指定的技術客戶經理。\n技術支援案例要 Developer 以上才有，但「開立支援要求」本身 Basic 也做得到（帳單與訂用帳戶類）。\n陷阱：這題答案取決於題目有沒有「技術（technical）」兩個字。\n・只寫「支援要求 support requests」（本題就是）— Basic 要算進去，答案是 Basic、Developer、Standard、Professional Direct。\n・寫成「技術支援要求 technical support requests」— Basic 出局，答案是 Developer、Standard、Professional Direct（＋Premier）。\n往後看到支援方案的複選題，先掃題目有沒有 technical，再決定要不要勾 Basic。\n注意：原始文件把 Basic、Developer、Standard、Professional Direct 框為答案而未框 Premier，這個標記在社群有爭議 — Premier／Unified 同樣可以開立支援要求，沒被選中多半只是因為拖放題的答案區只有四格。",
  en:{q:"Your company intends to subscribe to an Azure support plan. The support plan ⟦must allow for new support requests to be opened⟧. Which of the following are support plans that will allow this?",
      o:["Basic","Developer","Standard","Professional Direct","Premier"],
      e:"Azure support plans, cheapest to dearest:\n・Basic — free, included with every account. Can raise billing and subscription management requests, plus documentation, community forums, Azure Advisor and Service Health, but no technical support cases.\n・Developer — the cheapest paid plan. Business-hours technical support (severity C, response within 8 hours) and general architecture guidance; suits non-production.\n・Standard — 24/7 technical support, severity A response within 1 hour, general architecture guidance. The minimum recommended for production.\n・Professional Direct — everything in Standard plus a ProDirect delivery manager, architecture guidance based on your specific use case, operations support and training.\n・Premier (now Unified Support) — bespoke enterprise plan, highest price, with a designated technical account manager.\nTechnical support cases start at Developer, but opening a support request as such (billing and subscription) is possible on Basic too.\nTrap: the answer hinges on whether the stem contains the word 'technical'.\n・Plain 'support requests' (as here) — Basic counts, so the answer is Basic, Developer, Standard and Professional Direct.\n・'technical support requests' — Basic drops out, leaving Developer, Standard and Professional Direct (plus Premier).\nOn any multi-select about support plans, scan the stem for 'technical' before deciding whether to tick Basic.\nNote: the source document boxes Basic, Developer, Standard and Professional Direct while leaving Premier unboxed. That marking is disputed — Premier/Unified can also open support requests; it was probably left out because the drag-drop answer area held only four slots."}},
@@ -2672,7 +2672,7 @@ const BANK_DOC = [
  q:"你有一個 Azure 環境，裡面有多台 Azure 虛擬機器。\n你打算實作一套解決方案，⟦讓地端網路的用戶端電腦可以與 Azure 虛擬機器通訊⟧。\n你要建議這套方案必須建立哪些 Azure 資源。\n你應該把哪兩個 Azure 資源列入建議？每個正確答案各是解答的一部分。",
  o:["虛擬網路閘道","閘道子網路","負載平衡器","應用程式閘道","虛擬網路"],
  a:[0,1],
- e:"正解是「虛擬網路閘道」與「閘道子網路」。標註者手寫的 VPN 就是提示：要讓地端用戶端連到 Azure 的虛擬機器，就是建立站對站 VPN 或點對站 VPN。\n・虛擬網路閘道（Virtual network gateway）— Azure 這一端的 VPN 端點，負責建立與維持加密隧道。這是實際會計費的資源，依 SKU（VpnGw1 到 VpnGw5）決定頻寬與可建立的隧道數。\n・閘道子網路（GatewaySubnet）— 虛擬網路閘道必須放在一個名稱剛好是 GatewaySubnet 的專用子網路裡，名稱不能改。建議至少 /27 以上，才留得下未來擴充（例如同時要 VPN 與 ExpressRoute）的位址空間。\n為什麼題目沒把「虛擬網路」算進去：題幹說環境裡已經有 Azure 虛擬機器，虛擬機器必然已經在某個虛擬網路裡，所以虛擬網路不是「必須新建」的資源。這種題目要看清楚問的是「還要再建立什麼」。\n另外兩個選項的用途：\n・負載平衡器 — 第 4 層流量分配，把連線分給多台後端 VM，與跨網路連線無關。\n・應用程式閘道 — 第 7 層 HTTP／HTTPS 負載平衡，含 Web 應用程式防火牆，一樣不是用來連地端的。\n完整的站對站 VPN 會用到四樣東西：虛擬網路、閘道子網路、虛擬網路閘道、區域網路閘道（代表地端設備），再加一個連線（Connection）物件把兩端綁起來。",
+ e:"正解是「虛擬網路閘道」與「閘道子網路」。標註者手寫的 VPN 就是提示：要讓地端用戶端連到 Azure 的虛擬機器，就是建立站對站 VPN 或點對站 VPN。\n・虛擬網路閘道（Virtual network gateway）— Azure 這一端的 VPN 端點，負責建立與維持加密隧道。這是實際會計費的資源，依 SKU（VpnGw1 到 VpnGw5）決定頻寬與可建立的隧道數。\n・閘道子網路（GatewaySubnet）— 虛擬網路閘道必須放在一個名稱剛好是 GatewaySubnet 的專用子網路裡，名稱不能改。建議至少 /27 以上，才留得下未來擴充（例如同時要 VPN 與 ExpressRoute）的位址空間。\n為什麼題目沒把「虛擬網路」算進去：題目敘述說環境裡已經有 Azure 虛擬機器，虛擬機器必然已經在某個虛擬網路裡，所以虛擬網路不是「必須新建」的資源。這種題目要看清楚問的是「還要再建立什麼」。\n另外兩個選項的用途：\n・負載平衡器 — 第 4 層流量分配，把連線分給多台後端 VM，與跨網路連線無關。\n・應用程式閘道 — 第 7 層 HTTP／HTTPS 負載平衡，含 Web 應用程式防火牆，一樣不是用來連地端的。\n完整的站對站 VPN 會用到四樣東西：虛擬網路、閘道子網路、虛擬網路閘道、區域網路閘道（代表地端設備），再加一個連線（Connection）物件把兩端綁起來。",
  en:{q:"You have an Azure environment that contains multiple Azure virtual machines.\nYou plan to implement a solution that ⟦enables the client computers on your on-premises network to communicate to the Azure virtual machines⟧.\nYou need to recommend which Azure resources must be created for the planned solution.\nWhich two Azure resources should you include in the recommendation? Each correct answer presents part of the solution.\nNOTE: Each correct selection is worth one point.",
      o:["a virtual network gateway","a gateway subnet","a load balancer","an application gateway","a virtual network"],
      e:"The correct pair is a virtual network gateway and a gateway subnet. The annotator's handwritten 'VPN' is the hint: connecting on-premises clients to Azure VMs means a site-to-site or point-to-site VPN.\n・Virtual network gateway — the Azure-side VPN endpoint that establishes and maintains the encrypted tunnel. This is the billable resource, and its SKU (VpnGw1 through VpnGw5) determines bandwidth and tunnel count.\n・Gateway subnet — the virtual network gateway must live in a dedicated subnet named exactly GatewaySubnet; the name cannot be changed. Size it /27 or larger to leave room for growth, such as running VPN and ExpressRoute together.\nWhy 'a virtual network' is not counted: the stem says the environment already contains Azure virtual machines, which must already sit in a virtual network, so it is not a resource that must be created. Read carefully for what still needs building.\nWhat the other options do:\n・Load balancer — layer 4 traffic distribution across backend VMs; unrelated to cross-network connectivity.\n・Application gateway — layer 7 HTTP/HTTPS load balancing with a web application firewall; also not for reaching on-premises.\nA complete site-to-site VPN uses four things — virtual network, gateway subnet, virtual network gateway and local network gateway (representing the on-premises device) — plus a Connection object tying the two ends together."}},
@@ -3580,7 +3580,7 @@ const BANK_DOC = [
  q:"你的公司底下有多個業務單位，每個業務單位日常營運都需要 20 種不同的 Azure 資源，而且⟦各業務單位需要的資源型別完全相同⟧。\n你要提出一套⟦自動建立這些 Azure 資源⟧的解決方案。\n建議中應該包含下列何者？",
  o:["Azure Resource Manager 範本（ARM templates）","虛擬機器擴展集（Virtual machine scale sets）","Azure API 管理服務（Azure API Management）","管理群組（Management groups）"],
  a:[0],
- v0:"本題號在原始 PDF 裡是空的（作者當初沒有收錄），由外部來源補入。\n\n外部來源（ExamTopics「AZ-900 topic 1 question 196」討論串）\n　A company has several business units. Each business unit requires 20 different Azure resources\n　for daily operation. All the business units require the same type of Azure resources.\n　You need to recommend a solution to automate the creation of the Azure resources.\n　What should you include in the recommendations?\n\n　A. Azure Resource Manager templates　← 建議答案\n　B. virtual machine scale sets\n　C. the Azure API Management service\n　D. management groups\n\n可信度\n　· 題幹、四個選項、答案都查得到，不是只有答案。\n　· **可交叉驗證**：我們手上的 #18 是同一情境的是非題版本\n　　（「解法：把 Azure Resource Manager 範本納入策略」→ 是），\n　　兩題的情境敘述與正解方向完全一致。\n　· 社群共識強：高票留言指出情境是「各式各樣的資源」而不只是虛擬機器，\n　　所以答案必須是對所有資源型別都適用的 ARM 範本，而不是只管虛擬機器的擴展集。",
+ v0:"本題號在原始 PDF 裡是空的（作者當初沒有收錄），由外部來源補入。\n\n外部來源（ExamTopics「AZ-900 topic 1 question 196」討論串）\n　A company has several business units. Each business unit requires 20 different Azure resources\n　for daily operation. All the business units require the same type of Azure resources.\n　You need to recommend a solution to automate the creation of the Azure resources.\n　What should you include in the recommendations?\n\n　A. Azure Resource Manager templates　← 建議答案\n　B. virtual machine scale sets\n　C. the Azure API Management service\n　D. management groups\n\n可信度\n　· 題目、四個選項、答案都查得到，不是只有答案。\n　· **可交叉驗證**：我們手上的 #18 是同一情境的是非題版本\n　　（「解法：把 Azure Resource Manager 範本納入策略」→ 是），\n　　兩題的情境敘述與正解方向完全一致。\n　· 社群共識強：高票留言指出情境是「各式各樣的資源」而不只是虛擬機器，\n　　所以答案必須是對所有資源型別都適用的 ARM 範本，而不是只管虛擬機器的擴展集。",
  e:"答案是 ⟦Azure Resource Manager 範本（ARM 範本）⟧。決勝條件有兩個：⟦「20 種不同的資源」⟧與⟦「各單位需要的完全相同」⟧——前者要求方案能涵蓋任意資源型別，後者要求同一份定義能重複套用。\nARM 範本為什麼對：\n・⟦宣告式的 JSON 檔案，描述「要有什麼」而不是「怎麼做」⟧，Azure Resource Manager 負責算出建立順序與相依關係。\n・⟦適用於所有 Azure 資源型別⟧，不限於運算。\n・⟦冪等（idempotent）⟧— 同一份範本重複部署，結果都會收斂到同一個狀態，不會重複建立。\n・⟦可參數化⟧— 同一份範本用不同參數檔部署到不同業務單位、不同環境。\n・可納入原始碼控管與 CI/CD，這就是「基礎結構即程式碼（IaC）」。\n（新式的 ⟦Bicep⟧ 是 ARM 範本的簡化語法，編譯後仍是 ARM 範本；AZ-900 兩者都可能出現。）\n其他選項為什麼不對：\n・⟦虛擬機器擴展集⟧— 只管一件事：把**同一種**虛擬機器複製成很多台並自動調整數量。題目說的是 20 種**不同**的資源，範圍完全不符。這是本題最強的干擾項，因為它同樣帶有「自動化」的味道。\n・⟦Azure API 管理⟧— 把後端 API 包裝成統一的閘道，做驗證、限流、版本控制。與建立資源無關。\n・⟦管理群組⟧— 訂用帳戶之上的容器，用來套用原則與 RBAC。它管的是⟦「資源要符合什麼規範」⟧，不是⟦「把資源建出來」⟧。\n記法：⟦看到「自動建立／重複部署／基礎結構即程式碼」就選 ARM 範本（或 Bicep）⟧。\n（本題與第 18 題是同一情境：第 18 題問「把 ARM 範本納入策略是否達成目標」，答案是「是」。）",
  en:{q:"A company has several business units. Each business unit requires 20 different Azure resources for daily operation, and ⟦all the business units require the same type of Azure resources⟧.\nYou need to recommend a solution to ⟦automate the creation of the Azure resources⟧.\nWhat should you include in the recommendations?",
      o:["Azure Resource Manager templates","virtual machine scale sets","the Azure API Management service","management groups"],
@@ -4281,7 +4281,7 @@ const BANK_DOC = [
  sent:"你的公司實作{0}，來替含有信用卡資訊的 Microsoft Word 文件⟦自動加上浮水印⟧。",
  dd:[["Azure 原則（Azure policies）","DDoS 保護","Azure Information Protection","Azure Active Directory（Azure AD）Identity Protection"]],
  a:[2],
- v0:"Question #267  ·  Topic 1  ·  HOTSPOT\nTo complete the sentence, select the appropriate option in the answer area.\nHot Area:\n\nYour company implements ［ 下拉 ］ to automatically add a watermark to Microsoft Word documents that contain credit card information.\n\n下拉選項：Azure policies ｜ DDoS protection ｜ Azure Information Protection ｜ Azure Active Directory (Azure AD) Identity Protection\n紅框標的正解：Azure Information Protection\n（題幹另有一處紅框：automatically add a watermark，是關鍵條件不是第二個下拉）\n\n（核對來源：PDF 第 79 頁）",
+ v0:"Question #267  ·  Topic 1  ·  HOTSPOT\nTo complete the sentence, select the appropriate option in the answer area.\nHot Area:\n\nYour company implements ［ 下拉 ］ to automatically add a watermark to Microsoft Word documents that contain credit card information.\n\n下拉選項：Azure policies ｜ DDoS protection ｜ Azure Information Protection ｜ Azure Active Directory (Azure AD) Identity Protection\n紅框標的正解：Azure Information Protection\n（題目另有一處紅框：automatically add a watermark，是關鍵條件不是第二個下拉）\n\n（核對來源：PDF 第 79 頁）",
  e:"答案是 Azure Information Protection。關鍵字是「浮水印」加「文件」加「信用卡資訊」——這正是資料分類與保護服務的典型應用場景。\nAzure Information Protection（現已整合進 Microsoft Purview 資訊保護）的核心能力：\n・⟦分類與標記⟧— 依內容自動或手動套用標籤（例如「機密」「一般」「高機密」），可以用內建的敏感資訊類型（信用卡號碼、身分證字號等）自動偵測文件內容並套用對應標籤。\n・⟦保護動作⟧— 標籤套用後可以連動加密、限制存取的使用者、⟦自動加上浮水印或頁首頁尾標示⟧，讓文件在被列印、截圖或轉發時，都能一眼看出其機密等級。\n・涵蓋 Word、Excel、PowerPoint、PDF、電子郵件等常見文件格式。\n這正是本題描述的情境：偵測到文件裡含有信用卡資訊（一種敏感資訊類型），自動套用視覺化的浮水印標記，提醒使用者這份文件的機密程度。\n其他選項為什麼不對：\n・Azure 原則 — 規範 Azure 資源的設定是否合規，⟦不處理文件內容層級的分類與浮水印⟧。\n・DDoS 保護 — 防禦大規模流量洪水攻擊，⟦與文件保護完全無關⟧。\n・Microsoft Entra ID Identity Protection — 評估使用者登入風險並觸發條件式存取，⟦是身分識別層級的風險評估，不是文件內容保護⟧。\n記法：⟦「浮水印」「文件分類」「信用卡／個資等敏感資訊偵測」都指向 Azure Information Protection⟧。",
  en:{q:"Select the appropriate option to complete the sentence.",
      sent:"Your company implements {0} to ⟦automatically add a watermark⟧ to Microsoft Word documents that contain credit card information.",
@@ -5769,7 +5769,7 @@ const BANK_DOC = [
  q:"以下關於 ⟦Azure Advisor⟧的敘述，正確請選「是」，不正確請選「否」。",
  s:["Azure Advisor 會提供個人化的建議","Azure Advisor 可以針對虛擬機器提供成本方面的建議","Azure Advisor 可以跨多個 Azure 訂用帳戶提供建議"],
  a:[1,1,1],
- v0:"本題號在原始 PDF 裡是空的（作者當初沒有收錄），由外部來源補入。\n\n外部來源（ExamTopics「AZ-900 topic 1 question 418」討論串，view/108910）\n　Question #418  ·  Topic 1  ·  HOTSPOT\n　For each of the following statements, select Yes if the statement is true. Otherwise, select No.\n　NOTE: Each correct selection is worth one point.\n\n　Answer Area　　　　　　　　　　　　　　　　　　　　　　　　Yes　No\n　Azure Advisor provides personalized recommendations.　　　　○　　○\n　Azure Advisor can provide cost recommendations for virtual machines.　　○　　○\n　Azure Advisor can provide recommendations across multiple Azure subscriptions.　　○　　○\n\n　建議答案：Yes / Yes / Yes\n\n可信度\n　· 題幹與三句本文是使用者提供的原頁截圖，逐字可讀，不是靠搜尋摘要轉述。\n　　（2026-07-29 第一次查證時只查得到答案 YYY、三句本文在圖片裡讀不到，所以當初標為「不補」。）\n　· 社群最高票同樣是 YYY，與截圖上的建議答案一致。\n　· 三句話都落在 Azure Advisor 官方文件明載的能力範圍內，可獨立驗證，不依賴題庫共識。\n　· 編號對齊：相鄰的 #417、#419 都是 Azure Policy 題且已與 PDF 逐字核對過，\n　　外部來源的 #418 夾在同一段落裡沒有位移跡象。",
+ v0:"本題號在原始 PDF 裡是空的（作者當初沒有收錄），由外部來源補入。\n\n外部來源（ExamTopics「AZ-900 topic 1 question 418」討論串，view/108910）\n　Question #418  ·  Topic 1  ·  HOTSPOT\n　For each of the following statements, select Yes if the statement is true. Otherwise, select No.\n　NOTE: Each correct selection is worth one point.\n\n　Answer Area　　　　　　　　　　　　　　　　　　　　　　　　Yes　No\n　Azure Advisor provides personalized recommendations.　　　　○　　○\n　Azure Advisor can provide cost recommendations for virtual machines.　　○　　○\n　Azure Advisor can provide recommendations across multiple Azure subscriptions.　　○　　○\n\n　建議答案：Yes / Yes / Yes\n\n可信度\n　· 題目與三句本文是使用者提供的原頁截圖，逐字可讀，不是靠搜尋摘要轉述。\n　　（2026-07-29 第一次查證時只查得到答案 YYY、三句本文在圖片裡讀不到，所以當初標為「不補」。）\n　· 社群最高票同樣是 YYY，與截圖上的建議答案一致。\n　· 三句話都落在 Azure Advisor 官方文件明載的能力範圍內，可獨立驗證，不依賴題庫共識。\n　· 編號對齊：相鄰的 #417、#419 都是 Azure Policy 題且已與 PDF 逐字核對過，\n　　外部來源的 #418 夾在同一段落裡沒有位移跡象。",
  e:"答案是三句全部都選「是」。\n・第一句「提供個人化的建議」— ⟦正確。Advisor 不是一份通用的最佳實務清單，它會實際掃描你訂用帳戶裡已經部署的資源與它們的遙測資料（使用率、組態設定、Service Health 事件），只產生對你這個環境成立的建議⟧。所以同一條建議在別人的訂用帳戶可能根本不會出現。\n・第二句「可以針對虛擬機器提供成本建議」— ⟦正確。成本（Cost）是 Advisor 五大支柱之一，而虛擬機器正是最典型的對象⟧：偵測到使用率過低的 VM 就建議調降 SKU 或直接關機、長期穩定執行的 VM 就建議改買保留執行個體（Reserved VM Instances）或節省計畫（Savings Plan），順帶也會點名閒置的公用 IP 與未掛載的受管理磁碟。\n・第三句「可以跨多個訂用帳戶提供建議」— ⟦正確，這是本題唯一會讓人猶豫的一句。Advisor 儀表板最上方就是訂用帳戶篩選器，可以一次勾選多個訂用帳戶，把建議彙總在同一張分數卡與同一份清單上⟧；勾完之後還能再用資源群組往下收斂。\n把 Advisor 的五大支柱整組列出：\n・⟦可靠性（Reliability）⟧— 確保業務關鍵應用程式的持續運作，例如建議把單台 VM 放進可用性設定組、建議啟用備份。\n・⟦安全性（Security）⟧— 建議直接來自 Microsoft Defender for Cloud，例如未加密的儲存體、對外開放的管理連接埠。\n・⟦效能（Performance）⟧— 例如儲存體帳戶或 SQL 的效能瓶頸、建議升級到更適合的 SKU。\n・⟦成本（Cost）⟧— 找出閒置與低使用率資源、建議購買保留容量。\n・⟦卓越營運（Operational Excellence）⟧— 流程與工作流程的效率，例如建議訂閱 Service Health 警示、遵循 Azure 最佳做法。\n其他要點：\n・⟦Advisor 完全免費，連 Basic 支援方案都有⟧，不需要額外付費或另外部署。\n・⟦範圍可以設在訂用帳戶、資源群組或個別資源⟧；不想再看到的建議可以「延後（postpone）」或「關閉（dismiss）」。\n・⟦Advisor 分數（Advisor Score）⟧把五大支柱的落實程度量化成百分比，用來追蹤改善進度。\n・⟦可以設定 Advisor 警示⟧，一有新建議就透過動作群組通知。\n容易混淆的一組整理：⟦Advisor 給的是「你該怎麼改進」的建議；Service Health 講的是「Azure 這邊出了什麼事」；Azure Monitor 負責收集指標與記錄；Defender for Cloud 專注安全態勢與威脅防護——而 Advisor 的安全性建議正是從 Defender for Cloud 拉過來的⟧。\n記法：⟦只要題目問的能力落在「可靠、安全、效能、成本、營運卓越」這五項之內，Advisor 就做得到，答 Yes⟧。\n（可與第 183 題對照：那一題同樣問 Advisor 的涵蓋範圍，「降低虛擬機器成本」也是「是」，但「改善 Microsoft Entra ID 環境的安全性」是「否」——Advisor 的安全性建議來自 Defender for Cloud，管的是資源的安全態勢，不是身分目錄本身。）",
  en:{q:"For each of the following statements about ⟦Azure Advisor⟧, select Yes if the statement is true. Otherwise, select No.",
      s:["Azure Advisor provides personalized recommendations.","Azure Advisor can provide cost recommendations for virtual machines.","Azure Advisor can provide recommendations across multiple Azure subscriptions."],
@@ -6345,8 +6345,8 @@ const BANK_DOC = [
 let BANK = BANK_MINE;
 
 /* =====================================================================
-   英文版題目：以中文題幹為鍵，與中文題庫解耦，缺漏時自動退回中文。
-   格式 "中文題幹": [英文題幹, [英文選項…（順序須與中文一致）], 英文解析]
+   英文版題目：以中文題目為鍵，與中文題庫解耦，缺漏時自動退回中文。
+   格式 "中文題目": [英文題目, [英文選項…（順序須與中文一致）], 英文解析]
    ===================================================================== */
 const EN = {};
 function mergeEN(){
@@ -6448,7 +6448,7 @@ function withTerms(s){
 
 /* =====================================================================
    螢光筆標記：題目文字中用 ⟦…⟧ 包住的片段會以螢光筆呈現。
-   只標題幹裡的關鍵條件，絕不標選項 —— 標了等於直接送答案。
+   只標題目裡的關鍵條件，絕不標選項 —— 標了等於直接送答案。
    ===================================================================== */
 const HL_RE = /⟦([^⟧]*)⟧/g;
 const stripHl = s => String(s).replace(HL_RE, "$1");
@@ -6994,7 +6994,7 @@ function renderQ(){
     }
     meta.append(chk);
   }
-  /* 題幹用換行分段：制式前言自成一行，真正的題目與「解法：」各自另起一段 */
+  /* 題目本文用換行分段：制式前言自成一行，真正的題目與「解法：」各自另起一段 */
   p.append(meta);
   String(V.q).split("\n").forEach(seg=>{
     seg = seg.trim();
@@ -7005,8 +7005,8 @@ function renderQ(){
     paintHl(line, seg);
     p.append(line);
   });
-  /* 題幹裡的表格（原題就有一張表，例如 #187 的電腦與作業系統對照）。
-     只是題幹的一部分，不能選，也不參與洗牌。 */
+  /* 題目裡的表格（原題就有一張表，例如 #187 的電腦與作業系統對照）。
+     只是題目的一部分，不能選，也不參與洗牌。 */
   const TB = (EN && q.en && q.en.tbl) ? q.en.tbl : q.tbl;
   if(TB){
     const t = document.createElement("table");
@@ -7300,7 +7300,7 @@ function renderDD(q, V, EN){
     slot.type = "button"; slot.className = "slot"; slot.dataset.t = t;
     const desc = document.createElement("span");
     desc.className = "desc";
-    paintHl(desc, text);                /* 答案區的描述是題幹的一部分，可以標重點 */
+    paintHl(desc, text);                /* 答案區的描述是題目的一部分，可以標重點 */
 
     const paint = ()=>{
       const v = S.ans[t];
@@ -8241,7 +8241,7 @@ function stopTimer(){
 /* =====================================================================
    跳題：輸入題號直接跳到那一題
    -----------------------------------------------------------------
-   練習模式認的是「題目上標的題號」（文件題庫在題幹上方標的 第 N 題 / #N），
+   練習模式認的是「題目上標的題號」（文件題庫在題目本文上方標的 第 N 題 / #N），
    不是「本輪第幾題」——本輪順序是洗過的，本輪第 189 題可能是文件的第 316 題，
    要跳的當然是題目自己的號碼。自製題庫沒有題號，才用「本輪第幾題」。
    模擬考例外：那裡畫面上到處都是「作答總覽」的 1～40 編號，所以先當本輪的
@@ -8282,7 +8282,7 @@ function paintJump(){
   jumpBtn.textContent = EN ? "Go" : "跳題";
   jumpForm.title = byNo
     ? (EN ? `Type the number printed on the question — the #N above the stem, not its position in this shuffled round — then press Enter (this tab holds ${S.pool.length} questions, nos. ${jumpRange()}). Press / to focus.`
-          : `輸入題目上標的題號（題幹上方那個「第 N 題」，不是本輪的第幾題）按 Enter 就跳過去（這個分頁收了 ${S.pool.length} 題，題號 ${jumpRange()}）。按 / 鍵可以快速跳到這個欄位。`)
+          : `輸入題目上標的題號（題目本文上方那個「第 N 題」，不是本輪的第幾題）按 Enter 就跳過去（這個分頁收了 ${S.pool.length} 題，題號 ${jumpRange()}）。按 / 鍵可以快速跳到這個欄位。`)
     : (EN ? `Type a question number (1-${S.pool.length}, same numbering as the overview) and press Enter. Press / to focus.`
           : `輸入題號按 Enter 直接跳到那一題（本輪 1-${S.pool.length} 題，和「作答總覽」的編號一樣）。按 / 鍵可以快速跳到這個欄位。`);
   if(off) sayJump("");
@@ -8441,7 +8441,7 @@ const LANGS = ["zh","zhen","en"];
 const TAB_ZH = ["全部","雲端概念","架構與服務","管理與治理","錯題本","星號題"];
 const TAB_EN = ["All","Cloud concepts","Architecture","Governance","Review","Starred"];
 const HINT = {
-  practice_zh:'練習模式：選好答案按「批改」，會立刻給對錯與解析；答錯的題目會自動收進<b>錯題本</b>分頁。複選題標了「<b>需選 N 項</b>」就要<b>剛好選滿 N 項</b>才能批改，選滿之後也不會再讓你多選（跟原廠考試一樣，徽章會即時顯示已選幾項）。不想現在處理的題目，按「<b>跳過</b>」（或按 →）就直接走：跳過的題目<b>不計分、也不會進錯題本</b>，之後用「上一題」或上方的「題號」欄回來重做就好（本輪最後一題不給跳，免得手滑就結算；模擬考則一律不能空著跳過）。按「<b>☆ 加強練習</b>」可以自己打星號，那一題會進<b>星號題</b>分頁。「<b>上一題</b>」能翻回去重看，之前的作答與解析都會還原（←／→ 也可以翻題）。想直接跳到某一題，在上方的「<b>題號</b>」欄輸入<b>題目上標的題號</b>（題幹上方那個「第 N 題」）按 Enter 就會跳過去；跳題認的是題目自己的號碼，不是「本輪第幾題」（自製題庫沒有題號，就直接輸入本輪的第幾題。按 <code>/</code> 鍵可以快速對焦）。出題順序預設<b>依題號</b>，想打散就到「<b>⚙ 設定 → 出題順序</b>」改成<b>隨機</b>，下一輪生效（模擬考一律隨機抽題，不受這個設定影響）。<b>每個分頁的進度是分開記的</b>，切走再切回來、甚至關掉瀏覽器隔天再開都會接著做，分頁上有小圓點代表那裡還沒做完；整個分頁做完會自動歸零，想提前重洗就按「<b>↻ 重新開始</b>」。',
+  practice_zh:'練習模式：選好答案按「批改」，會立刻給對錯與解析；答錯的題目會自動收進<b>錯題本</b>分頁。複選題標了「<b>需選 N 項</b>」就要<b>剛好選滿 N 項</b>才能批改，選滿之後也不會再讓你多選（跟原廠考試一樣，徽章會即時顯示已選幾項）。不想現在處理的題目，按「<b>跳過</b>」（或按 →）就直接走：跳過的題目<b>不計分、也不會進錯題本</b>，之後用「上一題」或上方的「題號」欄回來重做就好（本輪最後一題不給跳，免得手滑就結算；模擬考則一律不能空著跳過）。按「<b>☆ 加強練習</b>」可以自己打星號，那一題會進<b>星號題</b>分頁。「<b>上一題</b>」能翻回去重看，之前的作答與解析都會還原（←／→ 也可以翻題）。想直接跳到某一題，在上方的「<b>題號</b>」欄輸入<b>題目上標的題號</b>（題目本文上方那個「第 N 題」）按 Enter 就會跳過去；跳題認的是題目自己的號碼，不是「本輪第幾題」（自製題庫沒有題號，就直接輸入本輪的第幾題。按 <code>/</code> 鍵可以快速對焦）。出題順序預設<b>依題號</b>，想打散就到「<b>⚙ 設定 → 出題順序</b>」改成<b>隨機</b>，下一輪生效（模擬考一律隨機抽題，不受這個設定影響）。<b>每個分頁的進度是分開記的</b>，切走再切回來、甚至關掉瀏覽器隔天再開都會接著做，分頁上有小圓點代表那裡還沒做完；整個分頁做完會自動歸零，想提前重洗就按「<b>↻ 重新開始</b>」。',
   practice_en:'Practice mode: pick your answer and hit <b>Check</b> for instant feedback plus an explanation. Anything you miss is collected in the <b>Review</b> tab. A question badged <b>select N</b> needs <b>exactly N</b> picks before it will grade, and refuses the N+1th pick — the same rule as the real exam (the badge shows your running count). Not in the mood for a question? Hit <b>Skip</b> (or press →) and move straight on: a skipped question is <b>not graded, not scored and never filed in Review</b> — come back to it any time with <b>Back</b> or the number box. The last question of a round has no Skip (skipping it would end the round), and the mock exam still refuses blank skips. Hit <b>☆ Star</b> to file a question in the <b>Starred</b> tab for extra drilling. <b>Back</b> returns to earlier questions with your answer and explanation intact (← / → work too). To go straight to a specific question, type <b>the number printed on the question</b> (the “#N” above the stem) in the box next to the counter and press Enter — it matches the number on the question itself, not its position in the round (the hand-written bank has no numbers, so there the box takes the position instead; press <code>/</code> to focus it). Questions come <b>By number</b> by default; to shuffle them, switch <b>⚙ Settings → Order</b> to <b>Shuffle</b> — it takes effect from the next round (the mock exam always draws at random regardless). <b>Each tab keeps its own progress</b> — switch away and back, or close the browser and return tomorrow, and you resume where you left off (a dot marks tabs still in progress). It resets once you finish the tab, or when you hit <b>↻ Restart</b>.',
   exam_zh:  `模擬考：隨機抽 ${EXAM_N} 題、限時 45 分鐘，作答期間不顯示答案。跟原廠考試一樣<b>不能空著跳過</b>：沒作答就按「下一題」會被擋下來提醒；複選題標了「<b>需選 N 項</b>」也要<b>剛好選滿 N 項</b>，不能多也不能少。真的想先擱著，從「<b>作答總覽</b>」點別的題號跳走，那些題目在總覽上會標成未作答。沒把握的題目按「<b>⚑ 標記待複習</b>」還能寫備註，之後從「<b>作答總覽</b>」跳回去重看，或在上方的「<b>題號</b>」欄輸入題號按 Enter 直接跳（考試中用的是總覽上那組 1～${EXAM_N} 的編號）。按「交卷」不會立刻給分，會先跳出總覽讓你確認，按「<b>確定交卷、給分</b>」才結算；時間到則自動結算。及格線抓 ${PASS}%。`,
   exam_en:  `Mock exam: ${EXAM_N} random questions, 45-minute limit, no answers shown while you work. As in the real exam you cannot leave a question blank and move on: <b>Next</b> refuses an unanswered question and tells you so, and a question badged <b>select N</b> needs exactly N picks — no more, no fewer. To park one, jump to another number from the <b>Overview</b>, where it stays marked unanswered. Use <b>⚑ Flag for review</b> (with an optional note) on anything you are unsure of, then jump back to it from the <b>Overview</b> — or type its number into the box next to the counter and press Enter (same 1-${EXAM_N} numbering as the overview). <b>Submit</b> does not grade immediately — it opens the review screen first, and only <b>Submit &amp; grade</b> scores the paper. Time-out submits automatically. Pass mark ${PASS}%.`
