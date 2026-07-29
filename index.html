@@ -76,6 +76,10 @@ header.top{
 }
 .brand .sub[data-src="doc"]{color:var(--bad);border-color:var(--bad)}
 .brand .spacer{margin-left:auto}
+.brand .hits{display:inline-flex;align-self:center;line-height:0}
+.brand .hits img{height:20px;width:auto;opacity:.85}
+.brand .hits:hover img{opacity:1}
+@media (max-width:380px){.brand .hits{display:none}}
 .ch-btn{
   background:none;border:1px solid var(--line);color:var(--ink-dim);flex:0 0 auto;
   border-radius:999px;height:34px;padding:0 11px;font:inherit;font-size:.78rem;cursor:pointer;line-height:1;
@@ -802,6 +806,10 @@ nav.tabs .dot{
     <h1>AZ-900 練習</h1>
     <span class="sub" id="srcTag" title="目前題庫（在設定裡切換）">自製題庫</span>
     <span class="spacer"></span>
+    <a class="hits" href="https://hits.sh/l257065.github.io/az900-practice/" target="_blank" rel="noopener noreferrer">
+      <img alt="瀏覽次數（今日／總計）"
+           src="https://hits.sh/l257065.github.io/az900-practice.svg?style=flat-square&label=%E7%80%8F%E8%A6%BD%20%E4%BB%8A%E6%97%A5%2F%E7%B8%BD%E8%A8%88&color=0a6b75&labelColor=3a4a50&view=today-total">
+    </a>
     <button class="ch-btn only-ico info" id="infoBtn"
             title="題數說明：文件題庫為什麼是 468 題而不是 474 題" aria-label="題數說明">!</button>
     <div class="langseg" id="langSeg" role="group" aria-label="語言">
