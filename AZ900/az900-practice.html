@@ -811,7 +811,7 @@ nav.tabs .dot{
            src="https://hits.sh/l257065.github.io/az900-practice.svg?style=flat-square&label=%E7%80%8F%E8%A6%BD%20%E4%BB%8A%E6%97%A5%2F%E7%B8%BD%E8%A8%88&color=0a6b75&labelColor=3a4a50&view=today-total">
     </a>
     <button class="ch-btn only-ico info" id="infoBtn"
-            title="題數說明：文件題庫為什麼是 468 題而不是 474 題" aria-label="題數說明">!</button>
+            title="題數說明：文件題庫的題數與跳號說明" aria-label="題數說明">!</button>
     <div class="langseg" id="langSeg" role="group" aria-label="語言">
       <button type="button" data-lang="zh"   aria-pressed="true"  title="純中文">中</button>
       <button type="button" data-lang="zhen" aria-pressed="false" title="中文，技術名詞後面附英文原文">中+EN</button>
@@ -8472,8 +8472,7 @@ function applyLang(){
   el("cfgBtn").title = en ? "Settings: bank, theme, restart this round"
                           : "設定：題庫、主題、重新開始這一輪";
   el("infoBtn").setAttribute("aria-label", en ? "About the question count" : "題數說明");
-  el("infoBtn").title = en ? "Question count: why the document bank has 468 questions, not 474"
-                           : "題數說明：文件題庫為什麼是 468 題而不是 474 題";
+  el("infoBtn").title = infoBtnTitle(en);
   /* 面板開著時切語言就重畫，不然會留著另一種語言的內容 */
   if(infowrap.classList.contains("show")) openInfo();
 
@@ -8660,9 +8659,10 @@ el("cfgReset").addEventListener("click", ()=>{
 });
 
 /* =====================================================================
-   題數說明：解釋「PDF 題號到 #474，題庫卻只有 468 題」
-   缺號不是漏做，是原始文件本身就跳號。數字全部從 BANK_DOC 現算，
-   之後補題或改題庫，這個面板會自己跟著更新，不會變成過期的說明。
+   題數說明：解釋「PDF 題號的最大值」與「題庫實際題數」之間的差異
+   缺號不是漏做，是原始文件本身就跳號。標題與內文數字全部從 BANK_DOC
+   現算（docGaps()／infoBtnTitle()），之後補題或改題庫、跳號被補齊，
+   這個面板會自己跟著更新，不會變成過期的說明。
    ===================================================================== */
 const closeInfo = () => { infowrap.classList.remove("show"); infowrap.innerHTML = ""; };
 
@@ -8674,13 +8674,22 @@ function docGaps(){
   return {total:nums.length, max, gaps};
 }
 
+function infoBtnTitle(en){
+  const g = docGaps();
+  if(!g.gaps.length) return en ? `Question count: all ${g.total} questions are present, no gaps`
+                                : `題數說明：全部 ${g.total} 題都在，沒有跳號`;
+  return en ? `Question count: why the document bank has ${g.total} questions, not ${g.max}`
+            : `題數說明：文件題庫為什麼是 ${g.total} 題而不是 ${g.max}`;
+}
+
 function openInfo(){
   const EN = S.lang === "en";
   const g = docGaps();
+  const hasGaps = g.gaps.length > 0;
   const chips = g.gaps.map(n => `<i>#${n}</i>`).join("");
 
   const body = EN ? `
-    <h2>Why 468 questions, not 474?</h2>
+    <h2>${hasGaps ? `Why ${g.total} questions, not ${g.max}?` : `All ${g.total} questions are present, no gaps`}</h2>
     <p class="ovsub">Nothing is missing — the document bank is complete.</p>
     <div class="infomath">
       <span>${g.max} − ${g.gaps.length}</span><span>=</span><b>${g.total}</b>
@@ -8690,13 +8699,13 @@ function openInfo(){
       <span class="lab">Skipped numbers</span>
       <p>These numbers do not exist in the source PDF. Every page was checked one by one — they were never transcribed because there is nothing there to transcribe.</p>
       <div class="infonums">${chips || "<i>none</i>"}</div>
-      <p style="margin-top:10px">So <em>#474</em> is the highest question number, not the number of questions. Typing one of the numbers above into the jump box will simply find nothing.</p>
+      <p style="margin-top:10px">So <em>#${g.max}</em> is the highest question number, not the number of questions. Typing one of the numbers above into the jump box will simply find nothing.</p>
     </div>
     <div class="infosec">
       <span class="lab">Numbering</span>
       <p>Question numbers here are the PDF's own numbers, so anything you look up in the original document lands on the same question. That is also why the gaps were left as gaps instead of being closed up.</p>
     </div>` : `
-    <h2>為什麼是 468 題，不是 474 題？</h2>
+    <h2>${hasGaps ? `為什麼是 ${g.total} 題，不是 ${g.max} 題？` : `全部 ${g.total} 題都在，沒有跳號`}</h2>
     <p class="ovsub">沒有漏做，文件題庫已經是完整的。</p>
     <div class="infomath">
       <span>${g.max} − ${g.gaps.length}</span><span>=</span><b>${g.total}</b>
@@ -8706,7 +8715,7 @@ function openInfo(){
       <span class="lab">跳掉的題號</span>
       <p>這幾個題號在原始 PDF 裡根本不存在。已經逐頁比對確認過，不是轉錄時漏掉，是原本就沒有這幾題。</p>
       <div class="infonums">${chips || "<i>無</i>"}</div>
-      <p style="margin-top:10px">所以 <em>#474</em> 是「最大題號」而不是「題目數量」。把上面任何一個號碼打進跳題欄，也只會找不到題目。</p>
+      <p style="margin-top:10px">所以 <em>#${g.max}</em> 是「最大題號」而不是「題目數量」。把上面任何一個號碼打進跳題欄，也只會找不到題目。</p>
     </div>
     <div class="infosec">
       <span class="lab">題號規則</span>
