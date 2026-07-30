@@ -51,3 +51,4 @@
 !/AZ104/tools/extract_quiz.py
 !/AZ104/tools/build_practice_html.js
 !/AZ104/tools/merge_batch.js
+!/AZ104/tools/validate.js

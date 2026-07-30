@@ -702,6 +702,22 @@ nav.tabs .dot{
   font-size:.82rem;color:var(--bad);background:var(--bad-soft);
   border:1px solid var(--bad);border-radius:8px;padding:4px 9px;
 }
+/* 題目與解析的輕量 markdown（見 mdHtml()）：行內程式碼與程式碼區塊 */
+code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;
+  background:var(--sunken);border:1px solid var(--line);border-radius:5px;
+  padding:.05em .35em;word-break:break-word;
+}
+pre.code{
+  margin:9px 0;padding:9px 12px;overflow-x:auto;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:.78rem;line-height:1.6;
+  white-space:pre;              /* 縮排保得住的原因：容器的 pre-line 會壓掉連續空白 */
+  color:var(--ink);background:var(--sunken);
+  border:1px solid var(--line);border-radius:9px;
+}
+pre.code code{background:none;border:0;padding:0;font-size:inherit}
+
 /* ---------- 統計面板 ---------- */
 .stsec{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
 .stsec:first-of-type{border-top:0;margin-top:8px;padding-top:0}
@@ -6447,29 +6463,44 @@ function withTerms(s){
 }
 
 /* =====================================================================
-   螢光筆標記：題目文字中用 ⟦…⟧ 包住的片段會以螢光筆呈現。
-   只標題目裡的關鍵條件，絕不標選項 —— 標了等於直接送答案。
+   題目與解析的輕量 markdown
+   ---------------------------------------------------------------------
+   q / e 這些欄位是純文字（`.expl` 用 white-space:pre-line 保留換行），
+   但寫六百字的解析時很自然會用到強調與程式碼。支援下面四種，其餘一律當字面：
+
+       ⟦螢光筆⟧          → <mark class="hl">   （沿用 AZ-900）
+       **粗體**          → <b>
+       `行內程式碼`       → <code>
+       ``` 換行 區塊 ```  → <pre class="code">
+
+   **程式碼區塊一定要走 <pre>**：容器是 white-space:pre-line，它保留換行但會把
+   連續空白壓成一個，所以縮排會被吃掉——PowerShell 的續行與 JSON 的層次全部對不齊。
+   只有 <pre>（white-space:pre）保得住。
+
+   處理順序很重要：先把 ``` 區塊整段挖走換成佔位符，才不會去動程式碼裡面的
+   ** 與反引號；跳脫、換標記都做完之後才把區塊放回去。
    ===================================================================== */
 const HL_RE = /⟦([^⟧]*)⟧/g;
 const stripHl = s => String(s).replace(HL_RE, "$1");
-/* 寫進 DOM（不使用 innerHTML，避免題目文字被當成 HTML） */
-function paintHl(el, s){
-  el.textContent = "";
-  let last = 0, m;
-  HL_RE.lastIndex = 0;
-  while((m = HL_RE.exec(String(s))) !== null){
-    if(m.index > last) el.append(document.createTextNode(String(s).slice(last, m.index)));
-    const mk = document.createElement("mark");
-    mk.className = "hl"; mk.textContent = m[1];
-    el.append(mk);
-    last = m.index + m[0].length;
-  }
-  if(last < String(s).length) el.append(document.createTextNode(String(s).slice(last)));
+function mdHtml(src, br){
+  const blocks = [];
+  let s = String(src).replace(
+    /\n?```[ \t]*\n([\s\S]*?)\n?```[ \t]*\n?/g,
+    (_m, code) => { blocks.push(code.replace(/\s+$/, "")); return "\u0000" + (blocks.length - 1) + "\u0000"; });
+
+  s = esc(s)
+    .replace(/`([^`\n]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>")
+    .replace(/⟦/g, '<mark class="hl">').replace(/⟧/g, "</mark>");
+  if(br) s = s.replace(/\n/g, "<br>");        /* 成績單那邊的容器沒有 pre-line */
+
+  return s.replace(/\u0000(\d+)\u0000/g,
+    (_m, i) => '<pre class="code">' + esc(blocks[+i]) + "</pre>");
 }
-/* 成績單是用 innerHTML 組的：先跳脫，再把標記換成 <mark> */
-const escHl = s => esc(String(s))
-  .replace(/⟦/g, '<mark class="hl">').replace(/⟧/g, "</mark>")
-  .replace(/\n/g, "<br>");
+/* 寫進 DOM */
+function paintHl(el, s){ el.innerHTML = mdHtml(s, false); }
+/* 成績單是用 innerHTML 組的，容器沒有 pre-line，所以換行要轉成 <br> */
+const escHl = s => mdHtml(s, true);
 
 /* =====================================================================
    題型

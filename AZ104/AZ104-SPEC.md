@@ -9,13 +9,24 @@
 
 單一檔案的 AZ-104 練習網頁：`az104-practice.html`（純本機自用，不上 GitHub、不連外）。
 
-沿用 AZ900 的練習引擎（洗牌、四種題型、成績單、進度續作等），只是資料來源與 AZ900 完全不同：
+沿用 AZ900 的練習引擎（洗牌、四種題型、成績單、進度續作等）。跟 AZ900 一樣，**裡面有兩份完全獨立的題庫**，
+頂列可切換（進度、統計、星號、錯題本各自獨立）：
 
-| 項目 | AZ900 | AZ104 |
-|---|---|---|
-| 來源 | 單一 PDF（ExamTopics 截圖排版） | Build School 課程「AZ104 Azure 系統管理員認證練習題庫」的**多個測驗頁**（LearnDash `wpProQuiz`），使用者逐頁另存為 HTML |
-| 題目呈現 | PDF 截圖，要轉成圖片用視覺讀取 | 兩種都有，逐卷不同，見第 3 節：一種選項/正解直接在 HTML 裡（免看圖）、一種只有一張答案截圖要看圖還原 |
-| 進度單位 | 頁碼區間 | 一次一個 quiz 分卷（quiz1~quiz19、quiz20），每卷各自 15～42 題 |
+| 代號 | UI 標籤 | 來源 | 題數 |
+|---|---|---|---|
+| `BANK_MINE`（`bank_az104.current.js`） | 自製題庫 | Build School 課程「AZ104 Azure 系統管理員認證練習題庫」的多個測驗頁（LearnDash `wpProQuiz`），逐頁另存 HTML 轉錄 | 372（進行中，見第 2 節） |
+| `BANK_DOC`（`bank_doc.current.js`） | 文件題庫 | PDF 考古題逐題轉錄，Question Set 1（`sec:"S1"`），欄位含 `sec`/`no` 標示原始文件位置 | 40（已完成） |
+
+（UI 標籤沿用 AZ900 的「自製／文件」命名，但跟 AZ900 的語意不完全對應——AZ104 的「自製題庫」也是
+逐頁轉錄自 Build School 網站，不是真的自行編寫；純粹是兩個題庫槽位的代稱，不影響任何功能。）
+
+`BANK_MINE` 這邊：
+
+| 項目 | 說明 |
+|---|---|
+| 來源 | Build School 課程「AZ104 Azure 系統管理員認證練習題庫」的**多個測驗頁**（LearnDash `wpProQuiz`），使用者逐頁另存為 HTML |
+| 題目呈現 | 兩種都有，逐卷不同，見第 3 節：一種選項/正解直接在 HTML 裡（免看圖）、一種只有一張答案截圖要看圖還原 |
+| 進度單位 | 一次一個 quiz 分卷（quiz1~quiz19、quiz20），每卷各自 15～42 題 |
 
 已確認**全套課程共 20 卷、748 題，題號連續無跳號**（AZ104-Q1 ~ Q748，quiz1 是 Q1~Q40，quiz20 是 Q712~Q748）。
 
@@ -145,22 +156,23 @@ node tools/build_practice_html.js
 
 ### 4-5. 驗證（每一卷都要做，別漏）
 
-**跑得動的自動檢查**（仿照 AZ900 spec 的精神，AZ104 目前用臨時的 node -e 一行腳本做，
-還沒抽成獨立檔案——這是待辦，見第 11 節）：
-
 ```bash
 cd AZ104/tools
-node --check bank_az104.current.js                 # 語法
-node -e "const {BANK_AZ104}=require('./bank_az104.current.js'); console.log(BANK_AZ104.length)"
+node --check bank_az104.current.js   # 語法
+node validate.js                     # 資料完整性、中英對應、答案範圍、螢光筆與輕量 markdown 成對
 ```
 
-至少要手動確認：
-- `o`/`items`/`s`/`dd` 的中英陣列長度一致
-- `a[]` 索引沒有超出範圍
-- 可選項目（`o`／`items`／`dd`）不可以有 `⟦⟧` 螢光筆標記（洩題）
-- `q`／`e`／`en.q`／`en.e` 不可留空、`⟦⟧` 要成對
-- **`d` 只能是 1/2/3**（分頁桶，見第 5 節），不是官方 `od` 的 1–5——這是 Quiz1 那次真的犯過的錯
+`validate.js` 會擋：
+- `o`/`items`/`s`/`dd` 的中英陣列長度不一致
+- `a[]` 索引超出範圍
+- 可選項目（`o`／`items`／`dd`）帶了 `⟦⟧` 螢光筆標記（洩題）
+- `q`／`e`／`en.q`／`en.e` 留空、或 `⟦⟧` 沒成對
+- **`d` 不是 1/2/3**（分頁桶，見第 5 節），不是官方 `od` 的 1–5——這是 Quiz1 那次真的犯過的錯
   （6 題誤填 `d:4`，靠事後跑迴圈統計每個 `d` 值的題數、加總跟 `BANK_AZ104.length` 對不起來才抓到）
+- **輕量 markdown（`**`／`` ` ``／` ``` `）沒成對**（見第 9 節與 AZ900-SPEC.md §9-1b）：
+  `mdHtml()` 對落單的標記不做任何處理，落單就會直接字面顯示在畫面上
+
+還要手動做（`validate.js` 顧不到）：
 - 用 jsdom 把整份 `az104-practice.html` 跑一次：載入無錯誤、新題目逐題「看答案」都有 verdict、
   分頁題數加總要等於題庫總數。範例見這次轉錄 Quiz1 時用的手法（讀 `az104-practice.html`、
   `new JSDOM(html, {runScripts:'dangerously', ...})`、跑 `jumpForm` 逐題跳＋`btnReveal`）。
@@ -282,6 +294,9 @@ question is part of a series...`，例如 AZ104-Q1~Q3、Q25~Q27）之間可以�
 
 沿用 AZ900-SPEC.md 第 9-1 節規則：`⟦…⟧` 只標題幹／`s[]`／`tgt[]`／`sent`，絕不標 `o`／`items`／`dd` 這些可選項目。
 
+輕量 markdown：引擎的 `mdHtml()` 另外支援 `**粗體**`、`` `行內程式碼` ``、``` ``` 換行 區塊 ``` ```
+（渲染成 `<pre class="code">`，保留縮排），詳見 AZ900-SPEC.md 第 9-1b 節。標記必須成對，落單會直接字面顯示。
+
 服務圖示（`ico`）欄位：AZ104 的答案截圖若是入口網站畫面（服務清單、刀鋒選單），比照 AZ900 第 9-2 節，
 優先直接從答案截圖裁切（`tools/icons_pdf.py` 的邏輯可以照搬，只是輸入源從 PDF 換成 PNG），
 裁不到才用 `AZ900/Azure_Public_Service_Icons_V24/` 官方圖示包（授權範圍涵蓋 AZ104，同一包可共用）。
@@ -300,21 +315,25 @@ source/
 tools/
   extract_quiz.py              從任一 quizN.html 抽出題幹、選項、正解、解析、inline 圖片 → quizN_questions.json
                                 （single/multiple 格式選項與正解直接抓 HTML；free_answer 格式只給答案截圖清單）
-  bank_az104.current.js        題庫真實來源，const BANK_AZ104 = [...]（改題庫改這個檔案，不要改 batch_*.js）
+  bank_az104.current.js        BANK_MINE（自製題庫槽位）真實來源，const BANK_AZ104 = [...]
+                                （改題庫改這個檔案，不要改 batch_*.js；build script 裡別名成 BANK_MINE）
   batch_quiz1.js                Quiz1 的轉錄批次檔（保留供追溯／參考格式，已合併進 bank_az104.current.js）
   merge_batch.js                把 batch_quizN.js 的陣列內容插進 bank_az104.current.js 的 BANK_AZ104 開頭
                                 （usage: `node merge_batch.js batch_quizN.js BATCH_QUIZN`）
-  build_practice_html.js       組頁腳本：讀 AZ900/az900-practice.html 抽出引擎、讀 bank_az104.current.js
-                                灌入資料，組出 ../az104-practice.html。每次改 bank_az104.current.js
-                                後要重跑：`node tools/build_practice_html.js`
-  （validate.js／check_layout.js／audit.js 等 AZ900 的驗證工具尚未搬過來，見第 11 節；
+  bank_doc.current.js          BANK_DOC（文件題庫槽位）真實來源，const BANK_DOC = [...]。轉錄自
+                                az104-skeleton 分支的 PDF 考古題 Question Set 1（40 題，`sec`/`no` 定位）
+  validate.js                   驗證 bank_az104.current.js 與 bank_doc.current.js 兩份題庫（見第 4-5 節）
+  build_practice_html.js       組頁腳本：讀 AZ900/az900-practice.html 抽出引擎、讀兩份題庫檔灌入資料，
+                                組出 ../az104-practice.html。每次改任一份題庫後要重跑：
+                                `node tools/build_practice_html.js`
+  （check_layout.js／audit.js 等 AZ900 的其餘驗證工具還沒有對應版本，見第 11 節；
   AZ900 的 append.py／splice.py 沒有用到，AZ104 用自己的 merge_batch.js）
 ```
 
-**組頁流程**：改 `tools/bank_az104.current.js` → `node tools/build_practice_html.js` →
-用瀏覽器開 `az104-practice.html` 檢查。`build_practice_html.js` 內建幾個安全網：
-少了任何一個預期字串就會直接丟錯（`mustReplace()`），組完後也會自我檢查輸出裡沒有殘留
-`BANK_MINE` 或 `az900.` 開頭的 key，避免 AZ900 原始檔改版後腳本悄悄組出壞掉的頁面。
+**組頁流程**：改 `tools/bank_az104.current.js` 或 `tools/bank_doc.current.js` →
+`node tools/validate.js` → `node tools/build_practice_html.js` → 用瀏覽器開 `az104-practice.html` 檢查。
+`build_practice_html.js` 內建安全網：少了任何一個預期字串就會直接丟錯（`mustReplace()`），組完後也會
+自我檢查輸出裡沒有殘留 `az900.` 開頭的 key，避免 AZ900 原始檔改版後腳本悄悄組出壞掉的頁面。
 
 ---
 
@@ -364,9 +383,10 @@ node build_practice_html.js
 2. **真的用瀏覽器開一次 `az104-practice.html`**：目前只用 jsdom（Node 模擬 DOM）驗證過語法與渲染，
    沒有真人點過拖放 (`dd`) 題型的實際拖曳互動、模擬考流程、統計面板、深色模式等。照 AZ900 的
    `tools/uitest.py`（Playwright）模式，之後可以幫 AZ104 也寫一份，或至少手動點過一輪。
-3. **驗證工具正式化**：目前驗證是每次臨時打 `node -e` 一行指令做，等題庫成長到有規模了，
-   應該仿照 AZ900 的 `validate.js`／`check_layout.js`／`audit.js` 寫成正式、可重跑的腳本
-   （尤其是「`d` 只能 1/2/3」「`a[]` 索引界限」這幾項，Quiz1 那次就因為沒有自動檢查漏掉過一次）。
+3. ~~驗證工具正式化~~ **已完成**：`tools/validate.js` 仿照 AZ900 的同名腳本寫好了，涵蓋
+   「`d` 只能 1/2/3」「`a[]` 索引界限」「中英陣列長度」「選項不可帶螢光筆標記」「螢光筆與
+   輕量 markdown（`**`／`` ` ``／` ``` `）成對」，`node tools/validate.js` 直接跑（見第 4-5 節）。
+   `check_layout.js`／`audit.js` 這兩支還沒有對應版本，之後題庫夠大、需要查重複題或排版檢查時再補。
 4. **分頁桶不夠用時**：見第 5 節「為什麼 `d` 只有 1/2/3」，題庫變大想拆更細的分頁，要同時改
    `az104-practice.html` 的 `TAB_ZH`/`TAB_EN`／`nav.tabs` 按鈕／錯題本與星號題的分頁代碼。
 5. **`category` → `od` 對照表要補完**：目前只確認過兩個官方領域的英文字串（見第 5 節），
