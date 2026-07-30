@@ -67,11 +67,6 @@ def main():
               pg.evaluate("[secName('S2',false), secName('T3',false), secName('NewQ',false),"
                           " secName('S2',true)]")
               == ["題組 2", "案例 3", "增題", "Question Set 2"])
-        check("跳題吃「段-題號」與純數字兩種寫法",
-              pg.evaluate("[parseJump('2-17'), parseJump('T3-2'), parseJump('N63'),"
-                          " parseJump('17'), parseJump('亂打')]")
-              == [{"sec": "S2", "no": 17}, {"sec": "T3", "no": 2},
-                  {"sec": "NewQ", "no": 63}, {"pos": 17}, None])
         gaps = pg.evaluate("docGaps()")
         check("段內缺號算得出來，而且不會把別段的號碼當缺號",
               gaps["total"] == n_doc and len(gaps["gaps"]) == 0,
@@ -79,9 +74,10 @@ def main():
               % (gaps["total"], len(gaps["secs"]),
                  "／".join(x["sec"] for x in gaps["secs"]), gaps["gaps"] or "無"))
 
-        # 真的在跳題框裡打字並送出。上面驗 parseJump() 是驗函式，驗不到
-        # input 自己的 pattern／maxlength——那個欄位原本有 pattern="[0-9]*"，
-        # 打「1-6」會被瀏覽器擋在「請符合要求的格式」，連 parseJump() 都進不去。
+        # 真的操作跳題那兩格。端對端才驗得到 select 的選項、input 的
+        # pattern／maxlength、以及瀏覽器的表單驗證有沒有把輸入擋在程式之外
+        # ——上一版右格是單一欄位又帶 pattern="[0-9]*"，打「1-6」會被擋在
+        # 「請符合要求的格式」，連跳題邏輯都進不去。
         pg.click("#cfgBtn")
         pg.wait_for_timeout(120)
         pg.click('#srcSeg button[data-src="doc"]')
@@ -90,29 +86,35 @@ def main():
             pg.click("#cfgClose")
             pg.wait_for_timeout(150)
 
-        check("跳題框沒有把非數字擋掉的 pattern",
-              not pg.get_attribute("#jumpNo", "pattern"),
-              pg.get_attribute("#jumpNo", "pattern"))
-        check("跳題框裝得下 NewQ-63 這種長度",
-              int(pg.get_attribute("#jumpNo", "maxlength") or 0) >= 7,
-              pg.get_attribute("#jumpNo", "maxlength"))
+        opts = pg.eval_on_selector_all(
+            "#jumpSec option", "els => els.map(e => [e.value, e.textContent])")
+        check("左格就是這一輪有的區段，沒有多加別的選項",
+              [o[0] for o in opts] == ["S1"] and opts[0][1] == "題組 1", opts)
+        check("這一輪有來源座標，左格看得見", not pg.is_hidden("#jumpSec"))
 
-        for typed, want in (("1-6", ("S1", 6)), ("S1-13", ("S1", 13)), ("3", None)):
+        for sec, num, want in (("S1", "6", ("S1", 6)), ("S1", "13", ("S1", 13))):
             errors.clear()
-            pg.fill("#jumpNo", typed)
+            pg.select_option("#jumpSec", sec)
+            pg.fill("#jumpNo", num)
             pg.press("#jumpNo", "Enter")
             pg.wait_for_timeout(200)
             valid = pg.evaluate("document.getElementById('jumpNo').checkValidity()")
-            cur = pg.evaluate("({sec:S.pool[S.idx].sec, no:S.pool[S.idx].no, idx:S.idx})")
-            if want:
-                ok = valid and (cur["sec"], cur["no"]) == want
-                check("跳題框打「%s」→ %s#%d" % (typed, want[0], want[1]), ok,
-                      "valid=%s 目前在 %s#%s" % (valid, cur["sec"], cur["no"]))
-            else:
-                check("跳題框打「%s」→ 本輪第 %s 題" % (typed, typed),
-                      valid and cur["idx"] == int(typed) - 1,
-                      "valid=%s idx=%s" % (valid, cur["idx"]))
-            check("跳題「%s」不會出錯" % typed, not errors, errors[:2])
+            cur = pg.evaluate("({sec:S.pool[S.idx].sec, no:S.pool[S.idx].no})")
+            check("跳題〔%s〕〔%s〕→ %s#%d" % (sec, num, want[0], want[1]),
+                  valid and (cur["sec"], cur["no"]) == want,
+                  "valid=%s 目前在 %s#%s" % (valid, cur["sec"], cur["no"]))
+            check("跳題〔%s〕〔%s〕不會出錯" % (sec, num), not errors, errors[:2])
+
+        # 跳不存在的題號要講話，而不是靜靜不動或炸掉
+        errors.clear()
+        pg.select_option("#jumpSec", "S1")
+        pg.fill("#jumpNo", "999")
+        pg.press("#jumpNo", "Enter")
+        pg.wait_for_timeout(200)
+        msg = pg.inner_text("#jumpMsg").strip()
+        check("跳到不存在的題號會說明", "沒有" in msg, msg[:44])
+        check("跳到不存在的題號不會出錯", not errors, errors[:2])
+        pg.fill("#jumpNo", "")
 
         # 兩份題庫各自檢查：有題目就要畫得出題目，沒題目就要給說明而不是白畫面。
         for src, label, cnt in (("mine", "A 自製", n_mine), ("doc", "B 文件", n_doc)):

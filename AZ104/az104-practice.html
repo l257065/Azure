@@ -210,6 +210,16 @@ nav.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-3p
 }
 .jump input::-webkit-outer-spin-button,
 .jump input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+/* 區段下拉：外觀跟右邊的題號框對齊，只有寬度讓它跟著內容走 */
+.jump select{
+  font:inherit;font-size:.74rem;line-height:1;
+  color:var(--ink);background:var(--surface);
+  border:1px solid var(--line);border-radius:999px;padding:4px 8px;
+  max-width:9.5em;cursor:pointer;
+}
+.jump select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* 只有一段可選（例如題庫 A 沒有來源座標，只剩「本輪」）就不用佔位置 */
+.jump select[hidden]{display:none}
 .jump button{
   font:inherit;font-size:.72rem;line-height:1;color:var(--ink-dim);cursor:pointer;
   background:none;border:1px solid var(--line);border-radius:999px;padding:5px 11px;
@@ -866,12 +876,13 @@ nav.tabs .dot{
   <div class="qhead">
     <span class="eyebrow" id="eyebrow">載入中</span>
     <form class="jump" id="jumpForm">
-      <!-- 不要放 pattern／inputmode="numeric"：這個欄位除了純數字（本輪第幾題）
-           還要吃 2-17、T3-2、NewQ-63 這種來源位置，數字限制會讓瀏覽器先跳
-           「請符合要求的格式」，根本進不到 parseJump()。格式不對由 parseJump()
-           用看得懂的話回報，比瀏覽器的通用訊息有用。maxlength 要裝得下 NewQ-63。 -->
-      <input id="jumpNo" type="text" maxlength="10"
-             autocomplete="off" placeholder="題號" aria-label="跳到指定題號">
+      <!-- 兩格：左邊挑「哪一段」（Question Set／Testlet／NewQ），右邊填該段裡的
+           Question #。左邊的選項由 paintJump() 依這一輪實際有哪些區段動態產生。
+           題庫 A 沒有來源座標，左格會整格收起來，右格退回「本輪第幾題」。
+           右邊純數字，所以 inputmode／pattern 放得回來（手機會直接給數字鍵盤）。 -->
+      <select id="jumpSec" aria-label="跳到哪一段"></select>
+      <input id="jumpNo" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4"
+             autocomplete="off" placeholder="題號" aria-label="跳到第幾題">
       <button type="submit" id="jumpBtn">跳題</button>
     </form>
     <span class="jmsg" id="jumpMsg" role="status" aria-live="polite"></span>
@@ -1152,20 +1163,9 @@ function secRank(sec){
 }
 const srcRank = q => hasSrc(q) ? secRank(q.sec) * 1000 + q.no : Infinity;
 
-/* 跳題框吃的寫法（大小寫都可以，空白會先去掉）：
-     2-17 / S2-17   → 題組 2 第 17 題
-     T3-2           → 案例 3 第 2 題
-     N63 / NewQ-63  → NewQ 第 63 題
-     17             → 本輪第 17 題（和「作答總覽」的編號一樣）           */
-function parseJump(raw){
-  const s = String(raw).trim().replace(/\s+/g, "").replace(/^[#第]/, "");
-  let m;
-  if((m = /^(?:s)?(\d+)[-\/.](\d+)$/i.exec(s))      ) return {sec:"S" + m[1],  no:Number(m[2])};
-  if((m = /^t(\d+)[-\/.](\d+)$/i.exec(s))           ) return {sec:"T" + m[1],  no:Number(m[2])};
-  if((m = /^(?:n|newq)[-\/.]?(\d+)$/i.exec(s))      ) return {sec:"NewQ",      no:Number(m[1])};
-  if((m = /^(\d+)題?$/.exec(s))                      ) return {pos:Number(m[1])};
-  return null;
-}
+/* 這一輪一段來源座標都沒有（題庫 A）時，右格的數字當「本輪第幾題」解。
+   不會和任何 sec 撞名（sec 只有 S／T／NewQ）。 */
+const JUMP_POS = "__pos__";
 
 /* =====================================================================
    英文版題目：以中文題目為鍵，與中文題庫解耦，缺漏時自動退回中文。
@@ -3076,7 +3076,8 @@ function stopTimer(){
    第幾題，超出範圍再拿題目自己的題號找一次。
    跳到哪裡都會在旁邊寫清楚是照哪一種號碼跳的。
    ===================================================================== */
-const jumpForm = el("jumpForm"), jumpNo = el("jumpNo"), jumpBtn = el("jumpBtn"), jumpMsg = el("jumpMsg");
+const jumpForm = el("jumpForm"), jumpSec = el("jumpSec"), jumpNo = el("jumpNo"),
+      jumpBtn = el("jumpBtn"), jumpMsg = el("jumpMsg");
 let jumpMsgId = null;
 
 function sayJump(txt, bad){
@@ -3105,46 +3106,59 @@ function jumpRange(en){
     .join("、");
 }
 
+/* 這一輪出現過哪些區段，依題組 → 案例 → 增題排好 */
+const jumpSecs = () => [...new Set(S.pool.filter(hasSrc).map(q => q.sec))]
+                         .sort((a,b) => secRank(a) - secRank(b));
+
 function paintJump(){
   const EN = S.lang === "en";
   const off = jumpOff();
   const cur = S.pool[S.idx];
-  const numbered = jumpNumbered();
+  const secs = jumpSecs();
   jumpForm.dataset.off = off ? "1" : "0";
-  jumpNo.disabled = jumpBtn.disabled = off;
-  /* 提示框裡放目前這一題的來源題號，一眼就知道這個欄位吃什麼寫法 */
-  jumpNo.placeholder = hasSrc(cur)
-    ? cur.sec.replace(/^S/, "") + "-" + cur.no
-    : (EN ? "no." : "題號");
+  jumpNo.disabled = jumpBtn.disabled = jumpSec.disabled = off;
+
+  /* 左格的選項就是這一輪實際有的區段，沒有別的。
+     題庫 A 沒有來源座標、一段都沒有，整格收起來，右格退回「本輪第幾題」。 */
+  const sig = secs.join("|") + "|" + (EN ? "en" : "zh");
+  if(jumpSec.dataset.sig !== sig){
+    jumpSec.dataset.sig = sig;
+    jumpSec.innerHTML = secs.map(s =>
+      `<option value="${s}">${esc(secName(s, EN))}</option>`).join("");
+    /* 預設挑目前這一題所屬的段，這樣多數情況下只要改右邊的數字 */
+    if(hasSrc(cur)) jumpSec.value = cur.sec;
+  } else if(!secs.includes(jumpSec.value) && hasSrc(cur)){
+    jumpSec.value = cur.sec;                    /* 原本選的那段已經不在這一輪了 */
+  }
+  jumpSec.hidden = !secs.length;
+
+  const byPos = !secs.length;
+  jumpNo.placeholder = byPos
+    ? `1-${S.pool.length}`
+    : (hasSrc(cur) && cur.sec === jumpSec.value ? String(cur.no)
+                                                : (EN ? "no." : "題號"));
   jumpBtn.textContent = EN ? "Go" : "跳題";
-  /* 一個數字＝本輪第幾題；「段-題號」＝原始文件上的位置。兩種寫法都吃 */
-  jumpForm.title = numbered
-    ? (EN ? `Two ways to jump, then press Enter:\n`
-          + `  17     — no. 17 of this round (same numbering as the overview, 1-${S.pool.length})\n`
-          + `  2-17   — Question Set 2, question #17 as printed in the PDF\n`
-          + `  T3-2   — Testlet 3, question #2\n`
-          + `  N63    — NewQ #63\n`
+  jumpForm.title = byPos
+    ? (EN ? `Type a question number (1-${S.pool.length}, same numbering as the overview) and press Enter. Press / to focus.`
+          : `輸入題號按 Enter 直接跳到那一題（本輪 1-${S.pool.length} 題，和「作答總覽」的編號一樣）。按 / 鍵可以快速跳到這個欄位。`)
+    : (EN ? `Pick the section, type the Question # printed in the PDF, press Enter.\n`
           + `This tab holds ${S.pool.length} questions: ${jumpRange(true)}. Press / to focus.`
-          : `兩種寫法，打完按 Enter：\n`
-          + `  17     — 本輪第 17 題（和「作答總覽」的編號一樣，本輪 1-${S.pool.length} 題）\n`
-          + `  2-17   — 原始文件的題組 2 第 17 題\n`
-          + `  T3-2   — 案例 3 第 2 題\n`
-          + `  N63    — 增題 NewQ 第 63 題\n`
-          + `這個分頁收了 ${S.pool.length} 題：${jumpRange(false)}。按 / 鍵可以快速跳到這個欄位。`)
-    : (EN ? `Type a question number (1-${S.pool.length}, same numbering as the overview) and press Enter. Press / to focus.`
-          : `輸入題號按 Enter 直接跳到那一題（本輪 1-${S.pool.length} 題，和「作答總覽」的編號一樣）。按 / 鍵可以快速跳到這個欄位。`);
+          : `左邊挑區段，右邊填原始文件上印的 Question #，按 Enter。\n`
+          + `這個分頁收了 ${S.pool.length} 題：${jumpRange(false)}。按 / 鍵可以快速跳到這個欄位。`);
   if(off) sayJump("");
 }
 
+/* 兩格分開讀：左格是區段（或 JUMP_POS＝本輪第幾題），右格是數字 */
 function jumpTo(raw){
   const EN = S.lang === "en";
   if(jumpOff()) return false;
-  const want = parseJump(raw);
-  if(!want){
-    sayJump(EN ? "Type 17 for no. 17 of this round, or 2-17 / T3-2 / N63 for the number printed in the PDF."
-               : "打 17 跳本輪第 17 題；打 2-17、T3-2、N63 跳原始文件上的題號。", true);
+  const num = parseInt(String(raw).replace(/[^0-9]/g, ""), 10);
+  if(!Number.isFinite(num)){
+    sayJump(EN ? "Type a number." : "請先填第幾題。", true);
     return false;
   }
+  const sec = jumpSec.hidden ? JUMP_POS : jumpSec.value;
+  const want = sec === JUMP_POS ? {pos:num} : {sec, no:num};
 
   const n = want.pos;
   let i = -1, byNo = false;
@@ -3157,7 +3171,7 @@ function jumpTo(raw){
   if(i < 0){
     sayJump(want.sec
       ? (EN ? `${secName(want.sec, true)} #${want.no} is not in this tab (${S.pool.length} questions: ${jumpRange(true)}).`
-            : `這個分頁裡沒有${secName(want.sec, false)}第 ${want.no} 題（這裡收了 ${S.pool.length} 題：${jumpRange(false)}）。`)
+            : `這個分頁裡沒有「${secName(want.sec, false)} 第 ${want.no} 題」（這裡收了 ${S.pool.length} 題：${jumpRange(false)}）。`)
       : (EN ? `No question ${n} in this round (1-${S.pool.length}).`
             : `這一輪沒有第 ${n} 題（可跳 1-${S.pool.length} 題）。`), true);
     return false;
@@ -3185,9 +3199,18 @@ jumpForm.addEventListener("submit", e=>{
   e.preventDefault();
   if(jumpTo(jumpNo.value)){ jumpNo.value = ""; jumpNo.blur(); }
 });
+/* 換段：右邊的提示數字要跟著換，順手把游標移過去等你打數字 */
+jumpSec.addEventListener("change", ()=>{
+  paintJump();
+  sayJump("");
+  jumpNo.focus();
+});
 /* 在輸入框裡按 Esc＝放棄跳題，把鍵盤還給作答（A-F、←／→） */
 jumpNo.addEventListener("keydown", e=>{
   if(e.key === "Escape"){ jumpNo.value = ""; jumpNo.blur(); e.stopPropagation(); }
+});
+jumpSec.addEventListener("keydown", e=>{
+  if(e.key === "Escape"){ jumpSec.blur(); e.stopPropagation(); }
 });
 
 /* =====================================================================
