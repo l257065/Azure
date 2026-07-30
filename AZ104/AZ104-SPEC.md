@@ -15,7 +15,12 @@
 | 代號 | UI 標籤 | 來源 | 題數 |
 |---|---|---|---|
 | `BANK_MINE`（`bank_az104.current.js`） | 自製題庫 | Build School 課程「AZ104 Azure 系統管理員認證練習題庫」的多個測驗頁（LearnDash `wpProQuiz`），逐頁另存 HTML 轉錄 | 372（進行中，見第 2 節） |
-| `BANK_DOC`（`bank_doc.current.js`） | 文件題庫 | PDF 考古題逐題轉錄，Question Set 1（`sec:"S1"`），欄位含 `sec`/`no` 標示原始文件位置 | 40（已完成） |
+| `BANK_DOC`（`bank_doc.current.js`） | 文件題庫 | PDF 考古題逐題轉錄，Question Set 1（`sec:"S1"`），欄位含 `sec`/`no` 標示原始文件位置 | 40（Question Set 1 已完成，全套約 505 題，見下） |
+
+`BANK_DOC` 要繼續匯入 Question Set 2 及之後的內容時，先看
+[`AZ104-DOC-BANK-SPEC.md`](AZ104-DOC-BANK-SPEC.md)——來源 PDF 結構、題數對不上的原因、
+14 組矛盾重複題、官方五大領域判定表、系列題與拖放題慣例都記在那份文件，是從已經沒有
+後續開發的 `az104-skeleton` 分支搬回來、依 main 現在的架構調整過的。
 
 （UI 標籤沿用 AZ900 的「自製／文件」命名，但跟 AZ900 的語意不完全對應——AZ104 的「自製題庫」也是
 逐頁轉錄自 Build School 網站，不是真的自行編寫；純粹是兩個題庫槽位的代稱，不影響任何功能。）
