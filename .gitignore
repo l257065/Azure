@@ -33,3 +33,21 @@
 !/AZ900/tools/check_review.js
 !/AZ900/tools/check_star_flag.py
 !/AZ900/tools/test_shuffle.js
+
+# Allow AZ104 directory to be traversed
+!/AZ104/
+/AZ104/*
+
+# Core files
+!/AZ104/AZ104-SPEC.md
+!/AZ104/az104-practice.html
+
+# Allow tools directory to be traversed
+!/AZ104/tools/
+/AZ104/tools/*
+
+# Reusable transcription/build tools (not the per-quiz batch files or bank data itself,
+# same convention as AZ900's bank_doc.current.js/batch_*.js staying untracked)
+!/AZ104/tools/extract_quiz.py
+!/AZ104/tools/build_practice_html.js
+!/AZ104/tools/merge_batch.js
