@@ -8,22 +8,28 @@
     AZ104_PDF="..." python tools/scan_pdf.py --stats
 
 欄位：
-    n        題庫裡用的題號，**已編碼進題組**（見下）
-    sec      來源區段，例如 "Question Set 2" / "Testlet 3"
-    q        該區段內的 Question #N
+    n        題庫裡用的題號，**已編碼進區段**（見下）
+    sec      來源區段，例如 "Question Set 2" / "Testlet 3" / "NewQ"
+    q        該區段內的題號
     pages    這一題橫跨的頁碼（1-based，含）
     k        疑似題型：mc / hs / dd / dl（看關鍵字猜的，轉錄時要自己確認）
     img      這幾頁裡的圖片數。>0 就要 render.py 出圖用眼睛看
     ans      文件標的 Correct Answer（可能是錯的，見 AZ104考題/*Correct.txt 的更正）
 
-題號編碼：這份 PDF 分成 Question Set 1–6 與 Testlet 1–10，**每一段的 Question #
-都從 1 重新算**，所以直接拿 #N 當題號會撞號。編碼規則：
+**題號會撞號，所以要編碼。** 三份來源檔各有各的編號方式：
 
-    Question Set S 的第 q 題  →  n = S*1000 + q      1001…6047
-    Testlet T 的第 q 題       →  n = 10000 + T*100 + q  10101…11004
+    NEW-AZ-104-470Q.pdf   分成 Question Set 1–6 與 Testlet 1–10，
+                          每一段的 `Question #` 都從 1 重新算
+    增題 62Q ＋ NewQ63-Q76  用的是 `NewQ #N`，兩份接在一起是 NewQ #1–#76
+
+編碼規則：
+
+    Question Set S 的第 q 題  →  n = S*1000 + q         1001…6047
+    Testlet T 的第 q 題       →  n = 10000 + T*100 + q    10101…11004
+    NewQ #q                   →  n = 20000 + q            20001…20076
 
 這樣 n 仍然是數字（跳題功能要數字），而且看得懂：`2017` = Question Set 2 第 17 題，
-`10302` = Testlet 3 第 2 題。
+`10302` = Testlet 3 第 2 題，`20063` = NewQ #63。
 """
 import json
 import os
@@ -33,14 +39,18 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import fitz  # noqa: E402
 
-Q_RE = re.compile(r"Question\s*#\s*(\d+)")
+Q_RE = re.compile(r"(Question|NewQ)\s*#\s*(\d+)")
 SEC_RE = re.compile(r"(Question Set|Testlet)\s*(\d+)")
 ANS_RE = re.compile(r"Correct\s*Answer\s*:?\s*(.*)")
 
 
 def encode(kind, sec_no, q):
     """把「區段 + 區段內題號」壓成一個看得懂的數字題號（見檔頭說明）。"""
-    return sec_no * 1000 + q if kind == "Question Set" else 10000 + sec_no * 100 + q
+    if kind == "NewQ":
+        return 20000 + q
+    if kind == "Question Set":
+        return sec_no * 1000 + q
+    return 10000 + sec_no * 100 + q
 
 
 def find_pdf():
@@ -116,12 +126,15 @@ def scan(path):
         if what == "sec":
             kind, sec_no = m.group(1), int(m.group(2))
             continue
-        q = int(m.group(1))
-        n = encode(kind, sec_no, q)
+        # 兩種題號標題：470Q 那份是 "Question #N"（歸在目前的 Question Set／Testlet），
+        # 兩份增題用的是 "NewQ #N"，自成一段、不吃 Question Set 狀態。
+        head, q = m.group(1), int(m.group(2))
+        this_kind, this_sec = ("NewQ", 0) if head == "NewQ" else (kind, sec_no)
+        n = encode(this_kind, this_sec, q)
         if starts and starts[-1]["n"] == n:
             continue                      # 同一題的標題重複出現（跨頁頁眉）
-        starts.append({"n": n, "sec": "%s %d" % (kind, sec_no),
-                       "q": q, "pos": pos})
+        label = "NewQ" if this_kind == "NewQ" else "%s %d" % (this_kind, this_sec)
+        starts.append({"n": n, "sec": label, "q": q, "pos": pos})
 
     out = []
     for idx, s in enumerate(starts):

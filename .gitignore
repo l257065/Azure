@@ -68,9 +68,10 @@
 !/AZ104/tools/extract_html.py
 !/AZ104/tools/render.py
 
-# Source-PDF survey: question index and per-question text dump
+# Source-PDF survey: question index, per-question text dump, duplicate finder
 !/AZ104/tools/scan_pdf.py
 !/AZ104/tools/qtext.py
+!/AZ104/tools/dupes.py
 
 # Skeleton build scripts (how az104-engine.html is derived from AZ900)
 !/AZ104/tools/build_skeleton.py
