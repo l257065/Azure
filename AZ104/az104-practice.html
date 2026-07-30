@@ -866,7 +866,11 @@ nav.tabs .dot{
   <div class="qhead">
     <span class="eyebrow" id="eyebrow">載入中</span>
     <form class="jump" id="jumpForm">
-      <input id="jumpNo" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+      <!-- 不要放 pattern／inputmode="numeric"：這個欄位除了純數字（本輪第幾題）
+           還要吃 2-17、T3-2、NewQ-63 這種來源位置，數字限制會讓瀏覽器先跳
+           「請符合要求的格式」，根本進不到 parseJump()。格式不對由 parseJump()
+           用看得懂的話回報，比瀏覽器的通用訊息有用。maxlength 要裝得下 NewQ-63。 -->
+      <input id="jumpNo" type="text" maxlength="10"
              autocomplete="off" placeholder="題號" aria-label="跳到指定題號">
       <button type="submit" id="jumpBtn">跳題</button>
     </form>

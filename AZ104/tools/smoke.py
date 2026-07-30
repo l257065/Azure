@@ -79,8 +79,42 @@ def main():
               % (gaps["total"], len(gaps["secs"]),
                  "／".join(x["sec"] for x in gaps["secs"]), gaps["gaps"] or "無"))
 
-        # 開頁預設是題庫 A。兩份題庫各自檢查：有題目就要畫得出題目，
-        # 沒題目就要給說明而不是白畫面。
+        # 真的在跳題框裡打字並送出。上面驗 parseJump() 是驗函式，驗不到
+        # input 自己的 pattern／maxlength——那個欄位原本有 pattern="[0-9]*"，
+        # 打「1-6」會被瀏覽器擋在「請符合要求的格式」，連 parseJump() 都進不去。
+        pg.click("#cfgBtn")
+        pg.wait_for_timeout(120)
+        pg.click('#srcSeg button[data-src="doc"]')
+        pg.wait_for_timeout(200)
+        if pg.is_visible("#cfgClose"):
+            pg.click("#cfgClose")
+            pg.wait_for_timeout(150)
+
+        check("跳題框沒有把非數字擋掉的 pattern",
+              not pg.get_attribute("#jumpNo", "pattern"),
+              pg.get_attribute("#jumpNo", "pattern"))
+        check("跳題框裝得下 NewQ-63 這種長度",
+              int(pg.get_attribute("#jumpNo", "maxlength") or 0) >= 7,
+              pg.get_attribute("#jumpNo", "maxlength"))
+
+        for typed, want in (("1-6", ("S1", 6)), ("S1-13", ("S1", 13)), ("3", None)):
+            errors.clear()
+            pg.fill("#jumpNo", typed)
+            pg.press("#jumpNo", "Enter")
+            pg.wait_for_timeout(200)
+            valid = pg.evaluate("document.getElementById('jumpNo').checkValidity()")
+            cur = pg.evaluate("({sec:S.pool[S.idx].sec, no:S.pool[S.idx].no, idx:S.idx})")
+            if want:
+                ok = valid and (cur["sec"], cur["no"]) == want
+                check("跳題框打「%s」→ %s#%d" % (typed, want[0], want[1]), ok,
+                      "valid=%s 目前在 %s#%s" % (valid, cur["sec"], cur["no"]))
+            else:
+                check("跳題框打「%s」→ 本輪第 %s 題" % (typed, typed),
+                      valid and cur["idx"] == int(typed) - 1,
+                      "valid=%s idx=%s" % (valid, cur["idx"]))
+            check("跳題「%s」不會出錯" % typed, not errors, errors[:2])
+
+        # 兩份題庫各自檢查：有題目就要畫得出題目，沒題目就要給說明而不是白畫面。
         for src, label, cnt in (("mine", "A 自製", n_mine), ("doc", "B 文件", n_doc)):
             errors.clear()
             pg.click("#cfgBtn")                 # 切題庫的按鈕在設定面板裡
