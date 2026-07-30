@@ -1,0 +1,9 @@
+# az104-practice.html 是 tools/build.py 的產出物，不是來源。
+# 關掉自動合併：兩邊都改過的話 git 會直接標成衝突，而不是憑行號亂拼一份
+# 看起來能跑、其實引擎與題庫對不起來的檔案。
+#
+# 併版遇到這個檔衝突時：
+#   git checkout --ours AZ104/az104-practice.html   # 隨便挑一邊，內容不重要
+#   python AZ104/tools/build.py                     # 由樣板與兩份題庫重新產生
+#   git add AZ104/az104-practice.html
+az104-practice.html -merge -diff

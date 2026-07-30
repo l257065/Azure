@@ -41,14 +41,34 @@
 
 # Core files
 !/AZ104/AZ104-EXAM-TDD.md
-!/AZ104/az104-practice.html
 !/AZ104/AZ104-SPEC.md
+!/AZ104/.gitattributes
+
+# az104-engine.html is the SOURCE (engine template, banks empty).
+# az104-practice.html is the BUILD OUTPUT of tools/build.py -- tracked so the
+# page can be opened straight from the repo, but never edited by hand.
+!/AZ104/az104-engine.html
+!/AZ104/az104-practice.html
+
+# Question banks: one file per owner so A and B never collide on merge.
+!/AZ104/banks/
+/AZ104/banks/*
+!/AZ104/banks/bank_a_mine.js
+!/AZ104/banks/bank_b_doc.js
 
 # Allow tools directory to be traversed
 !/AZ104/tools/
 /AZ104/tools/*
 
-# Skeleton build scripts (how az104-practice.html is derived from AZ900)
+# Build (mandatory: this is how az104-practice.html is produced and how a
+# merge conflict on it is resolved) and the transcription workflow scripts
+# the documented verification pipeline depends on.
+!/AZ104/tools/build.py
+!/AZ104/tools/append.py
+!/AZ104/tools/extract_html.py
+!/AZ104/tools/render.py
+
+# Skeleton build scripts (how az104-engine.html is derived from AZ900)
 !/AZ104/tools/build_skeleton.py
 !/AZ104/tools/port_tools.py
 
