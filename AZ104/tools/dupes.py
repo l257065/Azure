@@ -26,6 +26,7 @@ Question Set 出現好幾次，兩份增題又跟 470Q 撞題。所以「AZ-104 
 
     python tools/dupes.py            # 摘要
     python tools/dupes.py --list     # 連每一組都列出來
+    python tools/dupes.py --series   # 只列系列題，附每題的 Solution 與標的答案
 """
 import os
 import re
@@ -82,6 +83,62 @@ def short(r):
 def jac(a, b):
     A, B = set(a.split()), set(b.split())
     return len(A & B) / len(A | B) if A | B else 0.0
+
+
+def topic(scen, n=58):
+    """從共用情境裡抓一句當標題用"""
+    s = re.sub(r"\s+", " ", scen).strip()
+    return (s[:n] + "…") if len(s) > n else s
+
+
+def print_series(系列題):
+    """系列題工作清單：同一段共用情境、每題不同 Solution，全部都要收。"""
+    total = sum(len(g) for g, _ in 系列題)
+    print("\n" + "=" * 78)
+    print("系列題清單：%d 組、共 %d 題（都是不同的題目，不可以只收一題）"
+          % (len(系列題), total))
+    print("=" * 78)
+
+    order = sorted(系列題, key=lambda gb: min(r["n"] for r in gb[0]))
+    for i, (grp, buckets) in enumerate(order, 1):
+        grp = sorted(grp, key=lambda r: r["n"])
+        print("\n[%2d] %d 題 / %d 種解法    n = %s"
+              % (i, len(grp), len(buckets),
+                 ", ".join(str(r["n"]) for r in grp)))
+        print("     文件位置：%s" % "、".join(short(r) for r in grp))
+        print("     共用情境：%s" % topic(grp[0]["scen"], 66))
+        for r in grp:
+            sol = re.sub(r"\s+", " ", r["sol"]).strip()
+            print("       n=%-6d %-9s ans=%-4s %s"
+                  % (r["n"], short(r).split(" ", 1)[1] if " " in short(r) else "",
+                     (r["ans"] or "—")[:4],
+                     ("解法：" + sol[:52] + ("…" if len(sol) > 52 else "")) if sol
+                     else "（這一題沒有 Solution: 行）"))
+
+    dup_in = [gb for gb in order if len(gb[1]) < len(gb[0])]
+    if dup_in:
+        print("\n注意 1：有 %d 組的解法數少於題數，代表組內還有解法重複的題"
+              "（那幾題才是真重複，已另計在真重複裡）：" % len(dup_in))
+        for grp, buckets in dup_in:
+            print("        %d 題 / %d 種解法：n = %s"
+                  % (len(grp), len(buckets),
+                     ", ".join(str(r["n"]) for r in sorted(grp, key=lambda r: r["n"]))))
+
+    # 這類系列題的答案只有 Yes/No。原廠樣板明說「有些系列可能沒有正確解法」，
+    # 所以整組都是 No 是合法的；但那也是標記出錯最容易藏身的地方，值得回頭看。
+    def yes_n(grp):
+        return sum(1 for r in grp if (r["ans"] or "").strip().upper().startswith("A"))
+    no_yes = [gb for gb in order
+              if all(re.fullmatch(r"[AB]", (r["ans"] or "").strip()) for r in gb[0])
+              and yes_n(gb[0]) == 0]
+    if no_yes:
+        print("\n注意 2：有 %d 組**整組都標 No**（沒有任何一個解法被標成可行）。"
+              % len(no_yes))
+        print("        樣板允許這種情況，但也最容易藏標記錯誤，收錄時值得回頭確認：")
+        for grp, _ in no_yes:
+            print("        n = %s（%s）"
+                  % (", ".join(str(r["n"]) for r in sorted(grp, key=lambda r: r["n"])),
+                     topic(grp[0]["scen"], 44)))
 
 
 def main():
@@ -155,8 +212,12 @@ def main():
     conflict = [b for b in 真重複 if len({(r["ans"] or "").strip()[:20] for r in b if r["ans"]}) > 1]
     print("真重複裡有 %d 組**標的答案互相矛盾**，轉錄到那幾題要人工裁決" % len(conflict))
 
+    if "--series" in sys.argv:
+        print_series(系列題)
+        return
+
     if "--list" not in sys.argv:
-        print("\n（加 --list 看每一組）")
+        print("\n（加 --list 看每一組，--series 只看系列題）")
         return
 
     print("\n=== 真重複 · 標的答案矛盾 ===")
