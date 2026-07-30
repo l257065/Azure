@@ -2719,9 +2719,18 @@ function importSave(text){
    整輪做完、或按「重新開始」把進度歸零時都會呼叫，所以每一輪各自獨立，
    統計面板才比得出來這次跟上次有沒有進步。
    ===================================================================== */
+/* 領域計數器：{領域: [答對, 作答]}。依 D_MAX 產生——寫死三格是 AZ-900 的殘留，
+   AZ-104 有五個領域，寫死會讓領域 4／5 的成績被靜靜丟掉（logRound），
+   或在成績單上直接讀到 undefined 而爆掉（finishRound）。 */
+const blankByD = () => {
+  const o = {};
+  for(let d = 1; d <= D_MAX; d++) o[d] = [0, 0];
+  return o;
+};
+
 function logRound(rows){
   if(S.logged) return;
-  const byD = {1:[0,0], 2:[0,0], 3:[0,0]};
+  const byD = blankByD();
   let right = 0, total = 0;
 
   if(rows){                                   /* 模擬考：逐題結果已經算好了 */
@@ -2787,13 +2796,15 @@ function finishRound(){
                       : (EN?`below the ${PASS}% pass mark`:`未達 ${PASS}% 及格線`)) : "") + "</div></div>";
 
   if(S.exam){
-    const byD = {1:[0,0],2:[0,0],3:[0,0]};
-    rows.forEach(r=>{ byD[r.q.d][1]++; if(r.ok) byD[r.q.d][0]++; });
+    /* 依 D_MAX 產生，不要寫死三格：AZ-104 有五個領域，寫死的話只要抽到
+       領域 4／5 的題目，byD[4] 就是 undefined，成績單會直接爆掉。 */
+    const byD = blankByD();
+    rows.forEach(r=>{ const d = byD[r.q.d]; if(d){ d[1]++; if(r.ok) d[0]++; } });
     html += '<div class="dbreak">';
-    [1,2,3].forEach(d=>{
-      const [a,b] = byD[d];
+    for(let d = 1; d <= D_MAX; d++){
+      const [a, b] = byD[d];
       html += `<div class="row"><span>${esc(dname(d))}</span><span class="n">${a} / ${b}</span></div>`;
-    });
+    }
     html += "</div>";
 
     html += '<div class="rev">';

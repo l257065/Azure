@@ -55,28 +55,28 @@ for (const orig of BANK) {
       /* fix:true＝答案區是入口網站的截圖，順序本身就是題目的一部分，一格都不能動 */
       if (orig.fix) {
         if (JSON.stringify(q.o) !== JSON.stringify(orig.o))
-          bad.push(`#${orig.n} mc fix:true 但選項被洗了`);
+          bad.push(`${qid(orig)} mc fix:true 但選項被洗了`);
         if (JSON.stringify(q.a) !== JSON.stringify(orig.a))
-          bad.push(`#${orig.n} mc fix:true 但答案索引被改了`);
+          bad.push(`${qid(orig)} mc fix:true 但答案索引被改了`);
         if (q.ico && JSON.stringify(q.ico) !== JSON.stringify(orig.ico))
-          bad.push(`#${orig.n} mc fix:true 但圖示被洗了`);
+          bad.push(`${qid(orig)} mc fix:true 但圖示被洗了`);
       }
       // 正解的文字內容必須還是原本那些
       const want = orig.a.map(i => orig.o[i]).sort();
       const got = q.a.map(i => q.o[i]).sort();
       if (JSON.stringify(want) !== JSON.stringify(got))
-        bad.push(`#${orig.n} mc 洗完正解對不上：${got} ≠ ${want}`);
+        bad.push(`${qid(orig)} mc 洗完正解對不上：${got} ≠ ${want}`);
       // 中英必須成對
       if (q.en && q.en.o) q.o.forEach((t, i) => {
         const oi = orig.o.indexOf(t);
         if (oi >= 0 && orig.en.o[oi] !== q.en.o[i])
-          bad.push(`#${orig.n} mc 中英錯位：「${t}」配到「${q.en.o[i]}」`);
+          bad.push(`${qid(orig)} mc 中英錯位：「${t}」配到「${q.en.o[i]}」`);
       });
       // 圖示必須跟著選項走
       if (q.ico) q.o.forEach((t, i) => {
         const oi = orig.o.indexOf(t);
         if (oi >= 0 && orig.ico[oi] !== q.ico[i])
-          bad.push(`#${orig.n} mc 圖示錯位：「${t}」配到別的圖`);
+          bad.push(`${qid(orig)} mc 圖示錯位：「${t}」配到別的圖`);
       });
     }
 
@@ -84,9 +84,9 @@ for (const orig of BANK) {
       q.s.forEach((t, i) => {
         const oi = orig.s.indexOf(t);
         if (oi >= 0 && orig.a[oi] !== q.a[i])
-          bad.push(`#${orig.n} hs 逐句答案錯位：「${t.slice(0,20)}」`);
+          bad.push(`${qid(orig)} hs 逐句答案錯位：「${t.slice(0,20)}」`);
         if (q.en && q.en.s && oi >= 0 && orig.en.s[oi] !== q.en.s[i])
-          bad.push(`#${orig.n} hs 中英錯位`);
+          bad.push(`${qid(orig)} hs 中英錯位`);
       });
     }
 
@@ -94,20 +94,20 @@ for (const orig of BANK) {
       q.tgt.forEach((t, i) => {
         const oi = orig.tgt.indexOf(t);
         if (oi >= 0 && orig.items[orig.a[oi]] !== q.items[q.a[i]])
-          bad.push(`#${orig.n} dd 配對錯位：「${t.slice(0,20)}」`);
+          bad.push(`${qid(orig)} dd 配對錯位：「${t.slice(0,20)}」`);
       });
       if (orig.fix && JSON.stringify(q.tgt) !== JSON.stringify(orig.tgt))
-        bad.push(`#${orig.n} dd fix:true 但答案區被洗了`);
+        bad.push(`${qid(orig)} dd fix:true 但答案區被洗了`);
     }
 
     if (k === "dl") {
       q.dd.forEach((list, g) => {
         if (list[q.a[g]] !== orig.dd[g][orig.a[g]])
-          bad.push(`#${orig.n} dl 第 ${g + 1} 格答案錯位`);
+          bad.push(`${qid(orig)} dl 第 ${g + 1} 格答案錯位`);
         if (q.en && q.en.dd && q.en.dd[g]) list.forEach((t, i) => {
           const oi = orig.dd[g].indexOf(t);
           if (oi >= 0 && orig.en.dd[g][oi] !== q.en.dd[g][i])
-            bad.push(`#${orig.n} dl 第 ${g + 1} 格中英錯位`);
+            bad.push(`${qid(orig)} dl 第 ${g + 1} 格中英錯位`);
         });
       });
     }
@@ -117,7 +117,7 @@ for (const orig of BANK) {
     permute(again, q._p);
     for (const f of ["o", "s", "items", "tgt", "dd", "a", "ico"]) {
       if (q[f] && JSON.stringify(q[f]) !== JSON.stringify(again[f]))
-        bad.push(`#${orig.n} 帶入 _p 沒有重播出相同的 ${f}（進度續作會錯位）`);
+        bad.push(`${qid(orig)} 帶入 _p 沒有重播出相同的 ${f}（進度續作會錯位）`);
     }
   }
 }

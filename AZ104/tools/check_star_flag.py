@@ -237,6 +237,9 @@ with sync_playwright() as p:
     print("\n=== 5. 確定交卷才給分 ===")
     pg.click("#btnNext")
     pg.click(".ovbtns [data-act='submit']")
+    # 成績單要畫出逐題檢討，題庫越大畫越久。點完就立刻斷言會競速——
+    # 題庫 13 題時剛好過得去，40 題就開始不穩。等它真的出現再驗。
+    pg.wait_for_function("report.classList.contains('show')", timeout=10000)
     ck("確定交卷後出現成績單", pg.evaluate("report.classList.contains('show')"))
     ck("成績單標題是模擬考", "模擬考" in pg.inner_text("#eyebrow"))
     ck("逐題檢討有 %d 題" % want, pg.locator(".rev .item").count() == want, pg.locator(".rev .item").count())
@@ -250,7 +253,7 @@ with sync_playwright() as p:
 
     print("\n=== 6. 時間到自動交卷 ===")
     pg.click("#btnCheck")                       # 再來一輪（仍在模擬考模式）
-    pg.wait_for_function("S.exam === true && S.pool.length === %d" % want)
+    pg.wait_for_function("S.exam === true && S.pool.length === %d" % want, timeout=10000)
     pg.evaluate("S.left = 1")
     pg.wait_for_function("report.classList.contains('show')", timeout=5000)
     ck("時間到自動結算", pg.evaluate("report.classList.contains('show')"))
@@ -528,7 +531,13 @@ with sync_playwright() as p:
     ck("那一筆是練習、算 2 題（看答案的不算）",
        pg.evaluate("hist[0].k === 'practice' && hist[0].t === 2 && hist[0].r === 1"),
        pg.evaluate("JSON.stringify(hist[0])"))
-    ck("那一筆有三領域細項", pg.evaluate("!!hist[0].d && hist[0].d['1'][1] === 2"))
+    # 領域細項要有 D_MAX 格（AZ-900 是 3、AZ-104 是 5）。寫死格數的話，
+    # 領域 4／5 的成績會被靜靜丟掉，而且成績單會直接爆掉。
+    ck("那一筆的領域細項有 D_MAX 格",
+       pg.evaluate("!!hist[0].d && Object.keys(hist[0].d).length === D_MAX"),
+       pg.evaluate("hist[0].d && Object.keys(hist[0].d)"))
+    ck("領域細項有記到作答數", pg.evaluate("hist[0].d['1'][1] === 2"),
+       pg.evaluate("hist[0].d && hist[0].d['1']"))
     ck("歷次成績有寫進 localStorage", pg.evaluate("!!localStorage.getItem(HIST_KEYS[S.src])"))
 
     # 第二輪：兩題全部答對 → 應該看得出進步

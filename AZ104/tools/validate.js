@@ -17,6 +17,9 @@ const qid = q => (q.sec && Number.isFinite(q.no)) ? q.sec + "#" + q.no
 DOC.forEach(q => {
   const k = kindOf(q);
   if (!q.sec || !Number.isFinite(q.no)) fail('缺來源座標 sec/no：' + qid(q));
+  /* 領域超出 1..D_MAX 的話，成績單與歷次統計會抓不到那一格（曾經因此爆掉） */
+  if (!Number.isInteger(q.d) || q.d < 1 || q.d > 5)
+    fail('領域 d 要是 1-5：' + qid(q) + ' d=' + q.d);
   if (!q.q || !q.a || !q.en) fail('缺欄位 ' + qid(q));
   if (!q.e || !q.e.trim()) fail('缺中文解析 ' + qid(q));
   if (!q.en.e || !q.en.e.trim()) fail('缺英文解析 ' + qid(q));

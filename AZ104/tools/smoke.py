@@ -116,6 +116,60 @@ def main():
         check("跳到不存在的題號不會出錯", not errors, errors[:2])
         pg.fill("#jumpNo", "")
 
+        # 題庫裡每一種題型都畫一次，確認格數對得上資料。
+        # uitest.py 是深入的互動測試（真的拖、真的點），但它要 hs/dd/dl 與複選題
+        # 全都到齊才跑得動；收錄過程中會有一段時間只有部分題型，這裡先做結構檢查，
+        # 新題型第一次進題庫就有人守著。
+        kinds = pg.evaluate("[...new Set(BANK_DOC.map(q => q.k || 'mc'))].sort()")
+        print("  題庫 B 目前的題型：%s" % "、".join(kinds))
+        SHAPE = {
+            "mc": (".opts .opt", "o", "選項"),
+            "hs": (".hs .hrow", "s", "敘述列"),
+            "dd": (".dd .slot", "tgt", "答案格"),
+            "dl": (".dl select", "dd", "下拉格"),
+        }
+        for k in kinds:
+            sel, field, what = SHAPE[k]
+            info = pg.evaluate("""(k) => {
+              const q = BANK_DOC.find(x => (x.k || 'mc') === k);
+              S.exam = false; S.tab = 0;
+              S.pool = [q]; S.idx = 0; S.right = 0; S.total = 0;
+              S.answers = []; S.gr = []; S.graded = false;
+              report.classList.remove('show');
+              renderQ();
+              return {sec:q.sec, no:q.no, want:(q[%r] || []).length, a:q.a.length};
+            }""" % field, k)
+            got = pg.locator(sel).count()
+            check("%s 題（%s#%d）畫出 %d 個%s"
+                  % (k, info["sec"], info["no"], info["want"], what),
+                  got == info["want"], "實際 %d 個" % got)
+            if k != "mc":       # 多格題型：答案格數要等於答案數
+                check("%s 題的答案數對得上格數" % k, info["a"] == info["want"],
+                      "a=%d 格=%d" % (info["a"], info["want"]))
+        # 模擬考成績單：領域細項必須有 D_MAX 格。
+        # 這一段原本寫死三格（AZ-900 的殘留），只要抽到領域 4／5 的題目，
+        # byD[4] 就是 undefined，整張成績單會爆掉——題庫只有領域 1-3 時看不出來。
+        if n_doc:
+            errors.clear()
+            pg.click("#examBtn")
+            pg.wait_for_function("S.exam === true && S.pool.length > 0")
+            pg.evaluate("() => finishRound()")
+            pg.wait_for_function("report.classList.contains('show')", timeout=10000)
+            d_max = pg.evaluate("() => D_MAX")
+            rows = pg.eval_on_selector_all(".dbreak .row .n", "els => els.map(e => e.textContent)")
+            check("模擬考成績單的領域細項有 D_MAX（%d）格" % d_max,
+                  len(rows) == d_max, "實際 %d 格：%s" % (len(rows), rows))
+            check("成績單逐題檢討的筆數等於抽題數",
+                  pg.locator(".rev .item").count() == pg.evaluate("S.pool.length"),
+                  "%d vs %d" % (pg.locator(".rev .item").count(),
+                                pg.evaluate("S.pool.length")))
+            check("結算成績單不會出錯", not errors, errors[:2])
+            pg.click("#examBtn")
+            pg.wait_for_function("S.exam === false")
+
+        pg.evaluate("S.tab = 0; startRound(true)")
+        pg.wait_for_timeout(150)
+
         # 兩份題庫各自檢查：有題目就要畫得出題目，沒題目就要給說明而不是白畫面。
         for src, label, cnt in (("mine", "A 自製", n_mine), ("doc", "B 文件", n_doc)):
             errors.clear()
