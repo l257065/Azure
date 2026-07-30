@@ -21,19 +21,41 @@
 
 ---
 
-## 2. 目前進度（2026-07-30）
+## 2. 目前進度（2026-07-30，本次交接重點）
 
-**已完成 2 卷、共 77 題**，寫在 `tools/bank_az104.current.js` 的 `BANK_AZ104`，已組出可直接用瀏覽器開啟的 `az104-practice.html`：
+**已完成 8 卷、共 292 題**，寫在 `tools/bank_az104.current.js` 的 `BANK_AZ104`，已組出可直接用瀏覽器開啟的 `az104-practice.html`：
 
 | 卷 | 題號範圍 | 題數 | 狀態 |
 |---|---|---|---|
-| Quiz1 | Q1～Q40 | 40 | ✅ 已完成（2026-07-30） |
-| Quiz2～Quiz19 | Q41～Q711 | 671 | ⬜ 已取得來源 HTML（`source/quizN.html`），尚未轉錄 |
-| Quiz20 | Q712～Q748 | 37 | ✅ 已完成（2026-07-29） |
+| Quiz1 | Q1～Q40 | 40 | ✅ 已完成 |
+| Quiz2 | Q41～Q80 | 40 | ✅ 已完成 |
+| Quiz3 | Q81～Q120 | 40 | ✅ 已完成 |
+| Quiz4 | Q121～Q160 | 40 | ✅ 已完成 |
+| Quiz5 | Q161～Q200 | 40 | ✅ 已完成 |
+| Quiz6 | Q201～Q215 | 15 | ✅ 已完成 |
+| Quiz7～Quiz9 | Q216～Q322 | 107 | ⛔ **跳過，見下方說明** |
+| Quiz10 | Q323～Q362 | 40 | ✅ 已完成，jsdom 全量驗證通過（292 題、0 error） |
+| Quiz11～Quiz19 | Q363～Q711 | 348 | ⬜ 已取得來源 HTML（`source/quizN.html`），尚未轉錄 |
+| Quiz20 | Q712～Q748 | 37 | ✅ 已完成 |
 
-**使用者已把 quiz1~quiz19 的來源 HTML 全部另存並提供**（連同 quiz20，20 卷都在 `source/` 底下），
-不用再跟使用者要檔案，接手時直接照第 4 節流程逐卷轉錄即可。**使用者要求「照順序一卷一卷做，
-每次對話處理一卷」**——不要一次跨好幾卷，一個 session 專心做完一卷、驗證過、`git`-等級收尾後再停。
+**Quiz7～Quiz9 為什麼跳過**：使用者在對話中明確說「Quiz7~Quiz9 有問題，直接跳過，從 Quiz10 開始」。
+這個判斷是在**被壓縮掉、目前看不到的對話段落**裡做的，交接時**不要花時間回去重跑 Quiz7~Quiz9 或
+猜測問題出在哪**，除非使用者之後主動要求重新處理。`source/quiz7_questions.json`～`quiz9_questions.json`
+可能已經存在（是舊版 extract_quiz.py 擷取的，欄位可能不全，見第 4-2 節「拿到新分卷」的做法，
+真的要重做記得先用**目前版本**的 `extract_quiz.py` 重新擷取一次）。
+
+**使用者的排程指示**：「照順序一卷一卷做，每次對話處理一卷」，後來又放寬成「直接做到 Quiz4」
+（一次做完好幾卷），現在最新的指示是**每完成一卷就自行評估 session／context 使用量，接近上限就
+把交接狀態寫進本文件，讓新 session 接手**——也就是現在這個做法。**新 session 接手時：不用再問
+使用者要怎麼排程，直接照這份交接記錄的「下一步」繼續做 Quiz11 即可**，除非使用者又給新指示。
+
+**Git 狀態**：`.gitignore` 已比照 AZ900 加了 AZ104 的白名單例外（`AZ104-SPEC.md`、
+`az104-practice.html`、`tools/extract_quiz.py`／`build_practice_html.js`／`merge_batch.js`），
+**`bank_az104.current.js` 與 `batch_quizN.js` 系列刻意不追蹤**（同 AZ900 慣例，資料可以從
+`az104-practice.html` 反查）。2026-07-30 已經 commit 並 push 過一次（含 Quiz1~6、Quiz20，
+commit message「新增 AZ104 練習頁初版(Quiz1~6、Quiz20 共 252 題)」）。**Quiz10 合併之後
+的這次改動（292 題）截至本次交接時還沒有 commit**，新 session 接手時如果使用者要求 commit/push，
+記得比照第一次的做法（`git add AZ104/ ; git status` 先確認只有白名單檔案被加入，再 commit）。
 
 題號是課程站台自己編的連續流水號（`AZ104-Q<n>`），不是官方考試題號，純粹用來對照原始出處。
 **資料裡 `n` 欄位存的是純數字部份**（例如 `21`），`AZ104-Q` 前綴另外存在 `code` 欄位——這是為了
@@ -296,27 +318,43 @@ tools/
 
 ## 11. 待辦（交接時從這裡接手）
 
-**已完成 2 卷、77 題，練習網頁可正常使用**：
-- Quiz20（AZ104-Q712~Q748，37 題，2026-07-29）：格式 B（`free_answer`），看答案截圖還原
-- Quiz1（AZ104-Q1~Q40，40 題，2026-07-30）：格式 A（`single`/`multiple`），選項/正解直接來自 HTML
-- `bank_az104.current.js`：77 題全部中英雙語，`d`（分頁桶 1–3）＋`od`（官方五大領域 1–5）並存
-- `az104-practice.html`：已用 jsdom 掃過全部 77 題的渲染與「看答案」流程，0 error；也實測過
-  Quiz1 的複選題「需選 N 項」徽章與批改邏輯（選對兩項才判定答對）——**仍然沒有真人瀏覽器測過**，
-  見下方第 1 項
+**已完成 8 卷、292 題，練習網頁可正常使用**（完整清單見第 2 節表格）。Quiz7~Quiz9 是使用者
+明確指示跳過的，**不是還沒做**，不要主動回去補。
 
-**下一卷是 Quiz2（AZ104-Q41~Q80，40 題）**。使用者說「照順序一卷一卷做，每次對話處理一卷」，
-接手時**直接開始做 Quiz2**，不用再問方向。來源 HTML 已經在 `source/quiz2.html`，先跑
-`python tools/extract_quiz.py ../source/quiz2.html ../source/quiz2_questions.json` 看
-`by raw_type` 是哪種格式，再照第 4 節流程走。
+**下一卷是 Quiz11（AZ104-Q363~Q402，40 題）**。接手時**直接開始做 Quiz11**，不用再問方向、
+不用再跟使用者確認要不要繼續。來源 HTML 已經在 `source/quiz11.html`，流程：
+
+```bash
+cd AZ104/tools
+python extract_quiz.py ../source/quiz11.html ../source/quiz11_questions.json
+```
+
+看終端機印出的 `by raw_type`（目前看過的卷全部是格式 A：`single`/`multiple`，選項與正解直接從
+HTML 抓，不用看截圖——但還是要先看 `by raw_type` 確認，別預設每卷都一樣）；`category` 欄位
+Quiz1~Quiz6 都有給、Quiz10 是空的（`None`），兩種情況都有可能，遇到空的就依題目內容自己判斷
+`d`/`od`（第 5 節有 `category`→`od` 對照表，遇到新的英文 category 字串記得補進那張表）。
+
+轉錄完寫成 `tools/batch_quiz11.js`（格式照現有 `batch_quiz10.js` 抄），跑：
+
+```bash
+node merge_batch.js batch_quiz11.js BATCH_QUIZ11
+node --check bank_az104.current.js
+node build_practice_html.js
+```
+
+再用 jsdom 掃一次全部題號（範例見這次交接前用過的手法：`new JSDOM(html,{runScripts:'dangerously',...})`
+配合 `jumpForm` 逐題跳 + `btnReveal`，檢查 `errors.length === 0` 且每題都有 `verdict`）。
+
+**每做完一卷，比照這次交接的做法自我檢查 context 使用量**：如果明顯偏長（例如已經連續做了
+好幾卷、對話輪數很多），就把最新進度更新回本文件的第 2 節與這一節，再結束這個 session，
+不用等使用者提醒。
 
 下一步優先順序：
 
-1. **真的用瀏覽器開一次 `az104-practice.html`**：目前只用 jsdom（Node 模擬 DOM）驗證過語法與渲染
-   （含格式 A 的複選題批改邏輯），沒有真人點過拖放 (`dd`) 題型的實際拖曳互動、模擬考流程、統計面板、
-   深色模式等。照 AZ900 的 `tools/uitest.py`（Playwright）模式，之後可以幫 AZ104 也寫一份，或至少
-   手動點過一輪。
-2. **繼續轉錄剩下的 18 卷**（quiz2~quiz19，共 671 題）：來源 HTML 都已經在 `source/` 底下，不用再
-   跟使用者要檔案。**一次對話處理一卷**，做完一卷務必跑完第 4-5 節的驗證流程再結束。
+1. **繼續轉錄剩下的卷**（quiz11~quiz19，共 348 題）：來源 HTML 都已經在 `source/` 底下。
+2. **真的用瀏覽器開一次 `az104-practice.html`**：目前只用 jsdom（Node 模擬 DOM）驗證過語法與渲染，
+   沒有真人點過拖放 (`dd`) 題型的實際拖曳互動、模擬考流程、統計面板、深色模式等。照 AZ900 的
+   `tools/uitest.py`（Playwright）模式，之後可以幫 AZ104 也寫一份，或至少手動點過一輪。
 3. **驗證工具正式化**：目前驗證是每次臨時打 `node -e` 一行指令做，等題庫成長到有規模了，
    應該仿照 AZ900 的 `validate.js`／`check_layout.js`／`audit.js` 寫成正式、可重跑的腳本
    （尤其是「`d` 只能 1/2/3」「`a[]` 索引界限」這幾項，Quiz1 那次就因為沒有自動檢查漏掉過一次）。
