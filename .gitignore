@@ -40,6 +40,7 @@
 
 # Core files
 !/AZ104/AZ104-SPEC.md
+!/AZ104/AZ104-DOC-BANK-SPEC.md
 !/AZ104/az104-practice.html
 
 # Allow tools directory to be traversed
