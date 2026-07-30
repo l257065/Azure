@@ -1,0 +1,3385 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>AZ-104 練習 · Azure Administrator Drill</title>
+<script>
+/* 主題在畫面畫出來之前就先套用，避免重新整理時閃一下白底 */
+try{
+  var t = localStorage.getItem("az104.theme.v1");
+  if(t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+}catch(e){}
+</script>
+<style>
+:root{
+  --bg:#EDF1F2; --surface:#FFFFFF; --surface-2:#F3F7F7; --sunken:#E4EAEB;
+  --ink:#0F1618; --ink-dim:#5B696E; --ink-faint:#8A979B;
+  --line:#D2DBDD; --line-strong:#B6C3C6;
+  --accent:#0A6B75; --accent-soft:#D9EDEF; --on-accent:#FFFFFF;
+  --ok:#1C7A4B; --ok-soft:#DFF1E7;
+  --bad:#B0392C; --bad-soft:#FBE4E1;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0C1214; --surface:#141C1F; --surface-2:#1A2429; --sunken:#0A0F11;
+    --ink:#E3EBED; --ink-dim:#93A4A9; --ink-faint:#6C7C81;
+    --line:#253238; --line-strong:#3A4A50;
+    --accent:#3FC2CD; --accent-soft:#12333A; --on-accent:#04191C;
+    --ok:#54C489; --ok-soft:#123326;
+    --bad:#F17A6C; --bad-soft:#3A1B18;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1214; --surface:#141C1F; --surface-2:#1A2429; --sunken:#0A0F11;
+  --ink:#E3EBED; --ink-dim:#93A4A9; --ink-faint:#6C7C81;
+  --line:#253238; --line-strong:#3A4A50;
+  --accent:#3FC2CD; --accent-soft:#12333A; --on-accent:#04191C;
+  --ok:#54C489; --ok-soft:#123326;
+  --bad:#F17A6C; --bad-soft:#3A1B18;
+}
+:root[data-theme="light"]{
+  --bg:#EDF1F2; --surface:#FFFFFF; --surface-2:#F3F7F7; --sunken:#E4EAEB;
+  --ink:#0F1618; --ink-dim:#5B696E; --ink-faint:#8A979B;
+  --line:#D2DBDD; --line-strong:#B6C3C6;
+  --accent:#0A6B75; --accent-soft:#D9EDEF; --on-accent:#FFFFFF;
+  --ok:#1C7A4B; --ok-soft:#DFF1E7;
+  --bad:#B0392C; --bad-soft:#FBE4E1;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:calc(var(--topH,100px) + 16px);scroll-padding-bottom:76px}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  font-size:16px; line-height:1.65;
+}
+.mono,.chip,.kbd{
+  font-family:ui-monospace,SFMono-Regular,"Cascadia Mono","Consolas","Roboto Mono",monospace;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ---------- shell ---------- */
+.wrap{max-width:760px;margin:0 auto;padding:0 14px 110px}
+header.top{
+  position:sticky;top:0;z-index:20;background:var(--bg);
+  border-bottom:1px solid var(--line);
+  margin:0 -14px;padding:10px 14px 0;
+}
+.brand{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;min-height:34px}
+.brand h1{font-size:1.02rem;margin:0;letter-spacing:.01em;font-weight:650;white-space:nowrap}
+.brand .sub{
+  font-size:.66rem;letter-spacing:.1em;color:var(--ink-faint);
+  font-family:ui-monospace,monospace;white-space:nowrap;
+  border:1px solid var(--line);border-radius:999px;padding:2px 8px;
+}
+.brand .sub[data-src="doc"]{color:var(--bad);border-color:var(--bad)}
+.brand .spacer{margin-left:auto}
+.brand .hits{display:inline-flex;align-self:center;line-height:0}
+.brand .hits img{height:20px;width:auto;opacity:.85}
+.brand .hits:hover img{opacity:1}
+@media (max-width:380px){.brand .hits{display:none}}
+.ch-btn{
+  background:none;border:1px solid var(--line);color:var(--ink-dim);flex:0 0 auto;
+  border-radius:999px;height:34px;padding:0 11px;font:inherit;font-size:.78rem;cursor:pointer;line-height:1;
+}
+.ch-btn.only-ico{width:34px;padding:0;font-size:.95rem}
+.ch-btn .lbl{margin-left:5px}
+/* 窄螢幕：統計／模擬考只留圖示，頂列才擠得下一行 */
+@media (max-width:600px){
+  .ch-btn .lbl{display:none}
+  .ch-btn{width:34px;padding:0;font-size:.95rem}
+}
+@media (max-width:470px){ .brand .sub{display:none} }
+@media (max-width:360px){ .brand h1{font-size:.95rem} }
+.ch-btn:hover{border-color:var(--line-strong);color:var(--ink)}
+.ch-btn[aria-pressed="true"]{background:var(--bad-soft);border-color:var(--bad);color:var(--bad);font-weight:650}
+/* 題數說明：紅圈驚嘆號，窄螢幕也不縮成無框圖示 */
+.ch-btn.info{
+  color:var(--bad);border-color:var(--bad);font-weight:700;font-size:1rem;
+  width:34px;padding:0;margin-right:2px;
+}
+.ch-btn.info:hover{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+/* 語言：三段式，直接點選 */
+.langseg{display:inline-flex;align-self:center;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.langseg button{
+  appearance:none;background:none;border:0;border-left:1px solid var(--line);
+  color:var(--ink-dim);font:inherit;font-size:.76rem;line-height:1;
+  height:34px;padding:0 10px;cursor:pointer;white-space:nowrap;
+}
+.langseg button:first-child{border-left:0}
+.langseg button:hover{color:var(--ink);background:var(--surface-2)}
+.langseg button[aria-pressed="true"]{
+  background:var(--accent);color:var(--on-accent);font-weight:650;
+}
+.langseg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+@media (max-width:400px){.langseg button{padding:0 8px;font-size:.72rem}}
+/* 頂列多了一顆「!」，窄螢幕不收緊就會擠成兩行。
+   放在這裡是因為要蓋掉上面 .ch-btn.only-ico 與 400px 的語言鈕規則 */
+@media (max-width:470px){
+  .brand{gap:5px}
+  .ch-btn,.ch-btn.only-ico{width:30px;padding:0;font-size:.92rem}
+  .ch-btn.info{margin-right:0}
+  .langseg button{padding:0 6px;font-size:.72rem}
+}
+/* 360–400px（iPhone SE 這種寬度）還差幾個像素，標題再縮一級就排得下 */
+@media (max-width:400px){ .brand h1{font-size:.92rem} }
+@media (max-width:365px){ .brand h1{font-size:.86rem} .langseg button{padding:0 5px} }
+/* 題庫來源：沿用三段式外觀，但用不同色帶區分，避免和語言鈕混淆 */
+.srcseg button[aria-pressed="true"]{background:var(--ink-dim);color:var(--bg)}
+.srcseg button[data-src="doc"][aria-pressed="true"]{background:var(--bad);color:#fff}
+.ch-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- 設定面板 ---------- */
+.cfgrow{display:flex;align-items:center;gap:12px;margin:14px 0 0}
+.cfgrow .k{
+  flex:0 0 62px;font-family:ui-monospace,monospace;font-size:.7rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-faint);white-space:nowrap;
+}
+.cfghint{margin:6px 0 0 74px;font-size:.76rem;color:var(--ink-faint);line-height:1.5}
+@media (max-width:400px){
+  .cfgrow{flex-wrap:wrap;gap:6px}
+  .cfgrow .k{flex:0 0 100%}
+  .cfghint{margin-left:0}
+}
+.cfgact{
+  appearance:none;font:inherit;font-size:.8rem;cursor:pointer;
+  border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);
+  border-radius:999px;padding:7px 14px;
+}
+.cfgact:hover{border-color:var(--bad);color:var(--bad)}
+.cfgact.armed{background:var(--bad-soft);border-color:var(--bad);color:var(--bad);font-weight:650}
+.cfgact:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+nav.tabs{display:flex;gap:2px}
+nav.tabs button{
+  flex:1;appearance:none;background:none;border:0;border-bottom:2px solid transparent;
+  color:var(--ink-dim);padding:9px 4px 10px;cursor:pointer;font:inherit;font-size:.8rem;
+  display:flex;flex-direction:column;align-items:center;gap:2px;min-height:52px;justify-content:center;
+}
+nav.tabs button .num{
+  font-family:ui-monospace,monospace;font-size:.66rem;letter-spacing:.1em;color:var(--ink-faint);
+}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:650}
+nav.tabs button[aria-selected="true"] .num{color:var(--accent)}
+nav.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-3px;border-radius:6px}
+
+/* ---------- 進度列 ---------- */
+.bar{height:3px;background:var(--sunken);margin:0 -14px}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+
+/* ---------- 題目 ---------- */
+.qhead{display:flex;align-items:center;gap:7px;margin:16px 0 10px;flex-wrap:wrap}
+.qhead .spacer{margin-left:auto}
+.eyebrow{
+  font-family:ui-monospace,monospace;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--accent);
+}
+.score{
+  font-family:ui-monospace,monospace;font-size:.74rem;color:var(--ink-dim);
+  border:1px solid var(--line);border-radius:999px;padding:2px 10px;
+}
+/* 題目列上的小圖示鈕（星號）：跟計分徽章同高，不再自己佔一列 */
+.icobtn{
+  appearance:none;background:none;border:1px solid var(--line);color:var(--ink-faint);
+  border-radius:999px;width:26px;height:26px;line-height:1;font-size:.86rem;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;padding:0;
+}
+.icobtn:hover{border-color:var(--line-strong);color:var(--ink)}
+.icobtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.icobtn.star[aria-pressed="true"]{background:var(--star-soft);border-color:var(--star);color:var(--star)}
+.icobtn[hidden]{display:none}
+.score.timer{color:var(--accent);border-color:var(--accent)}
+.score.timer.warn{color:var(--bad);border-color:var(--bad);font-weight:650}
+
+/* 跳題：輸入題號直接跳到那一題 */
+.jump{display:inline-flex;align-items:center;gap:5px}
+.jump input{
+  width:66px;font:inherit;font-family:ui-monospace,monospace;font-size:.74rem;
+  color:var(--ink);background:var(--surface);
+  border:1px solid var(--line);border-radius:999px;padding:3px 10px;
+  -moz-appearance:textfield;appearance:textfield;
+}
+.jump input::-webkit-outer-spin-button,
+.jump input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.jump button{
+  font:inherit;font-size:.72rem;line-height:1;color:var(--ink-dim);cursor:pointer;
+  background:none;border:1px solid var(--line);border-radius:999px;padding:5px 11px;
+}
+.jump button:hover{border-color:var(--line-strong);color:var(--ink)}
+.jump input:focus-visible,.jump button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.jump[data-off="1"]{opacity:.4;pointer-events:none}
+.jmsg{font-size:.72rem;color:var(--ink-dim)}
+.jmsg:empty{display:none}
+.jmsg.bad{color:var(--bad)}
+
+.prompt{
+  background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:4px;padding:14px 16px;margin-bottom:14px;
+}
+.prompt .qtext{margin:0 0 10px;font-size:1.04rem;font-weight:600;line-height:1.7}
+.prompt .qtext:last-child{margin-bottom:0}
+/* 每題都一樣的制式前言：降重量並和真正的題目分開 */
+.prompt .qnote{
+  margin:0 0 10px;padding:0 0 9px;border-bottom:1px dashed var(--line);
+  font-size:.82rem;font-weight:400;line-height:1.65;color:var(--ink-faint);
+}
+/* 螢光筆：標出題目裡的決勝條件，對應原始 PDF 的紅框，但改成劃重點的樣子 */
+mark.hl{
+  background:linear-gradient(transparent 55%, rgba(255,214,0,.62) 55%);
+  color:inherit;padding:0 1px;border-radius:2px;
+}
+@media (prefers-color-scheme: dark){
+  mark.hl{background:linear-gradient(transparent 55%, rgba(255,214,0,.30) 55%)}
+}
+:root[data-theme="dark"] mark.hl{background:linear-gradient(transparent 55%, rgba(255,214,0,.30) 55%)}
+:root[data-theme="light"] mark.hl{background:linear-gradient(transparent 55%, rgba(255,214,0,.62) 55%)}
+.expl mark.hl{background:linear-gradient(transparent 60%, rgba(255,214,0,.45) 60%)}
+.prompt .meta{
+  margin:0 0 8px;font-family:ui-monospace,monospace;font-size:.68rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-faint);
+}
+/* 核對狀態：這一題是「從拆開的子題合併還原」的，還沒回頭跟原始文件逐字核對過 */
+.prompt .chk{
+  display:inline-block;margin-left:8px;padding:1px 7px;border-radius:3px;
+  font-family:system-ui,sans-serif;font-size:.7rem;letter-spacing:0;text-transform:none;
+  border:1px solid var(--line-strong);color:var(--ink-dim);background:var(--surface-2);
+  cursor:help;
+}
+.prompt .chk.wait{border-color:var(--bad);color:var(--bad);background:var(--bad-soft)}
+.prompt .chk.done{border-color:var(--ok);color:var(--ok);background:var(--ok-soft)}
+/* ext：原始 PDF 沒有這個題號，是由外部來源補入的。用藍紫色與另兩種狀態明顯區分 */
+.prompt .chk.ext{border-color:#7a5af5;color:#7a5af5;background:rgba(122,90,245,.10)}
+.prompt .chk.act{cursor:pointer}
+.prompt .chk.act:hover{border-color:var(--accent);color:var(--accent)}
+/* 原文對照：切出來看原始文件長什麼樣，確認改寫後沒有跑掉 */
+.v0box{
+  display:none;margin:0 0 14px;padding:12px 14px;border:1px dashed var(--line-strong);
+  border-radius:4px;background:var(--sunken);color:var(--ink-dim);
+  font-family:ui-monospace,SFMono-Regular,"Cascadia Mono",Consolas,monospace;
+  font-size:.8rem;line-height:1.75;white-space:pre-wrap;
+}
+.v0box.show{display:block}
+.v0box .lab{
+  display:block;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-faint);margin-bottom:6px;
+}
+.prompt .multi{
+  display:inline-block;margin-top:9px;font-size:.78rem;color:var(--bad);
+  border:1px solid var(--bad);border-radius:3px;padding:1px 8px;
+}
+/* 選滿了就轉綠：一眼看得出這題已經湊齊 N 項，可以往下一題 */
+.prompt .multi.done{color:var(--ok);border-color:var(--ok)}
+/* 想選第 N+1 項、或沒選滿就要繼續：閃一下提醒 */
+.prompt .multi.warn{background:var(--bad-soft);font-weight:650;animation:multibump .32s ease}
+@keyframes multibump{
+  0%{transform:translateX(0)} 25%{transform:translateX(-4px)}
+  60%{transform:translateX(4px)} 100%{transform:translateX(0)}
+}
+
+.opts{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.opt{
+  display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;
+  background:var(--surface);border:1px solid var(--line);border-radius:4px;
+  padding:11px 13px;font:inherit;font-size:.94rem;line-height:1.6;color:var(--ink);
+  cursor:pointer;min-height:46px;
+}
+.opt:hover{border-color:var(--line-strong)}
+.opt .key{
+  flex:0 0 auto;width:24px;height:24px;border-radius:3px;margin-top:1px;
+  border:1px solid var(--line-strong);background:var(--sunken);color:var(--ink-dim);
+  font-family:ui-monospace,monospace;font-size:.78rem;font-weight:650;
+  display:flex;align-items:center;justify-content:center;
+}
+/* 服務圖示：原題的答案區是入口網站的服務列（圖示＋名稱），有 ico 就照原樣顯示。
+   圖示是 Microsoft 官方 Azure 圖示包的 SVG，內嵌成 data URI，不連外。 */
+.opt .oico{
+  flex:0 0 auto;width:26px;height:26px;margin-top:-1px;
+  object-fit:contain;                /* SVG 比例不一，統一裝進 26×26 不變形 */
+}
+.ro .oico{
+  flex:0 0 auto;width:20px;height:20px;object-fit:contain;margin-right:2px;
+}
+/* 題目裡的表格（原題就有一張表，例如 #187） */
+.qtbl{border-collapse:collapse;margin:8px 0 2px;font-size:.9rem}
+.qtbl th,.qtbl td{border:1px solid var(--line-strong);padding:5px 12px;text-align:left}
+.qtbl th{background:var(--sunken);font-weight:650}
+
+/* look-nav：原題的答案區是入口網站的深色左側欄（#168） */
+.opts.look-nav{gap:0;border-radius:4px;overflow:hidden;background:#1b1b1b;padding:4px 0}
+.opts.look-nav .opt{
+  background:transparent;border:0;border-radius:0;color:#f3f3f3;
+  padding:9px 14px;min-height:42px;align-items:center;
+}
+.opts.look-nav .opt:hover{background:#2f2f2f}
+.opts.look-nav .opt .key{background:#333;border-color:#555;color:#ccc}
+.opts.look-nav .opt[aria-pressed="true"]{background:#0e5a8a}
+.opts.look-nav .opt.ok{background:rgba(45,150,90,.35)}
+.opts.look-nav .opt.bad{background:rgba(190,60,60,.35)}
+.opts.look-nav .opt.miss{background:rgba(45,150,90,.18);outline:1px dashed var(--ok);outline-offset:-2px}
+
+/* look-icons：原廠考試只給一張工具列的圖，選項就是圖示本身（#215） */
+.opts.look-icons{flex-direction:row;flex-wrap:wrap;gap:10px}
+.opts.look-icons .opt{
+  width:auto;flex-direction:column;align-items:center;gap:6px;
+  padding:10px 12px;min-height:0;
+}
+.opts.look-icons .opt .oico{width:34px;height:34px}
+
+.opt[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.opt[aria-pressed="true"] .key{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.ok .key{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.opt.bad .key{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt.miss{border-color:var(--ok);border-style:dashed}
+.opt.miss .key{color:var(--ok);border-color:var(--ok)}
+.opt[disabled]{cursor:default}
+
+.verdict{
+  margin:0 0 14px;padding:11px 14px;border-radius:4px;font-size:.92rem;
+  border:1px solid var(--line);background:var(--surface-2);display:none;
+}
+.verdict.show{display:block}
+.verdict.pass{border-color:var(--ok);background:var(--ok-soft);color:var(--ok);font-weight:600}
+.verdict.fail{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+
+.expl{
+  display:none;margin:0 0 14px;padding:11px 14px;border-left:2px solid var(--accent);
+  background:var(--surface-2);border-radius:0 3px 3px 0;
+  font-size:.88rem;line-height:1.8;color:var(--ink-dim);
+  white-space:pre-line;          /* 解析裡的換行要保留，方案／層級才能條列 */
+}
+.expl.show{display:block}
+.expl b{color:var(--accent);font-weight:600}
+.expl .lab{
+  display:block;font-family:ui-monospace,monospace;font-size:.66rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:4px;
+}
+
+/* ---------- 成績單 ---------- */
+.report{display:none}
+.report.show{display:block}
+.bigscore{
+  background:var(--surface);border:1px solid var(--line);border-radius:4px;
+  padding:20px 16px;text-align:center;margin-bottom:14px;
+}
+.bigscore .pct{font-family:ui-monospace,monospace;font-size:2.6rem;font-weight:700;line-height:1.1}
+.bigscore .pct.pass{color:var(--ok)}
+.bigscore .pct.fail{color:var(--bad)}
+.bigscore .cap{font-size:.86rem;color:var(--ink-dim);margin-top:6px}
+.dbreak{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.dbreak .row{
+  display:flex;align-items:center;gap:10px;font-size:.88rem;
+  background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:9px 13px;
+}
+.dbreak .row .n{margin-left:auto;font-family:ui-monospace,monospace;color:var(--ink-dim)}
+.rev{margin-bottom:12px}
+.rev .item{
+  background:var(--surface);border:1px solid var(--line);border-radius:4px;
+  padding:11px 13px;margin-bottom:8px;font-size:.9rem;
+}
+.rev .item.wrong{border-left:3px solid var(--bad)}
+.rev .item.right{border-left:3px solid var(--ok)}
+.rev .item .q{font-weight:600;margin:0 0 6px;line-height:1.6}
+.rev .item .ln{margin:0;font-size:.85rem;color:var(--ink-dim);line-height:1.75}
+.rev .item .ln .you{color:var(--bad)}
+.rev .item .ln .cor{color:var(--ok);font-weight:600}
+/* 檢討時把全部選項列出來：正解綠、你選錯紅、沒選到的錯誤選項淡灰 */
+.rev .ropts{display:flex;flex-direction:column;gap:4px;margin:9px 0 10px}
+.rev .ro{
+  display:flex;align-items:flex-start;gap:8px;padding:6px 9px;border-radius:3px;
+  font-size:.86rem;line-height:1.55;
+  border:1px solid var(--line);background:var(--surface-2);color:var(--ink-dim);
+}
+.rev .ro .k{
+  flex:0 0 auto;width:19px;height:19px;border-radius:2px;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:ui-monospace,monospace;font-size:.7rem;font-weight:650;
+  border:1px solid var(--line-strong);background:var(--sunken);
+}
+.rev .ro .t{flex:1}
+.rev .ro .tag{flex:0 0 auto;align-self:center;font-size:.72rem;font-weight:650;white-space:nowrap}
+.rev .ro.ok{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+.rev .ro.ok .k{background:var(--ok);border-color:var(--ok);color:#fff}
+.rev .ro.miss{border-color:var(--ok);border-style:dashed;background:var(--ok-soft);color:var(--ok)}
+.rev .ro.miss .k{color:var(--ok);border-color:var(--ok);background:transparent}
+.rev .ro.bad{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.rev .ro.bad .k{background:var(--bad);border-color:var(--bad);color:#fff}
+.rev .ro.none{opacity:.6}
+
+/* ---------- 底部動作列 ---------- */
+.actions{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  background:var(--bg);
+  background:color-mix(in srgb,var(--bg) 92%,transparent);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  border-top:1px solid var(--line);
+  padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+}
+.actions .row{max-width:760px;margin:0 auto;display:flex;gap:8px}
+button.act{
+  flex:1;min-height:46px;border-radius:4px;font:inherit;font-size:.92rem;font-weight:600;
+  cursor:pointer;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);
+}
+button.act.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+button.act.ghost{flex:0 0 auto;padding:0 14px;color:var(--ink-dim);font-weight:500}
+/* 上一題：只用箭頭，把橫向空間讓給真正要按的主動作 */
+button.act.arrow{
+  flex:0 0 auto;width:48px;padding:0;font-size:1.3rem;font-weight:400;color:var(--ink-dim);
+}
+button.act:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.act:active{transform:translateY(1px)}
+button.act[hidden]{display:none}
+button.act[disabled]{opacity:.45;cursor:default}
+
+.hint{font-size:.82rem;color:var(--ink-dim);margin:10px 2px 0;line-height:1.75}
+.hint code{background:var(--surface-2);border:1px solid var(--line);border-radius:3px;padding:1px 5px;font-size:.9em}
+/* 使用說明：預設收起，需要時再展開，平常不要擋住題目 */
+.hintbox{margin:18px 0 0}
+.hintbox > summary{
+  list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  font-size:.78rem;color:var(--ink-faint);padding:4px 2px;user-select:none;
+}
+.hintbox > summary::-webkit-details-marker{display:none}
+.hintbox > summary::before{content:"▸";font-size:.7rem;transition:transform .15s}
+.hintbox[open] > summary::before{transform:rotate(90deg)}
+.hintbox > summary:hover{color:var(--ink-dim)}
+.hintbox > summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.empty{
+  background:var(--surface);border:1px dashed var(--line-strong);border-radius:4px;
+  padding:26px 16px;text-align:center;color:var(--ink-dim);font-size:.9rem;line-height:1.8;
+}
+/* ---------- 原廠題型 1：HOTSPOT 是非表（每句各自選 Yes / No） ---------- */
+.hs{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.hs .hrow{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:10px 12px;
+}
+.hs .hrow .st{flex:1;font-size:.94rem;line-height:1.6}
+.hs .yn{display:inline-flex;flex:0 0 auto;border:1px solid var(--line-strong);border-radius:4px;overflow:hidden}
+.hs .yn button{
+  appearance:none;background:var(--surface);border:0;border-left:1px solid var(--line);
+  color:var(--ink-dim);font:inherit;font-size:.84rem;font-weight:650;line-height:1;
+  min-height:38px;min-width:52px;padding:0 10px;cursor:pointer;
+}
+.hs .yn button:first-child{border-left:0}
+.hs .yn button:hover:not([disabled]){background:var(--surface-2);color:var(--ink)}
+.hs .yn button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.hs .yn button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.hs .yn button[disabled]{cursor:default}
+/* 批改後：整列標出對錯，並把正解那一顆標綠 */
+.hs .hrow.ok{border-color:var(--ok);background:var(--ok-soft)}
+.hs .hrow.bad{border-color:var(--bad);background:var(--bad-soft)}
+.hs .yn button.ans{background:var(--ok);color:#fff}
+.hs .yn button.wrongpick{background:var(--bad);color:#fff}
+.hs .hrow .mk{flex:0 0 auto;font-size:.8rem;font-weight:650}
+.hs .hrow.ok .mk{color:var(--ok)}
+.hs .hrow.bad .mk{color:var(--bad)}
+@media (max-width:520px){
+  .hs .hrow{flex-wrap:wrap}
+  .hs .hrow .st{flex:1 0 100%}
+}
+
+/* ---------- 原廠題型 2：DRAG DROP 配對 ---------- */
+.dd{margin-bottom:14px}
+.dd .lab{
+  font-family:ui-monospace,monospace;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-faint);margin:0 0 6px;
+}
+.dd .bank{
+  display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;padding:10px;
+  background:var(--sunken);border:1px dashed var(--line-strong);border-radius:4px;min-height:52px;
+}
+.dd .chip{
+  background:var(--surface);border:1px solid var(--line-strong);border-radius:999px;
+  padding:7px 13px;font:inherit;font-size:.88rem;line-height:1.4;color:var(--ink);
+  cursor:grab;min-height:36px;display:inline-flex;align-items:center;
+}
+.dd .chip:hover{border-color:var(--accent)}
+.dd .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.dd .chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.dd .chip.dragging{opacity:.45}
+.dd .chip[disabled]{cursor:default;opacity:.55}
+.dd .rows{display:flex;flex-direction:column;gap:8px}
+.dd .drow{
+  display:flex;align-items:stretch;gap:10px;
+  background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:9px 11px;
+}
+.dd .slot{
+  flex:0 0 40%;min-height:44px;border:1px dashed var(--line-strong);border-radius:4px;
+  background:var(--surface-2);color:var(--ink-faint);
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:6px 9px;font-size:.86rem;line-height:1.45;cursor:pointer;
+}
+.dd .slot.filled{border-style:solid;border-color:var(--accent);background:var(--accent-soft);color:var(--ink);font-weight:600}
+.dd .slot.over{border-color:var(--accent);background:var(--accent-soft)}
+.dd .slot:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* 巢狀方框答案區（#227 縱深防禦）：一層包一層，靠 div 真的巢狀來產生同心效果，
+   每層都疊一點藍，越內層自然越深，跟原題的圖一樣。 */
+.nest{margin-top:4px}
+.nest .nlay{
+  border:1px solid var(--line-strong);border-radius:3px;
+  padding:5px 7px 7px;background:rgba(56,120,190,.07);
+}
+.nest .nlay + .nlay{margin-top:0}
+.nest .nrow{
+  text-align:center;font-weight:650;font-size:.92rem;
+  padding:7px 8px;margin-bottom:5px;letter-spacing:.02em;
+}
+.nest .nrow.nslot{padding:0;margin-bottom:5px}
+/* 空格用整條的按鈕，讓拖放目標夠大 */
+.nest .nrow.nslot .slot{width:100%;margin:0}
+/* 這裡不能用 display:flex —— paintHl() 會把描述拆成「文字節點 + <mark>」多個子節點，
+   一旦父層是 flex 容器，它們就各自變成 flex item 排成一列，中文會被擠成一字一行。
+   要讓它們照一般的行內文字流動，維持 block。 */
+.dd .desc{flex:1;align-self:center;font-size:.92rem;line-height:1.6}
+.dd .drow.ok .slot{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+.dd .drow.bad .slot{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.dd .drow .fix{
+  display:block;margin-top:4px;font-size:.78rem;font-weight:600;color:var(--ok);
+}
+@media (max-width:520px){
+  .dd .drow{flex-direction:column;gap:7px}
+  .dd .slot{flex:1 0 auto;width:100%}
+}
+
+/* ---------- 原廠題型 3：HOTSPOT 下拉選單 ---------- */
+.dl{margin-bottom:14px}
+.dl .sent{
+  background:var(--surface);border:1px solid var(--line);border-radius:4px;
+  padding:14px 16px;font-size:1rem;line-height:2.4;
+}
+.dl .sent .ln{display:block}
+.dl .sent .ln + .ln{margin-top:10px}
+.dl select{
+  font:inherit;font-size:.92rem;font-weight:600;color:var(--ink);
+  background:var(--surface-2);border:1px solid var(--line-strong);border-radius:4px;
+  padding:6px 9px;margin:0 3px;max-width:100%;min-height:38px;cursor:pointer;
+  vertical-align:middle;
+}
+.dl select:hover{border-color:var(--accent)}
+.dl select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.dl select.picked{border-color:var(--accent);background:var(--accent-soft)}
+.dl select.ok{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+.dl select.bad{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.dl select[disabled]{opacity:1;cursor:default}
+.dl .fix{display:block;margin-top:8px;font-size:.84rem;font-weight:600;color:var(--ok)}
+
+/* ---------- 成績單：新題型的檢討列 ---------- */
+.rev .rh{
+  display:flex;align-items:flex-start;gap:8px;padding:6px 9px;border-radius:3px;
+  font-size:.86rem;line-height:1.55;border:1px solid var(--line);background:var(--surface-2);
+  color:var(--ink-dim);margin-bottom:4px;
+}
+.rev .rh .t{flex:1}
+.rev .rh .yn{flex:0 0 auto;font-family:ui-monospace,monospace;font-size:.76rem;font-weight:650;white-space:nowrap}
+.rev .rh.ok{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+.rev .rh.bad{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* =====================================================================
+   星號 / 標記 / 作答總覽
+   ===================================================================== */
+:root{--star:#B8860B;--star-soft:#FAF0D8}
+@media (prefers-color-scheme: dark){:root{--star:#E9B949;--star-soft:#392D11}}
+:root[data-theme="dark"]{--star:#E9B949;--star-soft:#392D11}
+:root[data-theme="light"]{--star:#B8860B;--star-soft:#FAF0D8}
+
+.qtools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-2px 0 12px}
+.qtools:empty{display:none}
+.tbtn{
+  appearance:none;background:none;border:1px solid var(--line);color:var(--ink-dim);
+  border-radius:999px;font:inherit;font-size:.76rem;line-height:1;height:30px;padding:0 12px;
+  cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
+}
+.tbtn:hover{border-color:var(--line-strong);color:var(--ink)}
+.tbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tbtn.star[aria-pressed="true"]{background:var(--star-soft);border-color:var(--star);color:var(--star);font-weight:650}
+.tbtn.flag[aria-pressed="true"]{background:var(--bad-soft);border-color:var(--bad);color:var(--bad);font-weight:650}
+.tbtn.reset{margin-left:auto;color:var(--ink-faint)}
+.tbtn.reset.armed{background:var(--bad-soft);border-color:var(--bad);color:var(--bad);font-weight:650}
+
+/* 分頁上的小圓點：這個分頁還有沒做完的進度 */
+nav.tabs .dot{
+  display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:var(--accent);margin-left:5px;vertical-align:.15em;
+}
+.notebox{
+  flex:1 1 100%;border:1px solid var(--line);border-radius:10px;background:var(--surface);
+  color:var(--ink);font:inherit;font-size:.85rem;line-height:1.5;padding:8px 10px;
+  resize:vertical;min-height:46px;
+}
+.notebox:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+.notebox::placeholder{color:var(--ink-faint)}
+
+/* 逐題檢討裡的標記／備註 */
+.rev .flagln{color:var(--bad);font-size:.82rem}
+.rev .flagln b{font-weight:650}
+
+/* 作答總覽（交卷前的確認畫面，仿原廠 Review screen） */
+.ovwrap{
+  position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);
+  display:none;overflow:auto;padding:22px 14px;
+}
+.ovwrap.show{display:block}
+.ovcard{
+  max-width:760px;margin:0 auto;background:var(--surface);
+  border:1px solid var(--line);border-radius:16px;padding:18px 16px 16px;
+  box-shadow:0 18px 50px rgba(0,0,0,.28);
+}
+.ovcard h2{margin:0 0 4px;font-size:1.02rem;font-weight:650}
+.ovcard .ovsub{margin:0;color:var(--ink-dim);font-size:.86rem}
+.ovcard .ovsub .warnnum{color:var(--bad);font-weight:650}
+.ovlegend{display:flex;gap:14px;flex-wrap:wrap;margin:12px 0 2px;font-size:.74rem;color:var(--ink-dim)}
+.ovlegend span{display:inline-flex;align-items:center;gap:5px}
+.ovlegend i{width:12px;height:12px;border-radius:4px;border:1px solid var(--line);background:var(--surface-2)}
+.ovlegend i.done{background:var(--accent-soft);border-color:var(--accent)}
+.ovlegend i.blank{border-style:dashed}
+.ovlegend i.flag{border-color:var(--bad);border-width:2px}
+.ovgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:8px;margin:12px 0 14px}
+.ovcell{
+  position:relative;appearance:none;font:inherit;font-size:.84rem;cursor:pointer;
+  border:1px solid var(--line);background:var(--surface-2);color:var(--ink-dim);
+  border-radius:9px;padding:10px 0;text-align:center;
+  font-family:ui-monospace,monospace;font-variant-numeric:tabular-nums;
+}
+.ovcell:hover{border-color:var(--line-strong);color:var(--ink)}
+.ovcell.done{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:650}
+.ovcell.blank{border-style:dashed;color:var(--ink-faint)}
+/* 標記只加紅框與角標，不蓋掉「已作答／未作答」的底色，兩種資訊要同時看得出來 */
+.ovcell.flag{border-color:var(--bad);border-width:2px}
+.ovcell.flag::after{
+  content:"⚑";position:absolute;top:-8px;right:-6px;font-size:.78rem;line-height:1;
+  color:#fff;background:var(--bad);border-radius:50%;width:16px;height:16px;
+  display:flex;align-items:center;justify-content:center;
+}
+.ovcell.cur{box-shadow:0 0 0 2px var(--ink) inset}
+.ovnotes{border-top:1px solid var(--line);margin-top:6px;padding-top:10px}
+.ovnotes .lab{
+  font-family:ui-monospace,monospace;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-faint);display:block;margin-bottom:6px;
+}
+.ovnote{
+  display:block;width:100%;text-align:left;appearance:none;background:var(--surface-2);
+  border:1px solid var(--line);border-left:3px solid var(--bad);border-radius:8px;
+  font:inherit;font-size:.82rem;color:var(--ink);padding:7px 10px;margin-bottom:6px;cursor:pointer;
+}
+.ovnote:hover{border-color:var(--line-strong);border-left-color:var(--bad)}
+.ovnote .n{font-family:ui-monospace,monospace;color:var(--bad);font-weight:650;margin-right:6px}
+.ovnote .memo{color:var(--ink-dim)}
+.ovbtns{display:flex;gap:8px;margin-top:14px}
+.ovbtns button{
+  flex:1;appearance:none;font:inherit;font-size:.9rem;cursor:pointer;
+  border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);
+  border-radius:11px;padding:11px 10px;font-weight:600;
+}
+.ovbtns button.go{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.ovbtns button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* ---------- 題數說明面板 ---------- */
+.infosec{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+.infosec .lab{
+  font-family:ui-monospace,monospace;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-faint);display:block;margin-bottom:6px;
+}
+.infosec p{margin:0 0 8px;font-size:.88rem;line-height:1.7}
+.infosec p:last-child{margin-bottom:0}
+.infomath{
+  display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:11px;
+  padding:10px 12px;margin:10px 0 0;
+  font-family:ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:.9rem;
+}
+.infomath b{color:var(--accent);font-size:1.05rem}
+.infomath .why{font-family:inherit;font-size:.78rem;color:var(--ink-dim)}
+.infonums{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 0}
+.infonums i{
+  font-style:normal;font-family:ui-monospace,monospace;font-variant-numeric:tabular-nums;
+  font-size:.82rem;color:var(--bad);background:var(--bad-soft);
+  border:1px solid var(--bad);border-radius:8px;padding:4px 9px;
+}
+/* ---------- 統計面板 ---------- */
+.stsec{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+.stsec:first-of-type{border-top:0;margin-top:8px;padding-top:0}
+.stsec > .lab{
+  font-family:ui-monospace,monospace;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-faint);display:block;margin-bottom:8px;
+}
+.stsec .none{color:var(--ink-faint);font-size:.84rem;margin:2px 0 0}
+.stnow{
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;
+}
+.stnow .big{font-family:ui-monospace,monospace;font-size:1.3rem;font-weight:650;color:var(--accent)}
+.stnow .cap{font-size:.82rem;color:var(--ink-dim)}
+
+/* 領域強弱長條 */
+.dbar{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.dbar .nm{
+  flex:0 0 9.6em;font-size:.85rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.dbar .nm i{
+  font-family:ui-monospace,monospace;font-style:normal;font-size:.7rem;
+  color:var(--ink-faint);margin-right:5px;
+}
+.dbar .track{flex:1;height:9px;border-radius:999px;background:var(--sunken);overflow:hidden}
+.dbar .track i{display:block;height:100%;border-radius:999px;background:var(--accent);transition:width .3s}
+.dbar.hi .track i{background:var(--ok)}
+.dbar.lo .track i{background:var(--bad)}
+.dbar .pc{
+  flex:0 0 5.2em;text-align:right;font-family:ui-monospace,monospace;font-size:.8rem;
+  font-variant-numeric:tabular-nums;color:var(--ink-dim);
+}
+.dbar .pc b{color:var(--ink);font-weight:650}
+.dhint{font-size:.78rem;color:var(--ink-faint);margin:-2px 0 0}
+
+/* 常錯題 */
+.wq{
+  display:flex;gap:9px;align-items:flex-start;width:100%;text-align:left;appearance:none;
+  background:var(--surface-2);border:1px solid var(--line);border-left:3px solid var(--bad);
+  border-radius:9px;font:inherit;font-size:.82rem;color:var(--ink);
+  padding:8px 10px;margin-bottom:6px;cursor:pointer;
+}
+.wq:hover{border-color:var(--line-strong);border-left-color:var(--bad)}
+.wq .rate{
+  flex:0 0 auto;font-family:ui-monospace,monospace;font-size:.76rem;color:var(--bad);font-weight:650;
+  border:1px solid var(--bad);border-radius:6px;padding:1px 6px;line-height:1.5;
+}
+.wq .tx{flex:1;line-height:1.45}
+.wq .tx small{display:block;color:var(--ink-faint);font-size:.72rem;margin-top:2px}
+.wq .st{flex:0 0 auto;color:var(--ink-faint);font-size:.95rem}
+.wq[aria-pressed="true"] .st{color:var(--star)}
+
+/* 歷次成績 */
+.hrow2{
+  display:flex;align-items:center;gap:9px;font-size:.82rem;
+  border-bottom:1px dashed var(--line);padding:7px 2px;
+}
+.hrow2:last-child{border-bottom:0}
+.hrow2 .when{flex:0 0 auto;font-family:ui-monospace,monospace;font-size:.72rem;color:var(--ink-faint)}
+.hrow2 .kind{
+  flex:0 0 auto;font-size:.68rem;border:1px solid var(--line);border-radius:999px;
+  padding:1px 7px;color:var(--ink-dim);
+}
+.hrow2 .kind.exam{border-color:var(--bad);color:var(--bad)}
+.hrow2 .sc{flex:1;text-align:right;font-family:ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.hrow2 .sc b{font-size:.95rem}
+.hrow2 .dl2{flex:0 0 3.4em;text-align:right;font-family:ui-monospace,monospace;font-size:.76rem;color:var(--ink-faint)}
+.hrow2 .dl2.up{color:var(--ok);font-weight:650}
+.hrow2 .dl2.dn{color:var(--bad);font-weight:650}
+.hrow2 .dd3{flex:0 0 auto;font-family:ui-monospace,monospace;font-size:.7rem;color:var(--ink-faint)}
+
+/* 匯出／匯入 */
+.stbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.stbtns button{
+  appearance:none;font:inherit;font-size:.82rem;cursor:pointer;
+  border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);
+  border-radius:9px;padding:9px 12px;
+}
+.stbtns button:hover{border-color:var(--accent);color:var(--accent)}
+.stbtns button.danger{color:var(--bad);border-color:var(--line)}
+.stbtns button.danger:hover{border-color:var(--bad);color:var(--bad)}
+.stbtns button.armed{background:var(--bad-soft);border-color:var(--bad);color:var(--bad);font-weight:650}
+.stmsg{font-size:.8rem;color:var(--ok);margin:8px 0 0;min-height:1.2em}
+.stmsg.bad{color:var(--bad)}
+
+/* AZ-104 有五個領域，加上全部／錯題本／星號題共 8 個分頁，
+   比 AZ-900 的 6 個更擠，窄螢幕要再縮一級才不會折行 */
+@media (max-width:560px){
+  nav.tabs button{font-size:.66rem;padding:9px 0 10px;white-space:nowrap}
+  nav.tabs button .num{font-size:.54rem;letter-spacing:.04em}
+}
+@media (max-width:380px){
+  nav.tabs button{font-size:.6rem}
+  nav.tabs button .num{font-size:.5rem;letter-spacing:0}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    <h1>AZ-104 練習</h1>
+    <span class="sub" id="srcTag" title="目前題庫（在設定裡切換）">自製題庫</span>
+    <span class="spacer"></span>
+    <a class="hits" href="https://hits.sh/l257065.github.io/az104-practice/" target="_blank" rel="noopener noreferrer">
+      <img alt="瀏覽次數（今日／總計）"
+           src="https://hits.sh/l257065.github.io/az104-practice.svg?style=flat-square&label=%E7%80%8F%E8%A6%BD%20%E4%BB%8A%E6%97%A5%2F%E7%B8%BD%E8%A8%88&color=0a6b75&labelColor=3a4a50&view=today-total">
+    </a>
+    <button class="ch-btn only-ico info" id="infoBtn"
+            title="題數說明：文件題庫的題數與跳號說明" aria-label="題數說明">!</button>
+    <div class="langseg" id="langSeg" role="group" aria-label="語言">
+      <button type="button" data-lang="zh"   aria-pressed="true"  title="純中文">中</button>
+      <button type="button" data-lang="zhen" aria-pressed="false" title="中文，技術名詞後面附英文原文">中+EN</button>
+      <button type="button" data-lang="en"   aria-pressed="false" title="全英文題目與解析">EN</button>
+    </div>
+    <button class="ch-btn only-ico" id="cfgBtn" title="設定：題庫、主題、重新開始這一輪" aria-label="設定">⚙</button>
+    <button class="ch-btn" id="statBtn"
+            title="統計：各領域答對率、一直做錯的題目、歷次成績，也可以匯出／匯入存檔">▤ 統計</button>
+    <button class="ch-btn" id="examBtn" aria-pressed="false"
+            title="模擬考：抽 50 題、100 分鐘限時，作答期間不顯示答案，交卷後一次檢討">⏱ 模擬考</button>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="t0" aria-selected="true" aria-controls="pane"><span class="num">ALL</span>全部</button>
+    <button role="tab" id="t1" aria-selected="false" aria-controls="pane"><span class="num">01</span>身分治理</button>
+    <button role="tab" id="t2" aria-selected="false" aria-controls="pane"><span class="num">02</span>儲存體</button>
+    <button role="tab" id="t3" aria-selected="false" aria-controls="pane"><span class="num">03</span>運算</button>
+    <button role="tab" id="t4" aria-selected="false" aria-controls="pane"><span class="num">04</span>網路</button>
+    <button role="tab" id="t5" aria-selected="false" aria-controls="pane"><span class="num">05</span>監控</button>
+    <button role="tab" id="t6" aria-selected="false" aria-controls="pane"><span class="num">✗</span>錯題本</button>
+    <button role="tab" id="t7" aria-selected="false" aria-controls="pane"><span class="num">★</span>星號題</button>
+  </nav>
+  <div class="bar"><i id="barFill"></i></div>
+</header>
+
+<section id="pane" role="tabpanel" aria-labelledby="t0">
+  <div class="qhead">
+    <span class="eyebrow" id="eyebrow">載入中</span>
+    <form class="jump" id="jumpForm">
+      <input id="jumpNo" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+             autocomplete="off" placeholder="題號" aria-label="跳到指定題號">
+      <button type="submit" id="jumpBtn">跳題</button>
+    </form>
+    <span class="jmsg" id="jumpMsg" role="status" aria-live="polite"></span>
+    <span class="spacer"></span>
+    <span class="score timer" id="timer" hidden>⏱ 100:00</span>
+    <span class="score" id="score">0 / 0</span>
+    <button class="icobtn star" id="starBtn" aria-pressed="false"
+            title="加強練習：把這題收進「星號題」分頁，再按一次取消" aria-label="加強練習">☆</button>
+  </div>
+  <div class="qtools" id="qtools"></div>
+  <div id="qbox"></div>
+  <div class="verdict" id="verdict"></div>
+  <div class="expl" id="expl"></div>
+  <div class="report" id="report"></div>
+  <details class="hintbox" id="hintBox">
+    <summary id="hintSum">使用說明</summary>
+    <div class="hint" id="footHint"></div>
+  </details>
+</section>
+
+</div>
+
+<div class="actions">
+  <div class="row">
+    <button class="act arrow" id="btnPrev" title="上一題（←）" aria-label="上一題">‹</button>
+    <button class="act primary" id="btnCheck">批改</button>
+    <button class="act" id="btnReveal">看答案</button>
+    <button class="act ghost" id="btnNext">跳過</button>
+  </div>
+</div>
+
+<div class="ovwrap" id="ovwrap" role="dialog" aria-modal="true" aria-label="作答總覽"></div>
+
+<div class="ovwrap" id="cfgwrap" role="dialog" aria-modal="true" aria-label="設定">
+  <div class="ovcard">
+    <h2 id="cfgTitle">設定</h2>
+    <div class="cfgrow">
+      <span class="k" id="cfgSrcLab">題庫</span>
+      <div class="langseg srcseg" id="srcSeg" role="group" aria-label="題庫來源">
+        <button type="button" data-src="mine" aria-pressed="true"  title="我依官方大綱自行編寫的題庫">自製題庫</button>
+        <button type="button" data-src="doc"  aria-pressed="false" title="由 AZ-104 考古題文件逐題轉錄的題庫">文件題庫</button>
+      </div>
+    </div>
+    <p class="cfghint" id="cfgSrcHint">兩份題庫的進度、統計、星號、錯題本各自獨立。</p>
+    <div class="cfgrow">
+      <span class="k" id="cfgThemeLab">主題</span>
+      <div class="langseg" id="themeSeg" role="group" aria-label="主題">
+        <button type="button" data-theme="light"  aria-pressed="false">亮</button>
+        <button type="button" data-theme="dark"   aria-pressed="false">暗</button>
+        <button type="button" data-theme="system" aria-pressed="true">系統</button>
+      </div>
+    </div>
+    <div class="cfgrow">
+      <span class="k" id="cfgOrderLab">出題順序</span>
+      <div class="langseg" id="orderSeg" role="group" aria-label="出題順序">
+        <button type="button" data-order="seq"  aria-pressed="true"  title="照題庫本身的順序出題（文件題庫就是 #1、#2… 照題號排）">依題號</button>
+        <button type="button" data-order="rand" aria-pressed="false" title="每一輪重新洗牌打散，免得照著題號背答案">隨機</button>
+      </div>
+    </div>
+    <p class="cfghint" id="cfgOrderHint">只影響練習：模擬考一律隨機抽題。這一輪還沒開始就立刻套用，做到一半則下一輪才換（想馬上換就按下面的「重新開始」）。</p>
+    <div class="cfgrow">
+      <span class="k" id="cfgRoundLab">這一輪</span>
+      <button type="button" class="cfgact" id="cfgReset">↻ 重新開始</button>
+    </div>
+    <p class="cfghint" id="cfgResetHint">重新洗牌從第 1 題開始，這個分頁目前的作答進度會清掉（成績會先存進歷次紀錄）。</p>
+    <div class="ovbtns">
+      <button type="button" class="go" id="cfgClose">關閉</button>
+    </div>
+  </div>
+</div>
+<div class="ovwrap" id="statwrap" role="dialog" aria-modal="true" aria-label="統計"></div>
+<div class="ovwrap" id="infowrap" role="dialog" aria-modal="true" aria-label="題數說明"></div>
+<input type="file" id="impFile" accept="application/json,.json" hidden>
+
+<script>
+"use strict";
+
+/* =====================================================================
+   題庫：依 AZ-104 官方大綱自行編寫（非考古題）
+   d = 領域：1 身分與治理｜2 儲存體｜3 運算資源｜4 虛擬網路｜5 監控與維護
+   o = 選項　a = 正確選項索引（陣列）　e = 解析
+   ===================================================================== */
+const BANK_MINE = [
+];
+
+/* =====================================================================
+   題庫 B：由使用者提供的 PDF 逐題轉錄（英文原文 + 中文翻譯）
+   與題庫 A 完全獨立，切換時互不影響分數與錯題本。
+   欄位同題庫 A：q/o/e 為中文，en 為 {q,o,e} 英文原文。
+   n = 原始文件中的題號，方便對照 PDF。
+   ===================================================================== */
+const BANK_DOC = [
+];
+
+/* 目前作答中的題庫（由上方來源切換決定） */
+let BANK = BANK_MINE;
+
+/* =====================================================================
+   英文版題目：以中文題目為鍵，與中文題庫解耦，缺漏時自動退回中文。
+   格式 "中文題目": [英文題目, [英文選項…（順序須與中文一致）], 英文解析]
+   ===================================================================== */
+const EN = {};
+function mergeEN(){
+  let n = 0;
+  BANK_MINE.forEach(q=>{      /* EN 對照表只對應題庫 A；題庫 B 的英文直接寫在資料裡 */
+    const e = EN[q.q];
+    if(!e) return;
+    if(e[1].length !== q.o.length){ console.warn("EN 選項數不符:", q.q); return; }
+    q.en = {q:e[0], o:e[1].slice(), e:e[2]};
+    n++;
+  });
+  EN.__count = n;
+}
+
+/* =====================================================================
+   術語對照表：中＋術語模式會在中文名詞後面自動補上英文原文。
+   官方中譯常有出入，這裡以考試實際會看到的英文原詞為準。
+   每個字串只補第一次出現，避免整段變得雜亂。
+   ===================================================================== */
+const GLOSSARY_MAP = {
+  /* 雲端概念 */
+  "彈性":"Elasticity","可擴縮性":"Scalability","敏捷性":"Agility","容錯":"Fault tolerance",
+  "高可用性":"High availability","災難復原":"Disaster recovery","可預測性":"Predictability",
+  "資本支出":"CapEx","營運支出":"OpEx","消費式定價":"Consumption-based pricing",
+  "隨用隨付":"Pay-as-you-go","公有雲":"Public cloud","私有雲":"Private cloud",
+  "混合雲":"Hybrid cloud","多雲":"Multi-cloud","雲端暴衝":"Cloud bursting",
+  "共同責任模型":"Shared responsibility model","多租用戶":"Multi-tenant",
+  "無伺服器":"Serverless","水平擴展":"Scale out","水平縮減":"Scale in",
+  "垂直擴展":"Scale up","垂直縮小":"Scale down","自動調整":"Autoscaling",
+  "復原點目標":"RPO","復原時間目標":"RTO","資料主權":"Data sovereignty",
+  "資料落地":"Data residency","自助服務":"Self-service","上市時間":"Time to market",
+  /* 全球基礎結構與管理階層 */
+  "可用性區域":"Availability Zones","區域配對":"Region pairs","地理區":"Geography",
+  "主權區域":"Sovereign regions","可用性設定組":"Availability Set",
+  "容錯網域":"Fault domain","更新網域":"Update domain",
+  "管理群組":"Management group","訂用帳戶":"Subscription","資源群組":"Resource group",
+  "租用戶":"Tenant","資源":"Resource","區域":"Region",
+  /* 計算 */
+  "虛擬機器擴展集":"Virtual Machine Scale Sets","虛擬機器":"Virtual Machines",
+  "專用主機":"Dedicated Host","保留執行個體":"Reserved Instances",
+  "混合權益":"Azure Hybrid Benefit","解除配置":"Deallocated",
+  /* 網路 */
+  "虛擬網路":"Virtual Network / VNet","子網路":"Subnet","對等互連":"Peering",
+  "網路安全性群組":"Network Security Group / NSG","負載平衡器":"Load Balancer",
+  "應用程式閘道":"Application Gateway","內容傳遞網路":"CDN",
+  "私人端點":"Private Endpoint","站對站":"Site-to-site","點對站":"Point-to-site",
+  "使用者定義路由":"User-defined route","中樞輻射":"Hub-and-spoke",
+  "Web 應用程式防火牆":"Web Application Firewall / WAF",
+  /* 儲存 */
+  "經常性存取層":"Hot tier","冷層":"Cool tier","封存層":"Archive tier",
+  "本機備援儲存體":"LRS","區域備援儲存體":"ZRS","異地備援儲存體":"GRS",
+  "讀取權限異地備援儲存體":"RA-GRS","異地區域備援儲存體":"GZRS",
+  "區塊 Blob":"Block blob","附加 Blob":"Append blob","分頁 Blob":"Page blob",
+  "共用存取簽章":"Shared Access Signature / SAS","生命週期管理":"Lifecycle management",
+  "不可變儲存體":"Immutable storage / WORM","受管理磁碟":"Managed disks",
+  "復原服務保存庫":"Recovery Services vault","儲存體帳戶":"Storage account",
+  /* 身分與安全 */
+  "驗證":"Authentication","授權":"Authorization","單一登入":"Single sign-on / SSO",
+  "多重要素驗證":"Multi-factor authentication / MFA","條件式存取":"Conditional Access",
+  "無密碼驗證":"Passwordless authentication","自助式密碼重設":"Self-service password reset / SSPR",
+  "受控識別":"Managed Identity","零信任":"Zero Trust","縱深防禦":"Defense in depth",
+  "最低權限":"Least privilege","外部識別":"External Identities","安全分數":"Secure Score",
+  /* 治理與管理 */
+  "資源鎖定":"Resource lock","唯讀":"ReadOnly","原則":"Policy","計畫":"Initiative",
+  "拒絕":"Deny","稽核":"Audit","合規性":"Compliance","標記":"Tags",
+  "參與者":"Contributor","擁有者":"Owner","讀取者":"Reader",
+  "使用者存取系統管理員":"User Access Administrator","角色型存取控制":"RBAC",
+  "服務等級協定":"SLA","服務點數":"Service Credit","活動記錄":"Activity Log",
+  "診斷設定":"Diagnostic settings","動作群組":"Action group","計量":"Metrics",
+  "記錄":"Logs","警示":"Alerts","保留期":"Retention","工作區":"Workspace",
+  "基礎結構即程式碼":"Infrastructure as Code / IaC","範本":"Template",
+  "宣告式":"Declarative","冪等":"Idempotent","增量":"Incremental","完整":"Complete",
+  "定價計算機":"Pricing Calculator","總擁有成本":"Total Cost of Ownership / TCO",
+  "支出限制":"Spending limit","預算":"Budget","公開預覽":"Public preview",
+  "正式運作":"General Availability / GA","服務健康情況":"Service Health",
+  "資源健康情況":"Resource Health","雲端採用架構":"Cloud Adoption Framework / CAF",
+  "卓越營運":"Operational excellence","效能效率":"Performance efficiency",
+  "成本最佳化":"Cost optimization","可靠性":"Reliability","安全性":"Security"
+};
+/* 長詞優先，避免「可用性區域」被短詞「區域」先吃掉 */
+const GLOSSARY_KEYS = Object.keys(GLOSSARY_MAP).sort((a,b)=>b.length-a.length);
+const GLOSSARY_RE = new RegExp(GLOSSARY_KEYS.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|"), "g");
+
+function withTerms(s){
+  const seen = {};
+  const str = String(s);
+  return str.replace(GLOSSARY_RE, (m, ...args)=>{
+    const at = args[args.length - 2];        // replace 的倒數第二個參數是位移
+    if(seen[m]) return m;                    // 同一段只補第一次
+    seen[m] = 1;
+    const en = GLOSSARY_MAP[m];
+    /* 文件題庫的選項本來就寫成「中文（English）」，後面已經有同一個英文了就別再補一次，
+       否則會變成「可擴縮性（Scalability）（Scalability）」 */
+    const after = str.slice(at + m.length, at + m.length + en.length + 6);
+    if(new RegExp("^\\s*[（(]\\s*" + en.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i").test(after)) return m;
+    return m + "（" + en + "）";
+  });
+}
+
+/* =====================================================================
+   螢光筆標記：題目文字中用 ⟦…⟧ 包住的片段會以螢光筆呈現。
+   只標題目裡的關鍵條件，絕不標選項 —— 標了等於直接送答案。
+   ===================================================================== */
+const HL_RE = /⟦([^⟧]*)⟧/g;
+const stripHl = s => String(s).replace(HL_RE, "$1");
+/* 寫進 DOM（不使用 innerHTML，避免題目文字被當成 HTML） */
+function paintHl(el, s){
+  el.textContent = "";
+  let last = 0, m;
+  HL_RE.lastIndex = 0;
+  while((m = HL_RE.exec(String(s))) !== null){
+    if(m.index > last) el.append(document.createTextNode(String(s).slice(last, m.index)));
+    const mk = document.createElement("mark");
+    mk.className = "hl"; mk.textContent = m[1];
+    el.append(mk);
+    last = m.index + m[0].length;
+  }
+  if(last < String(s).length) el.append(document.createTextNode(String(s).slice(last)));
+}
+/* 成績單是用 innerHTML 組的：先跳脫，再把標記換成 <mark> */
+const escHl = s => esc(String(s))
+  .replace(/⟦/g, '<mark class="hl">').replace(/⟧/g, "</mark>")
+  .replace(/\n/g, "<br>");
+
+/* =====================================================================
+   題型
+   ---------------------------------------------------------------------
+   mc  單選／複選            o[] 選項            a=[正解索引…]
+   hs  HOTSPOT 是非表        s[] 敘述            a=[1,0,1]（1 是 / 0 否），逐句對應
+   dd  DRAG DROP 配對        items[] 可拖曳項目   tgt[] 答案區描述
+                                                a=[itemIdx…]，逐格對應 tgt
+   dl  HOTSPOT 下拉選單      sent 含 {0}{1} 的句子 dd[][] 每格的選項清單
+                                                a=[optIdx…]，逐格對應 dd
+   ===================================================================== */
+const kindOf = q => q.k || "mc";
+const slotCount = q => {
+  const k = kindOf(q);
+  return k === "hs" ? q.s.length : k === "dd" ? q.tgt.length : k === "dl" ? q.dd.length : 0;
+};
+
+/* 依目前語言取出題目的文字。EN 缺漏時自動退回中文，不會出現空白題目。*/
+function view(q){
+  const en = S.lang === "en" && q.en, zhen = S.lang === "zhen";
+  const T = s => zhen ? withTerms(s) : s;
+  const src = en ? q.en : q;
+  const V = {q:T(src.q), e:T(src.e || q.e), en:!!en};
+  switch(kindOf(q)){
+    case "hs": V.s = (src.s || q.s).map(T); break;
+    case "dd": V.items = (src.items || q.items).map(T);
+               V.tgt   = (src.tgt   || q.tgt  ).map(T); break;
+    case "dl": V.sent = T(src.sent || q.sent);
+               V.dd   = (src.dd || q.dd).map(list => list.map(T)); break;
+    default:   V.o = (src.o || q.o).map(T);
+  }
+  return V;
+}
+
+/* ---------------------------------------------------------------------
+   作答狀態：一律用陣列表示，好讓四種題型共用計分與成績單
+     mc → [已選索引…]（排序過）
+     hs → [1|0|null …] 每句一格
+     dd → [itemIdx|null …] 每個答案區一格
+     dl → [optIdx|null …] 每個下拉一格
+   --------------------------------------------------------------------- */
+function blankAns(q){
+  const n = slotCount(q);
+  return kindOf(q) === "mc" ? [] : new Array(n).fill(null);
+}
+const ansEmpty = (q, ans) => kindOf(q) === "mc"
+  ? !ans.length
+  : ans.every(v => v === null);
+const ansFull = (q, ans) => kindOf(q) === "mc"
+  ? !!ans.length
+  : ans.every(v => v !== null);
+/* 複選題要選滿幾項；單選與其他題型回傳 0 */
+const mcNeed  = q => (kindOf(q) === "mc" && q.a.length > 1) ? q.a.length : 0;
+/* 原廠考試的規則：複選題一定要「剛好」選滿 N 項才放你走 */
+const mcShort = (q, ans) => { const n = mcNeed(q); return n > 0 && (ans || []).length !== n; };
+/* 一題算不算「作答完成」：有作答，而且複選題有選滿 N 項（只選一半不算） */
+const ansDone = (q, ans) => !!ans && !ansEmpty(q, ans) && !mcShort(q, ans);
+/* 逐格比對；mc 因為順序無關，改用集合比對 */
+const ansOK = (q, ans) => kindOf(q) === "mc"
+  ? sameSet(ans, q.a)
+  : ans.length === q.a.length && q.a.every((v,i) => ans[i] === v);
+const YN = (v, en) => v === 1 ? (en ? "Yes" : "是") : v === 0 ? (en ? "No" : "否") : (en ? "—" : "—");
+
+/* =====================================================================
+   狀態
+   ===================================================================== */
+const DOMAIN_NAME = {1:"身分與治理", 2:"儲存體", 3:"運算資源", 4:"虛擬網路", 5:"監控與維護"};
+const DOMAIN_NAME_EN = {1:"Identities & governance", 2:"Storage", 3:"Compute", 4:"Virtual networking", 5:"Monitor & maintain"};
+const D_MAX = 5;                      /* 領域數；分頁 1..D_MAX 就是各領域 */
+const TAB_WRONG = D_MAX + 1;          /* 錯題本 */
+const TAB_STAR  = D_MAX + 2;          /* 星號題 */
+const TAB_MAX   = TAB_STAR;
+const dname = d => S.lang === "en" ? DOMAIN_NAME_EN[d] : DOMAIN_NAME[d];
+const LETTER = ["A","B","C","D","E","F","G","H","I","J"];
+const WRONG_KEYS = {mine:"az104.wrong.v1", doc:"az104.wrong.doc.v1"};
+const LANG_KEY  = "az104.lang.v1";
+const SRC_KEY   = "az104.src.v1";
+const TAB_KEY   = "az104.tab.v1";
+const THEME_KEY = "az104.theme.v1";
+const HINT_KEY  = "az104.hint.v1";
+const ORDER_KEY = "az104.order.v1";   /* 練習出題順序：seq 依題號／rand 隨機 */
+const EXAM_N = 50, EXAM_SEC = 100*60, PASS = 70;
+
+const STAR_KEYS  = {mine:"az104.star.v1",  doc:"az104.star.doc.v1"};
+const QSTAT_KEYS = {mine:"az104.qstat.v1", doc:"az104.qstat.doc.v1"};
+const HIST_KEYS  = {mine:"az104.hist.v1",  doc:"az104.hist.doc.v1"};
+
+const el = id => document.getElementById(id);
+const qbox=el("qbox"), verdict=el("verdict"), expl=el("expl"), report=el("report"),
+      eyebrow=el("eyebrow"), scoreEl=el("score"), timerEl=el("timer"), barFill=el("barFill"),
+      btnPrev=el("btnPrev"), btnCheck=el("btnCheck"), btnReveal=el("btnReveal"), btnNext=el("btnNext"),
+      footHint=el("footHint"), qtools=el("qtools"), ovwrap=el("ovwrap"), statwrap=el("statwrap"),
+      cfgwrap=el("cfgwrap"), starBtn=el("starBtn"), hintBox=el("hintBox");
+
+/* 錯題本以「題目文字」為鍵，題庫增修後仍能對應；兩份題庫各自獨立一本 */
+const WRONG = {mine:new Set(), doc:new Set()};
+["mine","doc"].forEach(k=>{
+  try{ WRONG[k] = new Set(JSON.parse(localStorage.getItem(WRONG_KEYS[k]) || "[]")); }catch(e){}
+});
+let wrongSet = WRONG.mine;                 /* 指向目前題庫的那一本 */
+const saveWrong = () => {
+  try{ localStorage.setItem(WRONG_KEYS[S.src], JSON.stringify([...wrongSet])); }catch(e){}
+};
+
+/* 星號題：自己手動打星號的「要加強」清單，同樣以題目文字為鍵、兩份題庫各自一本。
+   和錯題本的差別是它完全由使用者控制，答對也不會自動移除。 */
+const STAR = {mine:new Set(), doc:new Set()};
+["mine","doc"].forEach(k=>{
+  try{ STAR[k] = new Set(JSON.parse(localStorage.getItem(STAR_KEYS[k]) || "[]")); }catch(e){}
+});
+let starSet = STAR.mine;
+const saveStar = () => {
+  try{ localStorage.setItem(STAR_KEYS[S.src], JSON.stringify([...starSet])); }catch(e){}
+};
+
+/* =====================================================================
+   長期統計：每一題做過幾次、錯幾次；每一輪的成績各自留一筆
+   -----------------------------------------------------------------
+   QSTAT[題目文字] = {n:做過幾次, w:錯幾次, v:直接看答案幾次, l:最近十次的對錯, t:最後一次時間}
+   HIST = [{ts:時間, k:practice/exam, tab:分頁, r:答對, t:作答, d:{領域:[答對,作答]}}]
+   歷史是「一輪一筆」：整輪做完或按重新開始就封存，所以看得出來有沒有進步。
+   ===================================================================== */
+const QSTAT = {mine:{}, doc:{}};
+const HIST  = {mine:[], doc:[]};
+["mine","doc"].forEach(k=>{
+  try{ QSTAT[k] = JSON.parse(localStorage.getItem(QSTAT_KEYS[k]) || "{}") || {}; }catch(e){}
+  try{ HIST[k]  = JSON.parse(localStorage.getItem(HIST_KEYS[k])  || "[]") || []; }catch(e){}
+});
+let qstat = QSTAT.mine, hist = HIST.mine;
+const saveQstat = () => { try{ localStorage.setItem(QSTAT_KEYS[S.src], JSON.stringify(qstat)); }catch(e){} };
+const saveHist  = () => { try{ localStorage.setItem(HIST_KEYS[S.src],  JSON.stringify(hist));  }catch(e){} };
+
+/* 一次作答就記一筆。直接看答案＝不會，也算錯一次。 */
+function recordAttempt(qKey, ok, reveal){
+  const r = qstat[qKey] || (qstat[qKey] = {n:0, w:0, v:0, l:"", t:0});
+  const bad = !ok || reveal;
+  r.n++;
+  if(bad) r.w++;
+  if(reveal) r.v++;
+  r.l = (bad ? "0" : "1") + (r.l || "");
+  if(r.l.length > 10) r.l = r.l.slice(0, 10);   /* 只留最近十次，看得出近況 */
+  r.t = Date.now();
+  saveQstat();
+}
+
+const HIST_MAX = 60;
+function pushHist(entry){
+  hist.unshift(entry);
+  if(hist.length > HIST_MAX) hist.length = HIST_MAX;
+  saveHist();
+}
+
+const S = {
+  src:  "mine",    // mine 自製題庫 / doc 文件題庫
+  lang: "zh",      // zh 中文 / zhen 中＋術語 / en 全英
+  tab: 0,          // 0 全部 / 1-5 領域 / 6 錯題本 / 7 星號題
+  order: "seq",    // 練習出題順序：seq 依題號（預設）／rand 隨機；模擬考一律隨機
+  exam: false,
+  pool: [],        // 目前這一輪的題目
+  idx: 0,
+  ans: [],         // 目前這一題的作答，格式依題型而定（見 blankAns）
+  graded: false,
+  right: 0, total: 0,
+  answers: [],     // 每題記錄使用者選擇（練習模式回上一題也靠它還原）
+  gr: [],          // 練習模式：每題批改過的狀態 {reveal:是否只是看答案}
+  flags: [],       // 模擬考：本次考試標記「待複習」的題號
+  notes: [],       // 模擬考：本次考試的逐題備註
+  logged: false,   // 這一輪的成績是否已經封存進歷史紀錄
+  timerId: null, left: 0, ended: false
+};
+
+const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const sameSet = (a,b) => a.length===b.length && a.every(x=>b.includes(x));
+
+/* 題庫撰寫時正確答案都排在最前面，每輪重洗選項順序並重新對應答案索引，
+   否則「一律選 A」就會全對。
+   -----------------------------------------------------------------
+   第二個參數 p 是先前洗牌的結果：帶進來就照著洗回一模一樣的順序，
+   關掉瀏覽器再回來才有辦法把「你選的是第幾個選項」對回同一個選項。
+   洗完會把用到的順序記在 q._p，存進度時就是存這個。 */
+function permuteOptions(q, p){
+  /* 有存過就重播，沒有（或長度對不上，題庫被改過）就重新洗 */
+  const pick = (n, saved) =>
+    (Array.isArray(saved) && saved.length === n && saved.every(v => Number.isInteger(v) && v >= 0 && v < n))
+      ? saved.slice()
+      : shuffle(Array.from({length:n}, (_,i)=>i));
+
+  switch(kindOf(q)){
+
+  /* --- HOTSPOT 是非表：洗敘述的順序 ---------------------------------
+     每一句各自作答，順序不帶答案資訊；但洗過之後就沒辦法把整題背成
+     「YNY」這種答案樣式，必須真的逐句判斷。 */
+  case "hs": {
+    if(q.s.length <= 1) return;
+    const order = pick(q.s.length, p && p.s);
+    q.s = order.map(i => q.s[i]);
+    q.a = order.map(i => q.a[i]);
+    if(q.en && q.en.s) q.en.s = order.map(i => q.en.s[i]);
+    q._p = {s:order};
+    return;
+  }
+
+  /* --- DRAG DROP 配對：可拖曳項目與答案區兩邊都洗 ------------------- */
+  case "dd": {
+    const iOrd = pick(q.items.length, p && p.i);          // iOrd[新位置] = 舊索引
+    q.items = iOrd.map(i => q.items[i]);
+    if(q.en && q.en.items) q.en.items = iOrd.map(i => q.en.items[i]);
+    q.a = q.a.map(old => iOrd.indexOf(old));              // 答案改指向新的項目位置
+    /* q.fix：答案區的上下順序本身就是題意（例如縱深防禦由外而內的巢狀分層），
+       這種題目只洗可拖曳的項目，答案區維持原順序 */
+    let tOrd = null;
+    if(q.tgt.length > 1 && !q.fix){
+      tOrd = pick(q.tgt.length, p && p.t);
+      q.tgt = tOrd.map(i => q.tgt[i]);
+      q.a   = tOrd.map(i => q.a[i]);
+      if(q.en && q.en.tgt) q.en.tgt = tOrd.map(i => q.en.tgt[i]);
+    }
+    q._p = {i:iOrd, t:tOrd};
+    return;
+  }
+
+  /* --- HOTSPOT 下拉：每一格各自洗自己的選項清單 --------------------- */
+  case "dl": {
+    const ords = [];
+    q.dd.forEach((list, g)=>{
+      if(list.length <= 1){ ords[g] = null; return; }
+      const order = pick(list.length, p && p.d && p.d[g]);
+      q.dd[g] = order.map(i => list[i]);
+      if(q.en && q.en.dd && q.en.dd[g]) q.en.dd[g] = order.map(i => q.en.dd[g][i]);
+      q.a[g] = order.indexOf(q.a[g]);
+      ords[g] = order;
+    });
+    q._p = {d:ords};
+    return;
+  }
+
+  /* --- 單選／複選：是非題（只有兩個選項）維持原順序，才對得上原文件的 A/B --- */
+  default: {
+    /* q.fix：選項的順序本身就是題目的一部分——答案區是入口網站的截圖
+       （側欄、設定清單、刀鋒節點、工具列、服務磁磚），原廠考試給的就是那個畫面，
+       洗過就跟文件對不起來了。有 ico 的題目基本上都該設 fix。 */
+    if(q.o.length <= 2 || q.fix) return;
+    const order = pick(q.o.length, p && p.o);          // order[新位置] = 舊索引
+    q.o = order.map(i => q.o[i]);
+    if(q.en && q.en.o) q.en.o = order.map(i => q.en.o[i]);   // 英文選項必須跟著一起換位
+    if(q.ico) q.ico = order.map(i => q.ico[i]);              // 服務圖示也要，不然洗完圖會對到別的選項
+    q.a = q.a.map(old => order.indexOf(old)).sort((x,y)=>x-y);
+    q._p = {o:order};
+  }
+  }
+}
+
+function poolFor(tab){
+  if(tab === TAB_WRONG) return BANK.filter(q => wrongSet.has(q.q));
+  if(tab === TAB_STAR)  return BANK.filter(q => starSet.has(q.q));
+  if(tab === 0) return BANK.slice();
+  return BANK.filter(q => q.d === tab);
+}
+
+/* =====================================================================
+   分頁進度：每個分頁（連同題庫來源）各自記住自己做到哪
+   -----------------------------------------------------------------
+   出題時每一題都複製一份再洗選項，洗到的是複本而不是題庫本體，
+   所以「01 洗牌」不會把「02 已經作答的選項編號」對應到別的答案去。
+   進度只在兩種情況歸零：這個分頁的題目全部做完，或自己按「重新開始」。
+   ===================================================================== */
+const cloneQ = typeof structuredClone === "function"
+  ? (q => structuredClone(q))
+  : (q => JSON.parse(JSON.stringify(q)));
+
+const SESS = {};                                  /* key -> 該分頁的進度 */
+const sessKey = () => S.src + ":" + S.tab;
+
+/* 題目在題庫裡的位置：存進度時只存編號，不存整份題目，才不會塞爆 localStorage */
+let bankPos = null, bankPosOf = null;
+function posOf(q){
+  if(bankPosOf !== BANK){ bankPos = new Map(); BANK.forEach((x,i)=>bankPos.set(x,i)); bankPosOf = BANK; }
+  const v = bankPos.get(q);
+  return v === undefined ? -1 : v;
+}
+
+/* 題庫指紋：題庫改過（加題、改字）就讓舊進度自動作廢，
+   免得存下來的題號對到別題、答案全部錯位 */
+const SIG = new WeakMap();
+function sigOf(bank){
+  if(SIG.has(bank)) return SIG.get(bank);
+  let h = 5381;
+  for(const q of bank){
+    const s = q.q;
+    for(let i=0;i<s.length;i++) h = (((h * 33) ^ s.charCodeAt(i)) >>> 0);
+  }
+  const sig = bank.length + "." + h.toString(36);
+  SIG.set(bank, sig);
+  return sig;
+}
+
+/* ---- 進度存進 localStorage：關掉瀏覽器隔天回來還接得下去 ---- */
+const SESS_PREFIX = "az104.sess.v1|";
+const sessLS = (src, tab) => SESS_PREFIX + src + "|" + tab;
+
+function sessToJSON(s){
+  const n = s.pool.length;
+  return {
+    n: s.pool.map(q => q._n),                       /* 出過哪些題、什麼順序 */
+    p: s.pool.map(q => q._p || 0),                  /* 每題的選項洗牌結果 */
+    a: Array.from({length:n}, (_,i) => s.answers[i] || null),
+    g: Array.from({length:n}, (_,i) => s.gr[i] ? (s.gr[i].reveal ? 2 : 1) : 0),
+    i: s.idx, r: s.right, t: s.total
+  };
+}
+function sessFromJSON(o, bank){
+  if(!o || !Array.isArray(o.n) || !o.n.length) return null;
+  const pool = [];
+  for(let k=0;k<o.n.length;k++){
+    const src = bank[o.n[k]];
+    if(!src) return null;                           /* 題號對不上就整份作廢 */
+    const c = cloneQ(src); c._n = o.n[k];
+    permuteOptions(c, (o.p && o.p[k]) || null);
+    pool.push(c);
+  }
+  const trim = a => { while(a.length && a[a.length-1] === undefined) a.pop(); return a; };
+  return {
+    pool,
+    idx:   Math.min(Math.max(o.i|0, 0), pool.length - 1),
+    answers: trim((o.a || []).map(a => Array.isArray(a) ? a : undefined)),
+    gr:      trim((o.g || []).map(g => g ? {reveal: g === 2} : undefined)),
+    right: o.r|0, total: o.t|0
+  };
+}
+
+function persistSess(src, tab){
+  try{
+    const s = SESS[src + ":" + tab];
+    /* 還停在第 1 題、也還沒作答，就不算進度：不寫檔，免得每次開頁面都留一份 */
+    if(!s || !s.pool.length || (!s.idx && !s.total)){ localStorage.removeItem(sessLS(src, tab)); return; }
+    const o = sessToJSON(s);
+    o.sig = sigOf(src === "mine" ? BANK_MINE : BANK_DOC);
+    localStorage.setItem(sessLS(src, tab), JSON.stringify(o));
+  }catch(e){}                                       /* 空間不夠就只留在記憶體裡 */
+}
+
+function restoreSessions(){
+  ["mine","doc"].forEach(src=>{
+    const bank = src === "mine" ? BANK_MINE : BANK_DOC;
+    if(!bank.length) return;
+    const sig = sigOf(bank);
+    for(let tab=0; tab<=TAB_MAX; tab++){
+      let raw = null;
+      try{ raw = localStorage.getItem(sessLS(src, tab)); }catch(e){ return; }
+      if(!raw) continue;
+      let s = null;
+      try{
+        const o = JSON.parse(raw);
+        if(o.sig === sig) s = sessFromJSON(o, bank);
+      }catch(e){}
+      if(s) SESS[src + ":" + tab] = s;
+      else try{ localStorage.removeItem(sessLS(src, tab)); }catch(e){}
+    }
+  });
+}
+
+function saveSess(){
+  if(S.exam || !S.pool.length) return;
+  SESS[sessKey()] = {
+    pool:S.pool, idx:S.idx, answers:S.answers, gr:S.gr,
+    right:S.right, total:S.total
+  };
+  persistSess(S.src, S.tab);
+}
+function loadSess(){
+  const s = SESS[sessKey()];
+  if(!s || !s.pool.length) return false;
+  /* 錯題本／星號題的內容會隨著作答與打星號變動：
+     回到這個分頁時，把新符合條件、之前沒出過的題目補到隊伍最後面，
+     已經做過的進度照樣保留。 */
+  if(S.tab === TAB_WRONG || S.tab === TAB_STAR){
+    const have = new Set(s.pool.map(q => q.q));
+    poolFor(S.tab).forEach(q=>{
+      if(have.has(q.q)) return;
+      const c = cloneQ(q); c._n = posOf(q); permuteOptions(c); s.pool.push(c);
+    });
+  }
+  S.pool = s.pool; S.idx = s.idx; S.answers = s.answers; S.gr = s.gr;
+  S.right = s.right; S.total = s.total;
+  if(S.idx >= S.pool.length) S.idx = S.pool.length - 1;   /* 補題後回到最後一題 */
+  return true;
+}
+const dropSess = () => {
+  delete SESS[sessKey()];
+  try{ localStorage.removeItem(sessLS(S.src, S.tab)); }catch(e){}
+};
+
+/* 分頁上的小圓點：標出哪些分頁還有沒做完的進度 */
+function paintTabProgress(){
+  document.querySelectorAll("nav.tabs button").forEach((b,i)=>{
+    const s = SESS[S.src + ":" + i];
+    /* 剛開一輪、還停在第 1 題又沒作答，就不算「有進度」，免得每個分頁都亮點 */
+    const on = !!(s && s.pool.length && (s.idx > 0 || s.total > 0));
+    let dot = b.querySelector(".dot");
+    if(!on){ if(dot) dot.remove(); return; }
+    if(!dot){ dot = document.createElement("i"); dot.className = "dot"; b.append(dot); }
+    dot.title = S.lang === "en"
+      ? `in progress — question ${s.idx+1} of ${s.pool.length}`
+      : `還沒做完 · 做到第 ${s.idx+1} / ${s.pool.length} 題`;
+  });
+}
+
+/* =====================================================================
+   出題
+   ===================================================================== */
+/* fresh=true 代表「重新開始」：丟掉舊進度重新洗牌 */
+function startRound(fresh){
+  stopTimer();
+  closeOverview();
+  S.ended = false;
+  S.flags = []; S.notes = [];
+  report.classList.remove("show"); report.innerHTML = "";
+
+  /* 練習模式：先看看這個分頁有沒有沒做完的進度，有就接著做 */
+  if(!S.exam && !fresh && loadSess()){ S.logged = false; renderQ(); return; }
+
+  /* 按「重新開始」把做到一半的進度丟掉之前，先把這一輪的成績封存起來 */
+  if(fresh && !S.exam && S.pool.length) logRound(null);
+
+  S.idx = 0; S.right = 0; S.total = 0;
+  S.answers = []; S.gr = []; S.logged = false;
+  const build = list => list.map(q=>{
+    const c = cloneQ(q); c._n = posOf(q); permuteOptions(c); return c;
+  });
+  if(S.exam){
+    /* 模擬考一律隨機抽題，不看設定裡的出題順序——真的考試就是隨機的 */
+    S.pool = build(shuffle(BANK.slice()).slice(0, Math.min(EXAM_N, BANK.length)));
+    startTimer();
+  } else {
+    dropSess();
+    /* 練習：依設定決定順序。seq＝題庫本身的順序（文件題庫就是 #1、#2… 照題號排），
+       rand＝洗牌打散，免得照著題號背答案。選項順序照樣每輪重洗，不受這裡影響。 */
+    const list = poolFor(S.tab);
+    S.pool = build(S.order === "rand" ? shuffle(list) : list);
+  }
+  renderQ();
+}
+
+function renderQ(){
+  verdict.className = "verdict"; verdict.textContent = "";
+  expl.className = "expl"; expl.innerHTML = "";
+  S.ans = []; S.graded = false;
+  qbox.innerHTML = ""; qtools.innerHTML = "";
+
+  if(!S.pool.length){
+    const en = S.lang === "en";
+    eyebrow.textContent = S.tab === TAB_WRONG ? (en?"Review list":"錯題本")
+                        : S.tab === TAB_STAR ? (en?"Starred":"星號題")
+                        : (en?"No questions":"沒有題目");
+    scoreEl.textContent = "0 / 0";
+    barFill.style.width = "0%";
+    starBtn.hidden = true;
+    const docEmpty = S.src === "doc" && !BANK_DOC.length;
+    qbox.innerHTML = '<div class="empty">' +
+      (docEmpty
+        ? (en ? "The document question bank has not been imported yet."
+              : "文件題庫還沒有匯入題目。<br>轉錄完成後這裡就會出現題目，切回「自製題庫」可以照常練習。")
+        : S.tab === TAB_WRONG
+        ? (en ? "Your review list is empty.<br>Anything you answer incorrectly elsewhere lands here for a focused retry."
+              : "錯題本目前是空的。<br>在其他分頁答錯的題目會自動收進來，可以之後專門重練。")
+        : S.tab === TAB_STAR
+        ? (en ? "You have not starred anything yet.<br>Hit ☆ on any question to file it here for extra drilling."
+              : "還沒有打星號的題目。<br>在任何一題按「☆ 加強練習」，那一題就會收進這裡專門加強。")
+        : (en ? "No questions in this category." : "這個分類沒有題目。")) + "</div>";
+    setActions();
+    paintTabProgress();
+    return;
+  }
+  if(S.idx >= S.pool.length){ finishRound(); return; }
+
+  const q = S.pool[S.idx];
+  const V = view(q);
+  const multi = kindOf(q) === "mc" && q.a.length > 1;
+  const EN = S.lang === "en";
+  S.ans = blankAns(q);
+
+  eyebrow.textContent = (S.exam ? (EN ? "Mock exam · " : "模擬考 · ") : "") +
+    (EN ? `Q ${S.idx+1} / ${S.pool.length} · ${dname(q.d)}`
+        : `第 ${S.idx+1} / ${S.pool.length} 題 · ${dname(q.d)}`);
+  scoreEl.textContent = S.exam
+    ? (EN ? `answered ${answeredCount()} / ${S.pool.length}` : `已作答 ${answeredCount()} / ${S.pool.length}`)
+    : `${S.right} / ${S.total}`;
+  barFill.style.width = ((S.idx) / S.pool.length * 100).toFixed(1) + "%";
+
+  const p = document.createElement("div");
+  p.className = "prompt";
+  const meta = document.createElement("p");
+  meta.className = "meta";
+  meta.textContent = `${dname(q.d)} · ${(EN && q.tEn) ? q.tEn : q.t}`
+                   + (q.n ? (EN ? ` · #${q.n}` : ` · 第 ${q.n} 題`) : "");
+  /* 這一題是把第一版拆開的子題合併還原回來的，不是直接從原始文件轉錄。
+     還沒回頭逐字核對前先標出來，讓作答的人知道措辭可能與原文有出入。 */
+  /* q.ext：這一題**不在原始 PDF 裡**（作者當初沒收錄那個題號），是由外部來源補進來的。
+     不能用 mg/vf 表示——那兩個的意思分別是「子題合併還原」與「已與原始文件核對」，
+     對這種題目都不成立。給它自己的徽章，讓作答的人一眼分得出來源。 */
+  if(q.mg || q.ext){
+    const chk = document.createElement("span");
+    chk.className = "chk " + (q.ext ? "ext" : (q.vf ? "done" : "wait"));
+    chk.textContent = q.ext ? (EN ? "＋ not in the source PDF" : "＋ 原文件沒有，外部補入")
+                    : q.vf  ? (EN ? "✓ checked against source" : "✓ 已核對原文")
+                            : (EN ? "⚠ not yet checked" : "⚠ 尚未核對原文");
+    chk.title = q.ext
+      ? (EN ? "This question number is absent from the source PDF; the item was recovered from external question banks. See the box below for what was found and how reliable it is."
+            : "這個題號在原始 PDF 裡是空的，本題是由外部題庫來源補進來的。點開下方對照框可以看到找到了什麼、可信度如何。")
+      : q.vf
+      ? (EN ? "This item was rebuilt from split sub-questions and has since been checked word-for-word against the original document."
+            : "這一題是由拆開的子題合併還原的，已回頭與原始文件逐字核對過。")
+      : (EN ? "This item was rebuilt from split sub-questions and has not yet been checked against the original document — the wording may differ slightly. The answer itself is unaffected."
+            : "這一題是由拆開的子題合併還原的，還沒回頭與原始文件核對，措辭可能與原文略有出入。答案本身不受影響。");
+    /* 存了原文就讓徽章可以點，切出原始文件的樣子對照 */
+    if(q.v0){
+      chk.classList.add("act");
+      chk.setAttribute("role","button");
+      chk.tabIndex = 0;
+      const toggle = ()=>{
+        const box = qbox.querySelector(".v0box");
+        if(box) box.classList.toggle("show");
+      };
+      chk.addEventListener("click", toggle);
+      chk.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggle(); } });
+    }
+    meta.append(chk);
+  }
+  /* 題目本文用換行分段：制式前言自成一行，真正的題目與「解法：」各自另起一段 */
+  p.append(meta);
+  String(V.q).split("\n").forEach(seg=>{
+    seg = seg.trim();
+    if(!seg) return;
+    const isNote = /^(注意：|Note:|（原題|DRAG DROP)/.test(stripHl(seg));
+    const line = document.createElement("p");
+    line.className = isNote ? "qnote" : "qtext";
+    paintHl(line, seg);
+    p.append(line);
+  });
+  /* 題目裡的表格（原題就有一張表，例如 #187 的電腦與作業系統對照）。
+     只是題目的一部分，不能選，也不參與洗牌。 */
+  const TB = (EN && q.en && q.en.tbl) ? q.en.tbl : q.tbl;
+  if(TB){
+    const t = document.createElement("table");
+    t.className = "qtbl";
+    const th = document.createElement("tr");
+    TB.h.forEach(c=>{ const e = document.createElement("th"); e.textContent = c; th.append(e); });
+    t.append(th);
+    TB.r.forEach(row=>{
+      const tr = document.createElement("tr");
+      row.forEach(c=>{ const e = document.createElement("td"); paintHl(e, c); tr.append(e); });
+      t.append(tr);
+    });
+    p.append(t);
+  }
+
+  multiBadge = null;
+  if(multi){
+    const m = document.createElement("span");
+    m.className = "multi"; m.dataset.need = q.a.length;
+    p.append(m);
+    multiBadge = m;      /* 文字交給 paintMulti()，它會一併顯示「已選 x」 */
+  }
+  qbox.append(p);
+
+  /* 原文對照框：預設收起，點題頭的核對徽章才展開 */
+  if(q.v0){
+    const v0 = document.createElement("div");
+    v0.className = "v0box";
+    const lab = document.createElement("span");
+    lab.className = "lab";
+    lab.textContent = EN ? "Original wording in the source document" : "原始文件上的樣子";
+    v0.append(lab, document.createTextNode(q.v0));
+    qbox.append(v0);
+  }
+
+  /* 回頭看已作答的題目時（模擬考的「上一題」、練習模式的「上一題」）還原先前的作答 */
+  if(S.answers[S.idx]) S.ans = S.answers[S.idx].slice();
+
+  renderTools(q, EN);
+  paintStar();
+  ({hs:renderHS, dd:renderDD, dl:renderDL}[kindOf(q)] || renderMC)(q, V, EN);
+  setActions();
+  paintMulti();
+
+  /* 練習模式翻回批改過的題目：直接把當時的判定與解析重新畫出來，但不再重複計分 */
+  if(!S.exam && S.gr[S.idx]) grade(S.gr[S.idx].reveal, false);
+
+  saveSess();
+  paintTabProgress();
+}
+
+/* ---------- 星號：練習模式限定，放在題目列上的小圖示鈕 ---------- */
+function paintStar(){
+  const q = S.pool[S.idx];
+  const on = !!(q && starSet.has(q.q));
+  const show = !!q && !S.exam && !report.classList.contains("show");
+  starBtn.hidden = !show;
+  if(!show) return;
+  starBtn.setAttribute("aria-pressed", String(on));
+  starBtn.textContent = on ? "★" : "☆";
+  starBtn.title = S.lang === "en"
+    ? (on ? "Starred — tap to remove from the Starred tab"
+          : "Star this question so you can drill it in the Starred tab")
+    : (on ? "已收進「星號題」分頁，再按一次取消"
+          : "加強練習：把這題收進「星號題」分頁");
+}
+starBtn.addEventListener("click", ()=>{
+  const q = S.pool[S.idx];
+  if(!q) return;
+  if(starSet.has(q.q)) starSet.delete(q.q); else starSet.add(q.q);
+  saveStar();
+  paintStar();
+  /* 正在星號題分頁裡取消星號：這一輪照樣做完，換一輪才會消失 */
+});
+
+/* ---------- 題目上方的工具列 ----------------------------------------
+   兩種模式的工具是分開的，不互相混用：
+   ・練習模式＝★ 星號（長期保存，之後在「星號題」分頁專門加強）
+   ・模擬考　＝⚑ 標記待複習＋備註（只屬於這一次考試，交卷後隨檢討一起看）
+   兩種模式都可以用「上一題」翻回去。 */
+function renderTools(q, EN){
+  qtools.innerHTML = "";
+  if(!q) return;
+
+  /* 練習模式的星號在題目列上（見 paintStar），這裡只處理模擬考的標記與備註 */
+  if(!S.exam) return;
+
+  /* ---- 模擬考：仿原廠的「標記待複習」，交卷前可以從總覽跳回來重看 ---- */
+  const flag = document.createElement("button");
+  flag.type = "button"; flag.className = "tbtn flag";
+  const note = document.createElement("textarea");
+  note.className = "notebox";
+  note.placeholder = EN ? "Optional note — what made you unsure? (visible on the review screen)"
+                        : "備註（選填）：哪裡卡住、在猶豫哪兩個選項……交卷前的總覽看得到";
+  note.value = S.notes[S.idx] || "";
+  note.addEventListener("input", ()=>{ S.notes[S.idx] = note.value; });
+
+  const paintFlag = ()=>{
+    const on = !!S.flags[S.idx];
+    flag.setAttribute("aria-pressed", String(on));
+    flag.textContent = on ? (EN ? "⚑ Flagged for review" : "⚑ 已標記待複習")
+                          : (EN ? "⚑ Flag for review"    : "⚑ 標記待複習");
+    note.hidden = !on;
+  };
+  flag.title = EN ? "Mark this question so you can come back to it before submitting"
+                  : "把這題標記起來，交卷前可以從「作答總覽」跳回來再看一次";
+  flag.addEventListener("click", ()=>{
+    S.flags[S.idx] = !S.flags[S.idx];
+    paintFlag();
+    if(S.flags[S.idx]) note.focus();
+  });
+  paintFlag();
+  qtools.append(flag, note);
+}
+
+/* ---------- 複選題的「需選 N 項」徽章 --------------------------------
+   原廠考試對複選題是硬性的：選滿 N 項才放你走，也不讓你多選第 N+1 項。
+   這裡把規則做出來，順便把「已選幾項」即時寫在徽章上。 */
+let multiBadge = null, multiTimer = 0;
+function paintMulti(){
+  const m = multiBadge;
+  if(!m) return;
+  clearTimeout(multiTimer);
+  const need = +m.dataset.need, got = S.ans.length, EN = S.lang === "en";
+  m.textContent = EN ? `select ${need} · ${got} selected` : `需選 ${need} 項 · 已選 ${got}`;
+  m.classList.remove("warn");
+  m.classList.toggle("done", got === need);
+}
+/* 擋下來的時候閃一下徽章，並把原因寫上去，過幾秒自己還原 */
+function bumpMulti(msg){
+  const m = multiBadge;
+  if(!m) return;
+  clearTimeout(multiTimer);
+  m.classList.remove("warn"); void m.offsetWidth;   /* 重播動畫 */
+  m.classList.add("warn");
+  m.textContent = msg;
+  multiTimer = setTimeout(paintMulti, 2200);
+}
+/* 沒選滿就想繼續：擋住並說明還差幾項 */
+function nagMulti(q){
+  const EN = S.lang === "en", need = mcNeed(q), got = S.ans.length;
+  verdict.className = "verdict show fail";
+  verdict.textContent = got < need
+    ? (EN ? `This question needs ${need} selections — you have ${got}. Pick ${need - got} more before moving on.`
+          : `這題需選 ${need} 項，目前只選了 ${got} 項，再選 ${need - got} 項才能繼續。`)
+    : (EN ? `This question needs exactly ${need} selections — you have ${got}. Deselect ${got - need}.`
+          : `這題只能選 ${need} 項，目前選了 ${got} 項，請取消 ${got - need} 項。`);
+  bumpMulti(EN ? `${got} / ${need} selected` : `已選 ${got} / ${need} 項`);
+  verdict.scrollIntoView({block:"nearest", behavior:"smooth"});
+}
+
+/* 作答有變動時：把答案存起來，模擬考另外更新「已作答」計數 */
+const answeredCount = () => S.pool.filter((q,i) => ansDone(q, S.answers[i])).length;
+function ansChanged(){
+  S.answers[S.idx] = S.ans.slice();
+  paintMulti();
+  /* 補齊之後，把剛才「還差幾項」的提醒收掉（批改後的判定不能動） */
+  if(!S.graded && verdict.classList.contains("show")) verdict.className = "verdict";
+  if(!S.exam) return;
+  const n = answeredCount();
+  scoreEl.textContent = S.lang === "en"
+    ? `answered ${n} / ${S.pool.length}` : `已作答 ${n} / ${S.pool.length}`;
+}
+
+/* ---------- 單選／複選 ---------- */
+function renderMC(q, V, EN){
+  const multi = q.a.length > 1;
+  const box = document.createElement("div");
+  /* q.look：原題的答案區長什麼樣子就照著畫。
+     "nav"   入口網站的深色左側欄（#168）
+     "icons" 只有圖示、沒有文字的工具列（#215）——原廠考試就只給一張圖，
+             名稱只留在 aria-label 與成績單裡，作答時看不到，才不會變成送分題 */
+  box.className = "opts" + (q.look ? " look-" + q.look : "");
+  V.o.forEach((text, i)=>{
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "opt";
+    b.setAttribute("aria-pressed","false"); b.dataset.i = i;
+    const k = document.createElement("span");
+    k.className = "key"; k.textContent = LETTER[i];
+    const t = document.createElement("span");
+    t.textContent = stripHl(text);      /* 選項一律不標，免得直接洩題 */
+    /* 原題的答案區是入口網站的服務列，有存圖示就一起畫出來 */
+    if(q.ico && q.ico[i]){
+      const im = document.createElement("img");
+      im.className = "oico"; im.src = q.ico[i];
+      if(q.look === "icons"){
+        /* 只給圖：名稱不顯示，但要留給螢幕報讀與鍵盤操作 */
+        im.alt = stripHl(text);
+        b.setAttribute("aria-label", LETTER[i] + "　" + stripHl(text));
+        b.title = stripHl(text);
+        b.append(k, im);
+      }
+      else { im.alt = ""; b.append(k, im, t); }   /* 名稱就在旁邊，圖示純裝飾 */
+    }
+    else b.append(k, t);
+    b.addEventListener("click", ()=>{
+      if(S.graded) return;
+      const at = S.ans.indexOf(i);
+      if(multi){
+        if(at >= 0) S.ans.splice(at,1);
+        /* 已經選滿 N 項＝不再吃第 N+1 項，跟原廠考試一樣要先取消一個 */
+        else if(S.ans.length >= q.a.length){
+          bumpMulti(EN ? `select ${q.a.length} — deselect one first`
+                       : `最多 ${q.a.length} 項，請先取消一個`);
+          return;
+        }
+        else S.ans.push(i);
+      }
+      else S.ans = [i];
+      S.ans.sort((x,y)=>x-y);
+      [...box.children].forEach(c => c.setAttribute("aria-pressed", S.ans.includes(+c.dataset.i)));
+      ansChanged();
+    });
+    box.append(b);
+  });
+  qbox.append(box);
+  [...box.children].forEach(c => c.setAttribute("aria-pressed", S.ans.includes(+c.dataset.i)));
+}
+
+/* ---------- HOTSPOT 是非表：每一句各自選「是 / 否」 ---------- */
+function renderHS(q, V, EN){
+  const box = document.createElement("div");
+  box.className = "hs";
+  V.s.forEach((text, i)=>{
+    const row = document.createElement("div");
+    row.className = "hrow"; row.dataset.i = i;
+    const st = document.createElement("span");
+    st.className = "st";
+    paintHl(st, text);                  /* 敘述本身可以標重點，它不是選項 */
+    const yn = document.createElement("span");
+    yn.className = "yn";
+    [[1, EN?"Yes":"是"], [0, EN?"No":"否"]].forEach(([val, label])=>{
+      const b = document.createElement("button");
+      b.type = "button"; b.dataset.v = val; b.textContent = label;
+      b.setAttribute("aria-pressed", String(S.ans[i] === val));
+      b.addEventListener("click", ()=>{
+        if(S.graded) return;
+        S.ans[i] = val;
+        [...yn.children].forEach(c => c.setAttribute("aria-pressed", String(S.ans[i] === +c.dataset.v)));
+        ansChanged();
+      });
+      yn.append(b);
+    });
+    row.append(st, yn);
+    box.append(row);
+  });
+  qbox.append(box);
+}
+
+/* ---------- DRAG DROP 配對：把左邊的項目拖到右邊的答案區 ---------- */
+function renderDD(q, V, EN){
+  const box = document.createElement("div");
+  box.className = "dd";
+
+  const bankLab = document.createElement("p");
+  bankLab.className = "lab";
+  bankLab.textContent = EN ? "Drag from here (each item may be used once, more than once, or not at all)"
+                           : "從這裡拖曳（每個項目可以用一次、多次或完全不用）";
+  const bank = document.createElement("div");
+  bank.className = "bank";
+
+  let sel = null;                       /* 觸控／點擊操作：先選項目，再點答案格 */
+  const chips = V.items.map((text, i)=>{
+    const c = document.createElement("button");
+    c.type = "button"; c.className = "chip"; c.dataset.i = i;
+    c.draggable = true; c.textContent = stripHl(text);
+    c.setAttribute("aria-pressed","false");
+    c.addEventListener("click", ()=>{
+      if(S.graded) return;
+      sel = (sel === i) ? null : i;
+      chips.forEach(x => x.setAttribute("aria-pressed", String(+x.dataset.i === sel)));
+    });
+    c.addEventListener("dragstart", ev=>{
+      if(S.graded){ ev.preventDefault(); return; }
+      ev.dataTransfer.setData("text/plain", String(i));
+      ev.dataTransfer.effectAllowed = "copy";
+      c.classList.add("dragging");
+    });
+    c.addEventListener("dragend", ()=> c.classList.remove("dragging"));
+    bank.append(c);
+    return c;
+  });
+
+  const rows = document.createElement("div");
+  rows.className = "rows";
+  const slots = [];
+  V.tgt.forEach((text, t)=>{
+    const row = document.createElement("div");
+    row.className = "drow"; row.dataset.t = t;
+    const slot = document.createElement("button");
+    slot.type = "button"; slot.className = "slot"; slot.dataset.t = t;
+    const desc = document.createElement("span");
+    desc.className = "desc";
+    paintHl(desc, text);                /* 答案區的描述是題目的一部分，可以標重點 */
+
+    const paint = ()=>{
+      const v = S.ans[t];
+      slot.textContent = v === null || v === undefined
+        ? (EN ? "drop here" : "拖曳到這裡")
+        : stripHl(V.items[v]);
+      slot.classList.toggle("filled", v !== null && v !== undefined);
+    };
+    const put = v =>{
+      if(S.graded) return;
+      S.ans[t] = v;
+      paint(); ansChanged();
+    };
+    slot.addEventListener("click", ()=>{
+      if(S.graded) return;
+      if(sel !== null){ put(sel); sel = null; chips.forEach(x => x.setAttribute("aria-pressed","false")); }
+      else put(null);                   /* 沒有選取中的項目就當作清空這一格 */
+    });
+    slot.addEventListener("dragover", ev=>{ if(!S.graded){ ev.preventDefault(); slot.classList.add("over"); } });
+    slot.addEventListener("dragleave", ()=> slot.classList.remove("over"));
+    slot.addEventListener("drop", ev=>{
+      ev.preventDefault(); slot.classList.remove("over");
+      const v = parseInt(ev.dataTransfer.getData("text/plain"), 10);
+      if(!isNaN(v)) put(v);
+    });
+    paint();
+    row.append(slot, desc);
+    rows.append(row);
+    slots.push(slot);
+  });
+
+  const tgtLab = document.createElement("p");
+  tgtLab.className = "lab";
+  tgtLab.textContent = EN ? "Answer area" : "答案區";
+
+  /* q.nest：原題的答案區是一層包一層的同心方框（#227 的縱深防禦）。
+     陣列從最外層排到最內層，字串＝固定的層、null＝要拖進去的空格（依序吃 tgt）。
+     只在 fix:true 時成立——答案區的上下順序本身就是題意，不能洗。 */
+  const NEST = (EN && q.en && q.en.nest) ? q.en.nest : q.nest;
+  if(NEST){
+    const wrap = document.createElement("div");
+    wrap.className = "nest";
+    let cur = wrap, slotAt = 0;
+    NEST.forEach(lab=>{
+      const lay = document.createElement("div");
+      lay.className = "nlay";
+      const row = document.createElement("div");
+      row.className = "nrow";
+      if(lab === null){
+        row.classList.add("nslot");
+        row.append(slots[slotAt++]);      /* 沿用上面已經接好事件的那顆 slot */
+      }
+      else row.textContent = lab;
+      lay.append(row);
+      cur.append(lay);
+      cur = lay;                          /* 下一層畫在這一層裡面，自然形成同心 */
+    });
+    box.append(bankLab, bank, tgtLab, wrap);
+    qbox.append(box);
+    return;
+  }
+
+  box.append(bankLab, bank, tgtLab, rows);
+  qbox.append(box);
+}
+
+/* ---------- HOTSPOT 下拉選單：句子中挖空，用下拉挑答案 ---------- */
+function renderDL(q, V, EN){
+  const box = document.createElement("div");
+  box.className = "dl";
+  const sent = document.createElement("div");
+  sent.className = "sent";
+
+  String(V.sent).split("\n").forEach(lineTxt=>{
+    if(!lineTxt.trim()) return;
+    const ln = document.createElement("span");
+    ln.className = "ln";
+    /* 句子用 {0} {1} 標出下拉的位置，其餘文字照原樣（含螢光筆標記） */
+    let last = 0, m;
+    const re = /\{(\d+)\}/g;
+    while((m = re.exec(lineTxt)) !== null){
+      if(m.index > last){
+        const frag = document.createElement("span");
+        paintHl(frag, lineTxt.slice(last, m.index));
+        ln.append(frag);
+      }
+      const g = +m[1];
+      const sel = document.createElement("select");
+      sel.dataset.g = g;
+      const ph = document.createElement("option");
+      ph.value = ""; ph.textContent = EN ? "— select —" : "— 請選擇 —";
+      sel.append(ph);
+      (V.dd[g] || []).forEach((opt, oi)=>{
+        const o = document.createElement("option");
+        o.value = String(oi); o.textContent = stripHl(opt);
+        sel.append(o);
+      });
+      sel.value = (S.ans[g] === null || S.ans[g] === undefined) ? "" : String(S.ans[g]);
+      sel.classList.toggle("picked", sel.value !== "");
+      sel.addEventListener("change", ()=>{
+        if(S.graded) return;
+        S.ans[g] = sel.value === "" ? null : +sel.value;
+        sel.classList.toggle("picked", sel.value !== "");
+        ansChanged();
+      });
+      ln.append(sel);
+      last = m.index + m[0].length;
+    }
+    if(last < lineTxt.length){
+      const frag = document.createElement("span");
+      paintHl(frag, lineTxt.slice(last));
+      ln.append(frag);
+    }
+    sent.append(ln);
+  });
+
+  box.append(sent);
+  qbox.append(box);
+}
+
+/* =====================================================================
+   批改後在題目本體上標出對錯（四種題型各自的畫法）
+   ===================================================================== */
+function markBody(q, V, mine, EN){
+  switch(kindOf(q)){
+
+  case "hs":
+    [...qbox.querySelectorAll(".hs .hrow")].forEach((row, i)=>{
+      const right = mine[i] === q.a[i];
+      row.classList.add(right ? "ok" : "bad");
+      [...row.querySelectorAll(".yn button")].forEach(b=>{
+        b.disabled = true;
+        const v = +b.dataset.v;
+        if(v === q.a[i]) b.classList.add("ans");
+        else if(v === mine[i]) b.classList.add("wrongpick");
+      });
+      const mk = document.createElement("span");
+      mk.className = "mk"; mk.textContent = right ? "✓" : "✗";
+      row.append(mk);
+    });
+    return;
+
+  case "dd":
+    qbox.querySelectorAll(".dd .chip").forEach(c => { c.disabled = true; c.draggable = false; });
+    [...qbox.querySelectorAll(".dd .drow")].forEach((row, t)=>{
+      const right = mine[t] === q.a[t];
+      row.classList.add(right ? "ok" : "bad");
+      const slot = row.querySelector(".slot");
+      slot.disabled = true;
+      if(!right){
+        const fix = document.createElement("span");
+        fix.className = "fix";
+        fix.textContent = (EN ? "correct: " : "正解：") + stripHl(V.items[q.a[t]]);
+        row.querySelector(".desc").append(fix);
+      }
+    });
+    return;
+
+  case "dl":
+    [...qbox.querySelectorAll(".dl select")].forEach(sel=>{
+      const g = +sel.dataset.g;
+      sel.disabled = true;
+      sel.classList.remove("picked");
+      sel.classList.add(mine[g] === q.a[g] ? "ok" : "bad");
+      if(mine[g] !== q.a[g]){
+        const fix = document.createElement("span");
+        fix.className = "fix";
+        fix.textContent = (EN ? "correct: " : "正解：") + stripHl(V.dd[g][q.a[g]]);
+        sel.parentNode.append(fix);
+      }
+    });
+    return;
+
+  default:
+    [...qbox.querySelectorAll(".opt")].forEach((b,i)=>{
+      b.disabled = true;
+      const isAns = q.a.includes(i), isMine = mine.includes(i);
+      if(isAns && isMine) b.classList.add("ok");
+      else if(isAns) b.classList.add("miss");
+      else if(isMine) b.classList.add("bad");
+    });
+  }
+}
+
+/* 把 S.ans 重新畫回畫面上（切換語言重繪後要用） */
+function reflectAns(q){
+  const V = view(q), EN = S.lang === "en";
+  switch(kindOf(q)){
+    case "hs":
+      [...qbox.querySelectorAll(".hs .hrow")].forEach((row,i)=>{
+        [...row.querySelectorAll(".yn button")].forEach(b =>
+          b.setAttribute("aria-pressed", String(S.ans[i] === +b.dataset.v)));
+      });
+      return;
+    case "dd":
+      [...qbox.querySelectorAll(".dd .slot")].forEach((slot,t)=>{
+        const v = S.ans[t];
+        const has = v !== null && v !== undefined;
+        slot.textContent = has ? stripHl(V.items[v]) : (EN ? "drop here" : "拖曳到這裡");
+        slot.classList.toggle("filled", has);
+      });
+      return;
+    case "dl":
+      [...qbox.querySelectorAll(".dl select")].forEach(sel=>{
+        const g = +sel.dataset.g, v = S.ans[g];
+        sel.value = (v === null || v === undefined) ? "" : String(v);
+        sel.classList.toggle("picked", sel.value !== "");
+      });
+      return;
+    default:
+      qbox.querySelectorAll(".opt").forEach(c =>
+        c.setAttribute("aria-pressed", String(S.ans.includes(+c.dataset.i))));
+  }
+}
+
+/* 判定列上的「正確答案：…」文字 */
+function answerText(q, V, EN){
+  const sep = EN ? ", " : "、";
+  switch(kindOf(q)){
+    case "hs": return q.a.map(v => YN(v, EN)).join(sep);
+    case "dd": return q.a.map(v => stripHl(V.items[v])).join(sep);
+    case "dl": return q.a.map((v,g) => stripHl(V.dd[g][v])).join(sep);
+    default:   return q.a.map(i => LETTER[i]).join(sep);
+  }
+}
+
+/* 底部動作列：同一時間只留「現在真的會用到」的按鈕，用不到的直接收起來，
+   不要留一排灰掉或意思重複的鈕（例如批改完之後還擺兩顆「下一題」）。 */
+function setActions(){
+  const en = S.lang === "en";
+  const last = S.idx >= S.pool.length - 1;
+  btnCheck.dataset.mode = "";          /* 離開成績單畫面 */
+  paintJump();
+  btnPrev.title = en ? "Back (←)" : "上一題（←）";
+  btnPrev.setAttribute("aria-label", en ? "Back" : "上一題");
+  btnPrev.hidden = false;
+  btnPrev.disabled = !S.pool.length || S.idx <= 0;
+
+  if(S.exam){
+    /* 考試：下一題（最後一題就沒有）／作答總覽／交卷 */
+    btnCheck.hidden = last;
+    btnCheck.textContent = en ? "Next" : "下一題";
+    btnCheck.disabled = false;
+    btnCheck.className = "act primary";
+
+    btnReveal.hidden = false;
+    btnReveal.textContent = en ? "Overview" : "作答總覽";
+    btnReveal.disabled = false;
+    btnReveal.className = last ? "act primary" : "act";
+
+    btnNext.hidden = false;
+    btnNext.textContent = en ? "Submit" : "交卷";
+    btnNext.disabled = false;
+    btnNext.className = "act ghost";
+    btnNext.title = en ? "Submit — the review screen opens first"
+                       : "交卷：先跳出「作答總覽」讓你確認，不會直接給分";
+    return;
+  }
+
+  btnCheck.className = "act primary";
+  btnCheck.disabled  = !S.pool.length;
+  if(S.graded){
+    /* 批改完了：只剩往下走這一件事 */
+    btnCheck.hidden = false;
+    btnCheck.textContent = en ? "Next" : "下一題";
+    btnReveal.hidden = true;
+    btnNext.hidden = true;
+  } else {
+    /* 作答中：批改／看答案／跳過。練習是拿來練的，不想現在處理的題目直接跳掉，
+       不批改就不計分、也不會被丟進錯題本，之後用「上一題」或題號欄回來重做。
+       只有最後一題不給跳——跳過去就是結算這一輪，手滑的代價太大。 */
+    btnCheck.hidden = false;
+    btnCheck.textContent = en ? "Check" : "批改";
+    btnReveal.hidden = false;
+    btnReveal.textContent = en ? "Show answer" : "看答案";
+    btnReveal.disabled = !S.pool.length;
+    btnReveal.className = "act";
+    btnNext.hidden = last || !S.pool.length;
+    btnNext.textContent = en ? "Skip" : "跳過";
+    btnNext.disabled = false;
+    btnNext.className = "act ghost";
+    btnNext.title = en ? "Skip — not graded, not scored (→)"
+                       : "跳過這題：不計分、不算錯，之後可以用「上一題」或題號欄回來（→）";
+  }
+}
+
+/* =====================================================================
+   練習模式：批改
+   ===================================================================== */
+/* rescore=false 用於切換語言後重繪同一題：只重畫，不重複計分 */
+function grade(revealOnly, rescore){
+  if(rescore === undefined) rescore = true;
+  if(!S.pool.length || S.idx >= S.pool.length) return;
+  const q = S.pool[S.idx];
+  const V = view(q);
+  const EN = S.lang === "en";
+  const mine = S.ans.slice();
+  if(!revealOnly && ansEmpty(q, mine)){
+    verdict.className = "verdict show fail";
+    verdict.textContent = EN ? "Nothing answered yet — make a selection first."
+                             : "還沒有作答，先選一個再按批改。";
+    return;
+  }
+  /* 複選題沒選滿「需選 N 項」：原廠考試不讓你送，這裡也一樣先擋下來 */
+  if(!revealOnly && mcShort(q, mine)){ nagMulti(q); return; }
+  /* 多格題型只填了一部分：先提醒補齊，避免不小心送出半套答案 */
+  if(!revealOnly && kindOf(q) !== "mc" && !ansFull(q, mine)){
+    verdict.className = "verdict show fail";
+    verdict.textContent = EN ? "Some blanks are still empty — fill them all in first."
+                             : "還有空格沒填，全部填完再按批改。";
+    return;
+  }
+  const ok = ansOK(q, mine);
+  markBody(q, V, mine, EN);
+
+  if(!S.graded && rescore){
+    if(!revealOnly){
+      S.total++;
+      if(ok){ S.right++; wrongSet.delete(q.q); }
+      else wrongSet.add(q.q);
+    } else {
+      wrongSet.add(q.q);   /* 直接看答案＝這題還不熟，留在錯題本 */
+    }
+    saveWrong();
+    recordAttempt(q.q, ok, !!revealOnly);
+    scoreEl.textContent = `${S.right} / ${S.total}`;
+  }
+  S.graded = true;
+  S.lastReveal = revealOnly;
+  /* 記下這一題的作答與批改狀態，之後用「上一題」翻回來、或切走再切回來都還原得回去 */
+  S.answers[S.idx] = mine.slice();
+  S.gr[S.idx] = {reveal:!!revealOnly};
+  setActions();
+  paintMulti();     /* 批改後把徽章收回穩定狀態，不要留著剛才的紅字提醒 */
+  saveSess();
+
+  verdict.className = "verdict show " + (ok && !revealOnly ? "pass" : "fail");
+  const ansTxt = answerText(q, V, EN);
+  const hintTxt = kindOf(q) === "mc"
+    ? (EN ? "　(solid green = you got it; dashed green = correct answer you missed; red = wrong pick)"
+          : "　（實線綠框＝答對；虛線綠框＝漏掉的正確答案；紅框＝選錯）")
+    : (EN ? "　(green = correct; red = your wrong pick)" : "　（綠＝正解；紅＝你選錯的地方）");
+  if(revealOnly){
+    verdict.textContent = (EN ? `Answer: ${ansTxt}` : `正確答案：${ansTxt}`) + hintTxt;
+  } else if(ok){
+    verdict.textContent = EN ? `✓ Correct　Answer: ${ansTxt}` : `✓ 答對了　正確答案：${ansTxt}`;
+  } else {
+    verdict.textContent = EN ? `✗ Incorrect　Answer: ${ansTxt}　saved to Review list`
+                             : `✗ 答錯了　正確答案：${ansTxt}　已收進「錯題本」分頁`;
+  }
+
+  /* 文件題庫沒有解析，就只顯示出處，不要留一個空框 */
+  expl.className = "expl show";
+  const lab = q.n
+    ? (EN ? `Explanation · PDF question #${q.n}` : `解析 · 原始文件第 ${q.n} 題`)
+    : (EN ? "Explanation · " : "解析 · ") + q.t;
+  expl.innerHTML = '<span class="lab">' + esc(lab) + "</span>";
+  if(V.e){
+    const body = document.createElement("span");
+    paintHl(body, V.e);
+    expl.append(body);
+  }
+  else if(!q.n) expl.className = "expl";
+  if(EN && !q.en){
+    const note = document.createElement("div");
+    note.style.cssText = "margin-top:6px;font-size:.8rem;opacity:.75";
+    note.textContent = "(English version not available for this item — showing the original.)";
+    expl.append(note);
+  }
+  verdict.scrollIntoView({block:"nearest", behavior:"smooth"});
+}
+
+function nextQ(){
+  if(S.idx >= S.pool.length - 1){
+    if(!S.exam && !S.graded && S.pool.length){ /* 最後一題還沒批改就直接看結果也可以 */ }
+    S.idx++;
+    finishRound();
+    return;
+  }
+  S.idx++;
+  renderQ();
+  window.scrollTo(0, 0);
+}
+
+/* 回到上一題：練習模式會連同當時的作答與批改結果一起還原 */
+function prevQ(){
+  if(S.idx <= 0 || !S.pool.length) return;
+  S.idx--;
+  renderQ();
+  window.scrollTo(0, 0);
+}
+
+/* =====================================================================
+   作答總覽：仿原廠考試的 Review screen
+   交卷不會直接算分，一定先跳到這裡；確認過每一題（尤其是標記待複習的）才真的交卷
+   ===================================================================== */
+function closeOverview(){ ovwrap.classList.remove("show"); ovwrap.innerHTML = ""; }
+
+function openOverview(submitting){
+  if(!S.exam || !S.pool.length) return;
+  const EN = S.lang === "en";
+  const blanks = [], flagged = [];
+  S.pool.forEach((q,i)=>{
+    if(!ansDone(q, S.answers[i])) blanks.push(i);   /* 複選只選一半＝還沒作答完 */
+    if(S.flags[i]) flagged.push(i);
+  });
+
+  const cells = S.pool.map((q,i)=>{
+    const done = ansDone(q, S.answers[i]);
+    const cls = ["ovcell", done ? "done" : "blank", S.flags[i] ? "flag" : "", i === S.idx ? "cur" : ""]
+                .filter(Boolean).join(" ");
+    return `<button type="button" class="${cls}" data-i="${i}">${i+1}</button>`;
+  }).join("");
+
+  const num = (n, warn) => warn && n ? `<span class="warnnum">${n}</span>` : String(n);
+  const sub = EN
+    ? `${S.pool.length - blanks.length} of ${S.pool.length} answered · ${num(blanks.length,true)} unanswered · ${num(flagged.length,true)} flagged for review`
+    : `已作答 ${S.pool.length - blanks.length} / ${S.pool.length} 題 · 未作答 ${num(blanks.length,true)} 題 · 標記待複習 ${num(flagged.length,true)} 題`;
+
+  const notes = flagged.length ? '<div class="ovnotes"><span class="lab">' +
+      (EN ? "Flagged for review" : "標記待複習") + "</span>" +
+      flagged.map(i=>{
+        const memo = (S.notes[i] || "").trim();
+        return `<button type="button" class="ovnote" data-i="${i}">` +
+               `<span class="n">${EN?"Q":"第 "}${i+1}${EN?"":" 題"}</span>` +
+               `<span class="memo">${esc(memo || (EN ? "(no note)" : "（沒有備註）"))}</span></button>`;
+      }).join("") + "</div>" : "";
+
+  ovwrap.innerHTML =
+    '<div class="ovcard">' +
+      `<h2>${EN ? (submitting ? "Submit your exam?" : "Question overview") : (submitting ? "確定要交卷嗎？" : "作答總覽")}</h2>` +
+      `<p class="ovsub">${sub}</p>` +
+      `<p class="ovsub">${EN ? "Tap any number to jump straight back to that question. Nothing is graded until you press Submit."
+                             : "點題號可以直接跳回那一題重看；按下「確定交卷」之前都不會計分。"}</p>` +
+      '<div class="ovlegend">' +
+        `<span><i class="done"></i>${EN?"answered":"已作答"}</span>` +
+        `<span><i class="blank"></i>${EN?"unanswered":"未作答"}</span>` +
+        `<span><i class="flag"></i>${EN?"flagged":"標記待複習"}</span>` +
+      "</div>" +
+      `<div class="ovgrid">${cells}</div>` + notes +
+      '<div class="ovbtns">' +
+        `<button type="button" class="go" data-act="back">${EN ? "Keep working" : "返回作答"}</button>` +
+        `<button type="button" data-act="submit">${EN ? "Submit &amp; grade" : "確定交卷、給分"}</button>` +
+      "</div>" +
+    "</div>";
+  ovwrap.classList.add("show");
+}
+
+el("statBtn").addEventListener("click", openStat);
+
+statwrap.addEventListener("click", e=>{
+  if(!statwrap.classList.contains("show")) return;
+  if(e.target === statwrap){ closeStat(); return; }
+
+  /* 常錯題：點一下就打星號／取消星號 */
+  const wq = e.target.closest("[data-star]");
+  if(wq){
+    const k = wq.dataset.star;
+    if(starSet.has(k)) starSet.delete(k); else starSet.add(k);
+    saveStar();
+    const on = starSet.has(k);
+    wq.setAttribute("aria-pressed", String(on));
+    wq.querySelector(".st").textContent = on ? "★" : "☆";
+    paintTabProgress();
+    return;
+  }
+
+  const act = e.target.closest("[data-act]");
+  if(!act) return;
+  const EN = S.lang === "en";
+  const msg = el("stmsg");
+  const say = (t, bad)=>{ if(msg){ msg.textContent = t; msg.className = "stmsg" + (bad ? " bad" : ""); } };
+
+  switch(act.dataset.act){
+  case "close": closeStat(); return;
+
+  case "export":
+    try{ say((EN ? "Exported: " : "已匯出：") + exportSave()); }
+    catch(err){ say((EN ? "Export failed: " : "匯出失敗：") + err.message, true); }
+    return;
+
+  case "import":
+    say(EN ? "Importing replaces everything currently saved in this browser."
+           : "匯入會覆蓋這個瀏覽器目前的所有資料，建議先匯出一份備份。");
+    el("impFile").value = "";
+    el("impFile").click();
+    return;
+
+  case "clear": {
+    /* 只清統計與歷史，星號和錯題本留著；按兩次才算數 */
+    if(act.dataset.armed !== "1"){
+      act.dataset.armed = "1";
+      act.classList.add("armed");
+      act.textContent = EN ? "Tap again to clear" : "再按一次確認清除";
+      say(EN ? "This clears attempt stats and round history. Stars and the review list are kept."
+             : "會清掉「各領域答對率、常錯題、歷次成績」；星號與錯題本會留著。", true);
+      setTimeout(()=>{
+        if(act.dataset.armed === "1"){
+          act.dataset.armed = "0"; act.classList.remove("armed");
+          act.textContent = EN ? "Clear stats" : "清除統計與紀錄";
+        }
+      }, 4000);
+      return;
+    }
+    qstat = QSTAT[S.src] = {};
+    hist  = HIST[S.src]  = [];
+    saveQstat(); saveHist();
+    S.logged = false;
+    openStat();
+    el("stmsg").textContent = EN ? "Stats cleared." : "統計與歷次成績已清除。";
+    return;
+  }
+  }
+});
+
+el("impFile").addEventListener("change", e=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  const EN = S.lang === "en";
+  const rd = new FileReader();
+  rd.onload = ()=>{
+    const msg = el("stmsg");
+    try{
+      const n = importSave(String(rd.result));
+      if(msg){ msg.className = "stmsg"; msg.textContent = (EN ? `Imported ${n} entries — reloading…` : `已匯入 ${n} 筆資料，重新載入中…`); }
+      setTimeout(()=>location.reload(), 500);
+    }catch(err){
+      if(msg){ msg.className = "stmsg bad"; msg.textContent = (EN ? "Import failed: " : "匯入失敗：") + err.message; }
+    }
+  };
+  rd.onerror = ()=>{
+    const msg = el("stmsg");
+    if(msg){ msg.className = "stmsg bad"; msg.textContent = EN ? "Could not read the file." : "讀不到這個檔案。"; }
+  };
+  rd.readAsText(f);
+});
+
+/* 事件掛在容器上，只掛一次；內容每次重畫也不會累積監聽器 */
+ovwrap.addEventListener("click", e=>{
+  if(!ovwrap.classList.contains("show")) return;
+  if(e.target === ovwrap){ closeOverview(); return; }       /* 點背景＝返回作答 */
+  const cell = e.target.closest("[data-i]");
+  if(cell){ closeOverview(); S.idx = +cell.dataset.i; renderQ(); window.scrollTo(0,0); return; }
+  const act = e.target.closest("[data-act]");
+  if(!act) return;
+  closeOverview();
+  if(act.dataset.act === "submit") finishRound();
+});
+
+/* =====================================================================
+   統計面板：領域強弱、一直做錯的題目、歷次成績、匯出／匯入
+   ===================================================================== */
+const closeStat = () => { statwrap.classList.remove("show"); statwrap.innerHTML = ""; };
+
+const pad2 = n => String(n).padStart(2, "0");
+function stampOf(ts){
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+/* 三個領域各自的答對率：拿長期統計（不是單一輪）來算，看得出真正的強弱 */
+function domainStats(){
+  const out = {};
+  for(let d = 1; d <= D_MAX; d++) out[d] = {n:0, w:0, seen:0, tot:0};
+  BANK.forEach(q=>{
+    const d = out[q.d];
+    if(!d) return;
+    d.tot++;
+    const r = qstat[q.q];
+    if(!r || !r.n) return;
+    d.seen++; d.n += r.n; d.w += r.w;
+  });
+  return out;
+}
+
+/* 一直做錯的題目：做過兩次以上、錯得最多的排前面 */
+function weakQuestions(limit){
+  const byText = new Map();
+  BANK.forEach(q => byText.set(q.q, q));
+  return Object.keys(qstat)
+    .map(k => ({k, r:qstat[k], q:byText.get(k)}))
+    .filter(x => x.q && x.r.w > 0)
+    .sort((a,b) => (b.r.w - a.r.w) || ((b.r.w/b.r.n) - (a.r.w/a.r.n)) || (b.r.t - a.r.t))
+    .slice(0, limit);
+}
+
+function openStat(){
+  const EN = S.lang === "en";
+  const ds = domainStats();
+  const weak = weakQuestions(15);
+  const bankName = S.src === "mine" ? (EN ? "own bank" : "自製題庫") : (EN ? "document bank" : "文件題庫");
+
+  /* --- 目前這一輪 --- */
+  const nowPct = S.total ? Math.round(S.right/S.total*100) : 0;
+  const now = '<div class="stnow">' +
+    `<span class="big mono">${S.total ? nowPct + "%" : "—"}</span>` +
+    `<span class="cap">` +
+    (EN ? `this round: ${S.right} / ${S.total} correct` : `這一輪：答對 ${S.right} / ${S.total} 題`) +
+    (S.pool.length ? (EN ? ` · question ${S.idx+1} of ${S.pool.length}` : ` · 做到第 ${S.idx+1} / ${S.pool.length} 題`) : "") +
+    "</span></div>";
+
+  /* --- 領域強弱 --- */
+  let bars = "";
+  [1,2,3].forEach(d=>{
+    const s = ds[d];
+    const done = s.n - s.w;
+    const pct = s.n ? Math.round(done/s.n*100) : 0;
+    const cls = !s.n ? "" : pct >= 80 ? "hi" : pct < 60 ? "lo" : "";
+    bars += `<div class="dbar ${cls}"><span class="nm" title="${esc(dname(d))}">` +
+      `<i>0${d}</i>${esc(dname(d))}</span>` +
+      `<span class="track"><i style="width:${s.n ? pct : 0}%"></i></span>` +
+      `<span class="pc">${s.n ? `<b>${pct}%</b>` : (EN?"n/a":"未做")}</span></div>` +
+      `<p class="dhint">` +
+      (s.n ? (EN ? `${done} / ${s.n} attempts correct · ${s.seen} of ${s.tot} questions tried`
+                 : `作答 ${s.n} 次答對 ${done} 次 · 這個領域 ${s.tot} 題中做過 ${s.seen} 題`)
+           : (EN ? `not attempted yet · ${s.tot} questions` : `還沒做過 · 這個領域共 ${s.tot} 題`)) + "</p>";
+  });
+
+  /* --- 常錯題 --- */
+  const weakHtml = weak.length
+    ? weak.map(x=>{
+        const rate = Math.round(x.r.w / x.r.n * 100);
+        const recent = (x.r.l || "").split("").map(c => c === "1" ? "✓" : "✗").join("");
+        const on = starSet.has(x.k);
+        return `<button type="button" class="wq" data-star="${esc(x.k)}" aria-pressed="${on}">` +
+          `<span class="rate">${rate}%</span>` +
+          `<span class="tx">${esc(stripHl(x.q.q).split("\n").filter(Boolean).pop()).slice(0,90)}` +
+          `<small>${esc(dname(x.q.d))} · ${esc(x.q.t)} · ` +
+          (EN ? `wrong ${x.r.w} of ${x.r.n}` : `做 ${x.r.n} 次錯 ${x.r.w} 次`) +
+          (x.r.v ? (EN ? ` · revealed ${x.r.v}` : ` · 看答案 ${x.r.v} 次`) : "") +
+          (recent ? ` · ${EN?"recent":"最近"} ${recent}` : "") + "</small></span>" +
+          `<span class="st">${on ? "★" : "☆"}</span></button>`;
+      }).join("")
+    : `<p class="none">${EN ? "Nothing here yet — answer some questions first." : "還沒有資料，先做幾題就會出現。"}</p>`;
+
+  /* --- 歷次成績 --- */
+  const rows = hist.slice(0, 20);
+  const histHtml = rows.length
+    ? rows.map((h,i)=>{
+        const pct = h.t ? Math.round(h.r/h.t*100) : 0;
+        /* 跟「上一筆同類型」比，才不會拿模擬考去比單一領域的練習 */
+        let prev = null;
+        for(let j=i+1;j<rows.length;j++){ if(rows[j].k === h.k && rows[j].tab === h.tab){ prev = rows[j]; break; } }
+        const dl = prev && prev.t ? pct - Math.round(prev.r/prev.t*100) : null;
+        const dcls = dl === null ? "" : dl > 0 ? "up" : dl < 0 ? "dn" : "";
+        const dtxt = dl === null ? "—" : (dl > 0 ? "▲" : dl < 0 ? "▼" : "＝") + (dl ? Math.abs(dl) : "");
+        const per = [1,2,3].map(d => (h.d && h.d[d] && h.d[d][1]) ? `${h.d[d][0]}/${h.d[d][1]}` : "–").join(" ");
+        const label = h.k === "exam" ? (EN?"exam":"模擬考")
+                    : (EN ? TAB_EN[h.tab] : TAB_ZH[h.tab]);
+        return `<div class="hrow2"><span class="when">${stampOf(h.ts)}</span>` +
+          `<span class="kind ${h.k === "exam" ? "exam" : ""}">${esc(label)}</span>` +
+          `<span class="dd3" title="${EN?"by domain 01 / 02 / 03":"三個領域 01 / 02 / 03"}">${per}</span>` +
+          `<span class="sc"><b>${pct}%</b> <small>${h.r}/${h.t}</small></span>` +
+          `<span class="dl2 ${dcls}">${dtxt}</span></div>`;
+      }).join("")
+    : `<p class="none">${EN ? "No finished rounds yet. A round is filed when you finish it or press Restart."
+                            : "還沒有紀錄。整輪做完、或按「重新開始」時就會把那一輪存成一筆。"}</p>`;
+
+  statwrap.innerHTML =
+    '<div class="ovcard">' +
+      `<h2>${EN ? "Your stats" : "統計"}</h2>` +
+      `<p class="ovsub">${EN ? `Bank: ${bankName}. Stats and history are kept per bank.`
+                             : `目前題庫：${bankName}（兩份題庫的統計與紀錄各自獨立）`}</p>` +
+
+      '<div class="stsec">' + now + "</div>" +
+
+      '<div class="stsec"><span class="lab">' +
+        (EN ? "Domain strength (all-time)" : "各領域答對率（長期累計）") + "</span>" + bars + "</div>" +
+
+      '<div class="stsec"><span class="lab">' +
+        (EN ? "Questions you keep getting wrong" : "一直做錯的題目") + "</span>" +
+        `<p class="dhint" style="margin-bottom:8px">${EN ? "Tap one to star it, then drill them all in the Starred tab."
+                                                        : "點一下就打星號，之後到「星號題」分頁專門練這些。"}</p>` +
+        weakHtml + "</div>" +
+
+      '<div class="stsec"><span class="lab">' +
+        (EN ? "Round history — newest first" : "歷次成績（一輪一筆，新的在上面）") + "</span>" +
+        histHtml + "</div>" +
+
+      '<div class="stsec"><span class="lab">' + (EN ? "Save file" : "存檔") + "</span>" +
+        `<p class="dhint">${EN ? "Export everything (progress, stats, history, stars, review list) as one JSON file, or import it on another device."
+                               : "把全部資料（作答進度、統計、歷次成績、星號、錯題本）匯出成一個 JSON 檔，也可以在別台電腦匯入。"}</p>` +
+        '<div class="stbtns">' +
+          `<button type="button" data-act="export">${EN ? "⬇ Export" : "⬇ 匯出存檔"}</button>` +
+          `<button type="button" data-act="import">${EN ? "⬆ Import" : "⬆ 匯入存檔"}</button>` +
+          `<button type="button" class="danger" data-act="clear">${EN ? "Clear stats" : "清除統計與紀錄"}</button>` +
+        "</div>" +
+        '<p class="stmsg" id="stmsg"></p>' +
+      "</div>" +
+
+      '<div class="ovbtns">' +
+        `<button type="button" class="go" data-act="close">${EN ? "Close" : "關閉"}</button>` +
+      "</div>" +
+    "</div>";
+  statwrap.classList.add("show");
+}
+
+/* 匯出：把所有 az104.* 的資料包成一個檔 */
+function exportSave(){
+  const out = {app:"az104-practice", v:1, ts:Date.now(), data:{}};
+  for(let i=0;i<localStorage.length;i++){
+    const k = localStorage.key(i);
+    if(k && k.indexOf("az104.") === 0) out.data[k] = localStorage.getItem(k);
+  }
+  const d = new Date();
+  const name = `az104-progress-${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}-${pad2(d.getHours())}${pad2(d.getMinutes())}.json`;
+  const blob = new Blob([JSON.stringify(out)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  return name;
+}
+
+/* 匯入：整包覆蓋，所以先問過再做 */
+function importSave(text){
+  const o = JSON.parse(text);
+  if(!o || o.app !== "az104-practice" || !o.data || typeof o.data !== "object")
+    throw new Error("not an az104 save file");
+  const keys = Object.keys(o.data).filter(k => k.indexOf("az104.") === 0);
+  if(!keys.length) throw new Error("save file is empty");
+  const old = [];
+  for(let i=0;i<localStorage.length;i++){
+    const k = localStorage.key(i);
+    if(k && k.indexOf("az104.") === 0) old.push(k);
+  }
+  old.forEach(k => localStorage.removeItem(k));
+  keys.forEach(k => localStorage.setItem(k, String(o.data[k])));
+  return keys.length;
+}
+
+/* =====================================================================
+   把「這一輪」封存成一筆成績紀錄
+   整輪做完、或按「重新開始」把進度歸零時都會呼叫，所以每一輪各自獨立，
+   統計面板才比得出來這次跟上次有沒有進步。
+   ===================================================================== */
+function logRound(rows){
+  if(S.logged) return;
+  const byD = {1:[0,0], 2:[0,0], 3:[0,0]};
+  let right = 0, total = 0;
+
+  if(rows){                                   /* 模擬考：逐題結果已經算好了 */
+    rows.forEach(r=>{
+      total++; if(r.ok) right++;
+      const d = byD[r.q.d]; if(d){ d[1]++; if(r.ok) d[0]++; }
+    });
+  } else {                                    /* 練習：只算真的按過「批改」的題目 */
+    S.pool.forEach((q,i)=>{
+      const g = S.gr[i];
+      if(!g || g.reveal) return;
+      const ok = ansOK(q, S.answers[i] || blankAns(q));
+      total++; if(ok) right++;
+      const d = byD[q.d]; if(d){ d[1]++; if(ok) d[0]++; }
+    });
+  }
+  if(!total) return;
+  S.logged = true;
+  pushHist({ts:Date.now(), k:S.exam ? "exam" : "practice", tab:S.tab, r:right, t:total, d:byD});
+}
+
+/* =====================================================================
+   結算
+   ===================================================================== */
+function finishRound(){
+  stopTimer();
+  closeOverview();
+  dropSess();                 /* 這個分頁整輪做完了，進度才歸零 */
+  paintTabProgress();
+  qbox.innerHTML = ""; qtools.innerHTML = "";
+  starBtn.hidden = true;
+  verdict.className = "verdict"; expl.className = "expl";
+  barFill.style.width = "100%";
+
+  let right = S.right, total = S.total;
+  const rows = [];
+  if(S.exam){
+    right = 0; total = S.pool.length;
+    S.pool.forEach((q,i)=>{
+      const mine = S.answers[i] || blankAns(q);
+      const ok = ansOK(q, mine);
+      if(ok){ right++; wrongSet.delete(q.q); } else wrongSet.add(q.q);
+      rows.push({q, mine, ok});
+      /* 考試沒作答的題目不列入長期統計，免得時間到留白把「常錯題」灌爆 */
+      if(!ansEmpty(q, mine)) recordAttempt(q.q, ok, false);
+    });
+    saveWrong();
+  }
+  logRound(S.exam ? rows : null);
+
+  const EN = S.lang === "en";
+  const pct = total ? Math.round(right/total*100) : 0;
+  const passed = pct >= PASS;
+  eyebrow.textContent = S.exam ? (EN ? "Mock exam · Result" : "模擬考 · 成績單")
+                               : (EN ? "Round complete" : "這一輪結束");
+  scoreEl.textContent = `${right} / ${total}`;
+
+  let html = '<div class="bigscore">' +
+    `<div class="pct ${passed?"pass":"fail"} mono">${pct}%</div>` +
+    `<div class="cap">` +
+    (EN ? `${right} / ${total} correct　` : `答對 ${right} / ${total} 題　`) +
+    (S.exam ? (passed ? (EN?`at or above the ${PASS}% pass mark`:`達到 ${PASS}% 及格線`)
+                      : (EN?`below the ${PASS}% pass mark`:`未達 ${PASS}% 及格線`)) : "") + "</div></div>";
+
+  if(S.exam){
+    const byD = {1:[0,0],2:[0,0],3:[0,0]};
+    rows.forEach(r=>{ byD[r.q.d][1]++; if(r.ok) byD[r.q.d][0]++; });
+    html += '<div class="dbreak">';
+    [1,2,3].forEach(d=>{
+      const [a,b] = byD[d];
+      html += `<div class="row"><span>${esc(dname(d))}</span><span class="n">${a} / ${b}</span></div>`;
+    });
+    html += "</div>";
+
+    html += '<div class="rev">';
+    rows.forEach((r,i)=>{
+      const RV = view(r.q);
+      const sep = EN ? ", " : "、";
+      const answered = !ansEmpty(r.q, r.mine);
+      let body, mineTxt, corTxt;
+
+      switch(kindOf(r.q)){
+
+      /* 是非表：逐句列出你的判斷與正解 */
+      case "hs":
+        body = RV.s.map((text, si)=>{
+          const my = r.mine[si], cor = r.q.a[si];
+          const cls = my === cor ? "ok" : (my === null || my === undefined ? "none" : "bad");
+          return `<div class="rh ${cls}"><span class="t">${escHl(text)}</span>` +
+                 `<span class="yn">${EN?"you":"你"} ${YN(my,EN)} / ${EN?"ans":"正解"} ${YN(cor,EN)}</span></div>`;
+        }).join("");
+        mineTxt = answered ? r.mine.map(v=>YN(v,EN)).join(sep) : (EN?"not answered":"未作答");
+        corTxt  = r.q.a.map(v=>YN(v,EN)).join(sep);
+        break;
+
+      /* 配對：逐格列出描述、你放的項目與正解 */
+      case "dd":
+        body = RV.tgt.map((text, ti)=>{
+          const my = r.mine[ti], cor = r.q.a[ti];
+          const cls = my === cor ? "ok" : (my === null || my === undefined ? "none" : "bad");
+          const myTxt = (my === null || my === undefined) ? (EN?"—":"—") : stripHl(RV.items[my]);
+          return `<div class="rh ${cls}"><span class="t">${escHl(text)}</span>` +
+                 `<span class="yn">${esc(myTxt)} / ${esc(stripHl(RV.items[cor]))}</span></div>`;
+        }).join("");
+        mineTxt = answered ? r.mine.map(v => v==null ? "—" : stripHl(RV.items[v])).join(sep) : (EN?"not answered":"未作答");
+        corTxt  = r.q.a.map(v => stripHl(RV.items[v])).join(sep);
+        break;
+
+      /* 下拉：逐格列出你選的與正解 */
+      case "dl":
+        body = RV.dd.map((list, g)=>{
+          const my = r.mine[g], cor = r.q.a[g];
+          const cls = my === cor ? "ok" : (my === null || my === undefined ? "none" : "bad");
+          const myTxt = (my === null || my === undefined) ? (EN?"—":"—") : stripHl(list[my]);
+          return `<div class="rh ${cls}"><span class="t">${EN?"Blank":"第"} ${g+1} ${EN?"":"格"}</span>` +
+                 `<span class="yn">${esc(myTxt)} / ${esc(stripHl(list[cor]))}</span></div>`;
+        }).join("");
+        mineTxt = answered ? r.mine.map((v,g) => v==null ? "—" : stripHl(RV.dd[g][v])).join(sep) : (EN?"not answered":"未作答");
+        corTxt  = r.q.a.map((v,g) => stripHl(RV.dd[g][v])).join(sep);
+        break;
+
+      /* 單選／複選：全部選項都列出來，讓你看得到錯的錯在哪，而不是只給一個字母 */
+      default:
+        body = RV.o.map((text, oi)=>{
+          const isAns = r.q.a.includes(oi), isMine = r.mine.includes(oi);
+          const cls = isAns ? (isMine ? "ok" : "miss") : (isMine ? "bad" : "none");
+          const tag = isAns
+            ? (isMine ? (EN ? "✓ correct · your pick" : "✓ 正解 · 你選的")
+                      : (EN ? "✓ correct answer"      : "✓ 正解"))
+            : (isMine ? (EN ? "✗ your pick"           : "✗ 你選的") : "");
+          /* 有服務圖示的題目，檢討時也要帶著圖，才跟作答畫面對得起來 */
+          const ico = r.q.ico && r.q.ico[oi]
+            ? `<img class="oico" src="${r.q.ico[oi]}" alt="">` : "";
+          return `<div class="ro ${cls}"><span class="k">${LETTER[oi]}</span>${ico}` +
+                 `<span class="t">${esc(stripHl(text))}</span>` +
+                 (tag ? `<span class="tag">${tag}</span>` : "") + "</div>";
+        }).join("");
+        mineTxt = answered ? r.mine.map(x=>LETTER[x]).join(sep) : (EN?"not answered":"未作答");
+        corTxt  = r.q.a.map(x=>LETTER[x]).join(sep);
+      }
+
+      const sentTxt = kindOf(r.q) === "dl"
+        ? `<p class="ln">${escHl(String(RV.sent).replace(/\{(\d+)\}/g, (m,g)=>"＿＿＿"))}</p>` : "";
+
+      /* 考試時標記過的題目，檢討時把標記與備註一起帶出來 */
+      const memo = (S.notes[i] || "").trim();
+      const flagTxt = S.flags[i]
+        ? `<p class="ln flagln">⚑ <b>${EN?"you flagged this":"你標記過這題"}</b>` +
+          (memo ? `：${esc(memo)}` : "") + "</p>"
+        : "";
+
+      html += `<div class="item ${r.ok?"right":"wrong"}">` +
+        `<p class="q">${r.ok?"✓":"✗"} ${i+1}. ${escHl(RV.q)}</p>` + sentTxt + flagTxt +
+        `<div class="ropts">${body}</div>` +
+        `<p class="ln">${EN?"Your answer":"你的答案"}：<span class="you">${esc(mineTxt)}</span>　` +
+        `${EN?"Correct":"正確答案"}：<span class="cor">${esc(corTxt)}</span></p>` +
+        `<p class="ln">${escHl(RV.e)}</p></div>`;
+    });
+    html += "</div>";
+  } else {
+    html += '<p class="hint">' + (EN
+      ? "Hit “New round” to go again. Anything you missed is waiting in the Review list."
+      : "按「再來一輪」重新出題（順序看「⚙ 設定 → 出題順序」）；答錯的題目已收進「錯題本」分頁。") + "</p>";
+  }
+
+  report.innerHTML = html;
+  report.classList.add("show");
+  /* 成績單上只需要一顆「再來一輪」，其餘按鈕收起來 */
+  btnCheck.hidden = false; btnCheck.className = "act primary"; btnCheck.disabled = false;
+  btnCheck.textContent = EN ? "New round" : "再來一輪";
+  btnCheck.dataset.mode = "again";
+  btnPrev.hidden = true; btnReveal.hidden = true; btnNext.hidden = true;
+  paintJump();                /* 成績單畫面沒有「當前題目」，跳題先關掉 */
+  window.scrollTo(0, 0);
+}
+
+const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+/* =====================================================================
+   模擬考計時
+   ===================================================================== */
+function fmt(s){ const m = Math.floor(s/60); return m + ":" + String(s%60).padStart(2,"0"); }
+function startTimer(){
+  S.left = EXAM_SEC;
+  timerEl.hidden = false; timerEl.classList.remove("warn");
+  timerEl.textContent = "⏱ " + fmt(S.left);
+  S.timerId = setInterval(()=>{
+    S.left--;
+    timerEl.textContent = "⏱ " + fmt(Math.max(0,S.left));
+    if(S.left <= 300) timerEl.classList.add("warn");
+    if(S.left <= 0){ stopTimer(); finishRound(); }
+  }, 1000);
+}
+function stopTimer(){
+  if(S.timerId){ clearInterval(S.timerId); S.timerId = null; }
+  if(!S.exam) timerEl.hidden = true;
+}
+
+/* =====================================================================
+   跳題：輸入題號直接跳到那一題
+   -----------------------------------------------------------------
+   練習模式認的是「題目上標的題號」（文件題庫在題目本文上方標的 第 N 題 / #N），
+   不是「本輪第幾題」——本輪順序是洗過的，本輪第 189 題可能是文件的第 316 題，
+   要跳的當然是題目自己的號碼。自製題庫沒有題號，才用「本輪第幾題」。
+   模擬考例外：那裡畫面上到處都是「作答總覽」的 1～40 編號，所以先當本輪的
+   第幾題，超出範圍再拿題目自己的題號找一次。
+   跳到哪裡都會在旁邊寫清楚是照哪一種號碼跳的。
+   ===================================================================== */
+const jumpForm = el("jumpForm"), jumpNo = el("jumpNo"), jumpBtn = el("jumpBtn"), jumpMsg = el("jumpMsg");
+let jumpMsgId = null;
+
+function sayJump(txt, bad){
+  jumpMsg.textContent = txt || "";
+  jumpMsg.className = "jmsg" + (bad ? " bad" : "");
+  if(jumpMsgId){ clearTimeout(jumpMsgId); jumpMsgId = null; }
+  if(txt) jumpMsgId = setTimeout(()=>{ jumpMsg.textContent = ""; jumpMsg.className = "jmsg"; }, 3000);
+}
+
+/* 沒題目、或整輪做完正在看成績單時就不給跳 */
+const jumpOff = () => !S.pool.length || report.classList.contains("show");
+/* 這一輪的題目有沒有自己的題號（文件題庫有，自製題庫沒有） */
+const jumpNumbered = () => S.pool.some(q => q.n);
+/* 輸入的數字要當成哪一種號碼："no" = 題目自己的題號、"pos" = 本輪第幾題 */
+const jumpMode = () => (!S.exam && jumpNumbered()) ? "no" : "pos";
+/* 這個分頁跳得到的題號範圍：分類分頁、錯題本只含部分題目，所以不是連號 */
+function jumpRange(){
+  const ns = S.pool.map(q => Number(q.n)).filter(Number.isFinite);
+  return ns.length ? Math.min(...ns) + "-" + Math.max(...ns) : "";
+}
+
+function paintJump(){
+  const EN = S.lang === "en";
+  const off = jumpOff();
+  const byNo = jumpMode() === "no";
+  const cur = S.pool[S.idx];
+  jumpForm.dataset.off = off ? "1" : "0";
+  jumpNo.disabled = jumpBtn.disabled = off;
+  /* 提示框裡放目前這一題的號碼，一眼就知道這個欄位認的是哪一種號碼 */
+  jumpNo.placeholder = (byNo && cur && cur.n) ? "#" + cur.n : (EN ? "no." : "題號");
+  jumpBtn.textContent = EN ? "Go" : "跳題";
+  jumpForm.title = byNo
+    ? (EN ? `Type the number printed on the question — the #N above the stem, not its position in this shuffled round — then press Enter (this tab holds ${S.pool.length} questions, nos. ${jumpRange()}). Press / to focus.`
+          : `輸入題目上標的題號（題目本文上方那個「第 N 題」，不是本輪的第幾題）按 Enter 就跳過去（這個分頁收了 ${S.pool.length} 題，題號 ${jumpRange()}）。按 / 鍵可以快速跳到這個欄位。`)
+    : (EN ? `Type a question number (1-${S.pool.length}, same numbering as the overview) and press Enter. Press / to focus.`
+          : `輸入題號按 Enter 直接跳到那一題（本輪 1-${S.pool.length} 題，和「作答總覽」的編號一樣）。按 / 鍵可以快速跳到這個欄位。`);
+  if(off) sayJump("");
+}
+
+function jumpTo(raw){
+  const EN = S.lang === "en";
+  if(jumpOff()) return false;
+  const n = parseInt(String(raw).replace(/[^0-9]/g, ""), 10);   /* 連 #316、第 316 題 這種寫法也吃 */
+  if(!Number.isFinite(n)){
+    sayJump(EN ? "Enter a question number." : "請先輸入題號。", true);
+    return false;
+  }
+
+  const findByNo = () => S.pool.findIndex(q => Number(q.n) === n);
+  let i = -1, byNo = false;
+  if(jumpMode() === "no"){
+    i = findByNo(); byNo = i >= 0;                 /* 練習模式：只照題目自己的題號 */
+  } else {
+    if(n >= 1 && n <= S.pool.length) i = n - 1;    /* 本輪第幾題 */
+    else if(jumpNumbered()){ i = findByNo(); byNo = i >= 0; }   /* 超出範圍才試題號 */
+  }
+  if(i < 0){
+    sayJump(jumpMode() === "no"
+      ? (EN ? `Question ${n} is not in this tab (${S.pool.length} questions, nos. ${jumpRange()}).`
+            : `這個分頁裡沒有第 ${n} 題（這裡收了 ${S.pool.length} 題，題號 ${jumpRange()}）。`)
+      : (EN ? `No question ${n} in this round (1-${S.pool.length}).`
+            : `這一輪沒有第 ${n} 題（可跳 1-${S.pool.length} 題）。`), true);
+    return false;
+  }
+  /* 跳到哪一題就講清楚是照哪一種號碼跳的，免得和另一種號碼搞混 */
+  const qn = S.pool[i].n;
+  const where = byNo
+    ? (EN ? `question ${n} — no. ${i+1} of ${S.pool.length} this round`
+          : `第 ${n} 題（本輪第 ${i+1} / ${S.pool.length} 題）`)
+    : (EN ? `no. ${i+1} of this round${qn ? ` — question ${qn}` : ""}`
+          : `本輪第 ${i+1} 題${qn ? `（題目上標的是第 ${qn} 題）` : ""}`);
+  if(i === S.idx){
+    sayJump((EN ? "Already on " : "已經在") + where + (EN ? "." : "了。"));
+    return true;
+  }
+  closeOverview();
+  S.idx = i;
+  renderQ();
+  window.scrollTo(0, 0);
+  sayJump((EN ? "Jumped to " : "跳到") + where + (EN ? "." : "。"));
+  return true;
+}
+
+jumpForm.addEventListener("submit", e=>{
+  e.preventDefault();
+  if(jumpTo(jumpNo.value)){ jumpNo.value = ""; jumpNo.blur(); }
+});
+/* 在輸入框裡按 Esc＝放棄跳題，把鍵盤還給作答（A-F、←／→） */
+jumpNo.addEventListener("keydown", e=>{
+  if(e.key === "Escape"){ jumpNo.value = ""; jumpNo.blur(); e.stopPropagation(); }
+});
+
+/* =====================================================================
+   事件
+   ===================================================================== */
+/* 模擬考沒作答就想往下一題：擋住並說明（原廠考試也是這樣，不給空著跳過）。
+   練習模式有「跳過」，走不到這裡。 */
+function nagUnanswered(part){
+  const EN = S.lang === "en";
+  verdict.className = "verdict show fail";
+  verdict.textContent = part
+    ? (EN ? "Some blanks are still empty — fill them all in before moving on."
+          : "還有空格沒填，全部填完才能繼續。")
+    : (EN ? "You have not answered this question yet. Answer it before moving on"
+          + " — or jump to another number from the Overview to come back later."
+          : "你還沒作答，答完才能按「下一題」；想先擱著晚點再看，可以從「作答總覽」跳到別題。");
+  verdict.scrollIntoView({block:"nearest", behavior:"smooth"});
+}
+
+/* 模擬考往下一題之前的關卡（回傳 true＝擋下來了）：
+   沒作答、複選題沒選滿、多格題型沒填完，都不放行——跟原廠考試一樣沒有「跳過」。
+   「上一題」「作答總覽」「交卷」不受限制，真的想擱著就從總覽跳到別題。 */
+function examGate(){
+  const q = S.pool[S.idx];
+  if(!q) return false;
+  if(ansEmpty(q, S.ans)){ nagUnanswered(false); return true; }
+  if(mcShort(q, S.ans)){ nagMulti(q); return true; }
+  if(!ansFull(q, S.ans)){ nagUnanswered(true); return true; }
+  return false;
+}
+
+btnPrev.addEventListener("click", prevQ);
+btnCheck.addEventListener("click", ()=>{
+  if(btnCheck.dataset.mode === "again"){ startRound(true); return; }
+  if(S.exam){
+    /* 複選題要選滿「需選 N 項」才能往下走，跟原廠考試一致 */
+    if(examGate()) return;
+    /* 最後一題的「下一題」不會直接交卷，而是先開總覽讓你檢查 */
+    if(S.idx >= S.pool.length-1) openOverview(true); else { S.idx++; renderQ(); window.scrollTo(0,0); }
+    return;
+  }
+  if(S.graded) nextQ(); else grade(false);
+});
+btnReveal.addEventListener("click", ()=>{
+  if(S.exam){ openOverview(false); return; }
+  grade(true);
+});
+btnNext.addEventListener("click", ()=>{
+  if(S.exam){ openOverview(true); return; }   /* 交卷＝先進確認畫面，不直接給分 */
+  nextQ();                                    /* 練習模式：跳過＝不批改直接走，這題不計分 */
+});
+
+/* 鍵盤：← → 翻題，Esc 關掉總覽 */
+document.addEventListener("keydown", e=>{
+  if(e.target.matches("input, textarea, select")) return;
+  if(e.key === "Escape"){
+    if(infowrap.classList.contains("show")){ closeInfo(); return; }
+    if(cfgwrap.classList.contains("show")){ closeCfg(); return; }
+    if(statwrap.classList.contains("show")){ closeStat(); return; }
+    if(ovwrap.classList.contains("show")){ closeOverview(); return; }
+  }
+  if(ovwrap.classList.contains("show") || statwrap.classList.contains("show")
+     || cfgwrap.classList.contains("show") || infowrap.classList.contains("show")) return;
+  if(e.key === "/" && !jumpNo.disabled){ jumpNo.focus(); jumpNo.select(); e.preventDefault(); return; }
+  if(e.key === "ArrowLeft" && !btnPrev.disabled){ prevQ(); }
+  else if(e.key === "ArrowRight" && S.pool.length && S.idx < S.pool.length-1){
+    /* 模擬考的 → 還是要過關卡（不能空著跳過）；練習模式的 → 就是「跳過」 */
+    if(S.exam && examGate()) return;
+    S.idx++; renderQ(); window.scrollTo(0,0);
+  }
+});
+
+document.querySelectorAll("nav.tabs button").forEach((b,i)=>{
+  b.addEventListener("click", ()=>{
+    if(S.exam){   /* 模擬考進行中切分頁＝放棄本次考試 */
+      S.exam = false; el("examBtn").setAttribute("aria-pressed","false");
+      timerEl.hidden = true; stopTimer(); closeOverview(); applyLang();
+    }
+    S.tab = i;
+    try{ localStorage.setItem(TAB_KEY, String(i)); }catch(e){}
+    document.querySelectorAll("nav.tabs button").forEach((x,j)=>x.setAttribute("aria-selected", j===i));
+    startRound();
+    window.scrollTo(0, 0);
+  });
+});
+
+el("examBtn").addEventListener("click", ()=>{
+  S.exam = !S.exam;
+  el("examBtn").setAttribute("aria-pressed", S.exam);
+  timerEl.hidden = !S.exam;
+  applyLang();
+  startRound();
+  window.scrollTo(0, 0);
+});
+
+/* =====================================================================
+   語言：三段獨立按鈕（中／中+EN／全英），點哪個就切哪個
+   ===================================================================== */
+const LANGS = ["zh","zhen","en"];
+const TAB_ZH = ["全部","身分治理","儲存體","運算","網路","監控","錯題本","星號題"];
+const TAB_EN = ["All","Identity","Storage","Compute","Network","Monitor","Review","Starred"];
+const HINT = {
+  practice_zh:'練習模式：選好答案按「批改」，會立刻給對錯與解析；答錯的題目會自動收進<b>錯題本</b>分頁。複選題標了「<b>需選 N 項</b>」就要<b>剛好選滿 N 項</b>才能批改，選滿之後也不會再讓你多選（跟原廠考試一樣，徽章會即時顯示已選幾項）。不想現在處理的題目，按「<b>跳過</b>」（或按 →）就直接走：跳過的題目<b>不計分、也不會進錯題本</b>，之後用「上一題」或上方的「題號」欄回來重做就好（本輪最後一題不給跳，免得手滑就結算；模擬考則一律不能空著跳過）。按「<b>☆ 加強練習</b>」可以自己打星號，那一題會進<b>星號題</b>分頁。「<b>上一題</b>」能翻回去重看，之前的作答與解析都會還原（←／→ 也可以翻題）。想直接跳到某一題，在上方的「<b>題號</b>」欄輸入<b>題目上標的題號</b>（題目本文上方那個「第 N 題」）按 Enter 就會跳過去；跳題認的是題目自己的號碼，不是「本輪第幾題」（自製題庫沒有題號，就直接輸入本輪的第幾題。按 <code>/</code> 鍵可以快速對焦）。出題順序預設<b>依題號</b>，想打散就到「<b>⚙ 設定 → 出題順序</b>」改成<b>隨機</b>，下一輪生效（模擬考一律隨機抽題，不受這個設定影響）。<b>每個分頁的進度是分開記的</b>，切走再切回來、甚至關掉瀏覽器隔天再開都會接著做，分頁上有小圓點代表那裡還沒做完；整個分頁做完會自動歸零，想提前重洗就按「<b>↻ 重新開始</b>」。',
+  practice_en:'Practice mode: pick your answer and hit <b>Check</b> for instant feedback plus an explanation. Anything you miss is collected in the <b>Review</b> tab. A question badged <b>select N</b> needs <b>exactly N</b> picks before it will grade, and refuses the N+1th pick — the same rule as the real exam (the badge shows your running count). Not in the mood for a question? Hit <b>Skip</b> (or press →) and move straight on: a skipped question is <b>not graded, not scored and never filed in Review</b> — come back to it any time with <b>Back</b> or the number box. The last question of a round has no Skip (skipping it would end the round), and the mock exam still refuses blank skips. Hit <b>☆ Star</b> to file a question in the <b>Starred</b> tab for extra drilling. <b>Back</b> returns to earlier questions with your answer and explanation intact (← / → work too). To go straight to a specific question, type <b>the number printed on the question</b> (the “#N” above the stem) in the box next to the counter and press Enter — it matches the number on the question itself, not its position in the round (the hand-written bank has no numbers, so there the box takes the position instead; press <code>/</code> to focus it). Questions come <b>By number</b> by default; to shuffle them, switch <b>⚙ Settings → Order</b> to <b>Shuffle</b> — it takes effect from the next round (the mock exam always draws at random regardless). <b>Each tab keeps its own progress</b> — switch away and back, or close the browser and return tomorrow, and you resume where you left off (a dot marks tabs still in progress). It resets once you finish the tab, or when you hit <b>↻ Restart</b>.',
+  exam_zh:  `模擬考：隨機抽 ${EXAM_N} 題、限時 100 分鐘，作答期間不顯示答案。跟原廠考試一樣<b>不能空著跳過</b>：沒作答就按「下一題」會被擋下來提醒；複選題標了「<b>需選 N 項</b>」也要<b>剛好選滿 N 項</b>，不能多也不能少。真的想先擱著，從「<b>作答總覽</b>」點別的題號跳走，那些題目在總覽上會標成未作答。沒把握的題目按「<b>⚑ 標記待複習</b>」還能寫備註，之後從「<b>作答總覽</b>」跳回去重看，或在上方的「<b>題號</b>」欄輸入題號按 Enter 直接跳（考試中用的是總覽上那組 1～${EXAM_N} 的編號）。按「交卷」不會立刻給分，會先跳出總覽讓你確認，按「<b>確定交卷、給分</b>」才結算；時間到則自動結算。及格線抓 ${PASS}%。`,
+  exam_en:  `Mock exam: ${EXAM_N} random questions, 100-minute limit, no answers shown while you work. As in the real exam you cannot leave a question blank and move on: <b>Next</b> refuses an unanswered question and tells you so, and a question badged <b>select N</b> needs exactly N picks — no more, no fewer. To park one, jump to another number from the <b>Overview</b>, where it stays marked unanswered. Use <b>⚑ Flag for review</b> (with an optional note) on anything you are unsure of, then jump back to it from the <b>Overview</b> — or type its number into the box next to the counter and press Enter (same 1-${EXAM_N} numbering as the overview). <b>Submit</b> does not grade immediately — it opens the review screen first, and only <b>Submit &amp; grade</b> scores the paper. Time-out submits automatically. Pass mark ${PASS}%.`
+};
+
+function applyLang(){
+  const en = S.lang === "en";
+  el("langSeg").querySelectorAll("button").forEach(b=>{
+    b.setAttribute("aria-pressed", b.dataset.lang === S.lang);
+  });
+  document.documentElement.lang = en ? "en" : "zh-Hant";
+
+  const labels = en ? TAB_EN : TAB_ZH;
+  document.querySelectorAll("nav.tabs button").forEach((b,i)=>{
+    const num = b.querySelector(".num").outerHTML;
+    b.innerHTML = num + labels[i];
+  });
+  paintTabProgress();          /* 上面重畫分頁會把進度圓點洗掉，補回去 */
+  el("examBtn").innerHTML = '⏱<span class="lbl">' + (en ? "Mock exam" : "模擬考") + "</span>";
+  el("statBtn").innerHTML = '▤<span class="lbl">' + (en ? "Stats" : "統計") + "</span>";
+  el("examBtn").title = en
+    ? "Mock exam: 50 questions, 100 minutes, answers hidden until you submit"
+    : "模擬考：抽 50 題、100 分鐘限時，作答期間不顯示答案，交卷後一次檢討";
+  el("statBtn").title = en
+    ? "Stats: domain accuracy, questions you keep missing, round history, export / import"
+    : "統計：各領域答對率、一直做錯的題目、歷次成績，也可以匯出／匯入存檔";
+  el("cfgBtn").setAttribute("aria-label", en ? "Settings" : "設定");
+  el("cfgBtn").title = en ? "Settings: bank, theme, restart this round"
+                          : "設定：題庫、主題、重新開始這一輪";
+  el("infoBtn").setAttribute("aria-label", en ? "About the question count" : "題數說明");
+  el("infoBtn").title = infoBtnTitle(en);
+  /* 面板開著時切語言就重畫，不然會留著另一種語言的內容 */
+  if(infowrap.classList.contains("show")) openInfo();
+
+  /* 題庫改用頂列的小標籤顯示，切換在設定裡 */
+  const srcTag = el("srcTag");
+  srcTag.textContent = S.src === "mine" ? (en ? "Own bank" : "自製題庫")
+                                        : (en ? "Doc bank" : "文件題庫");
+  srcTag.dataset.src = S.src;
+  srcTag.title = en ? "Current question bank — switch it in Settings" : "目前題庫（在設定裡切換）";
+
+  /* 設定面板 */
+  el("cfgTitle").textContent    = en ? "Settings" : "設定";
+  el("cfgSrcLab").textContent   = en ? "Bank"  : "題庫";
+  el("cfgThemeLab").textContent = en ? "Theme" : "主題";
+  el("cfgOrderLab").textContent = en ? "Order" : "出題順序";
+  el("cfgRoundLab").textContent = en ? "Round" : "這一輪";
+  el("cfgClose").textContent    = en ? "Close" : "關閉";
+  el("cfgSrcHint").textContent  = en
+    ? "Each bank keeps its own progress, stats, stars and review list."
+    : "兩份題庫的進度、統計、星號、錯題本各自獨立。";
+  el("cfgOrderHint").textContent = en
+    ? "Practice only — the mock exam always draws at random. Applied right away if this round has not started; otherwise it takes effect next round (or hit Restart below to switch now)."
+    : "只影響練習：模擬考一律隨機抽題。這一輪還沒開始就立刻套用，做到一半則下一輪才換（想馬上換就按下面的「重新開始」）。";
+  el("cfgResetHint").textContent = en
+    ? "Rebuilds this tab from question 1 in the order set above. Progress here is cleared — the score is filed in the history first."
+    : "依上面的出題順序重新出題、從第 1 題開始，這個分頁目前的作答進度會清掉（成績會先存進歷次紀錄）。";
+  const th = el("themeSeg").querySelectorAll("button");
+  if(th[0]) th[0].textContent = en ? "Light"  : "亮";
+  if(th[1]) th[1].textContent = en ? "Dark"   : "暗";
+  if(th[2]) th[2].textContent = en ? "System" : "系統";
+  const od = el("orderSeg").querySelectorAll("button");
+  if(od[0]){
+    od[0].textContent = en ? "By number" : "依題號";
+    od[0].title = en ? "Keep the bank's own order (the doc bank runs #1, #2, …)"
+                     : "照題庫本身的順序出題（文件題庫就是 #1、#2… 照題號排）";
+  }
+  if(od[1]){
+    od[1].textContent = en ? "Shuffle" : "隨機";
+    od[1].title = en ? "Reshuffle every round so you cannot memorise answers by number"
+                     : "每一輪重新洗牌打散，免得照著題號背答案";
+  }
+  resetArm(false);
+  paintCfg();
+
+  el("hintSum").textContent = en ? "How this works" : "使用說明";
+  paintJump();
+  paintStar();
+  if(statwrap.classList.contains("show")) openStat();     /* 開著就跟著換語言重畫 */
+  footHint.innerHTML = S.exam ? (en ? HINT.exam_en : HINT.exam_zh)
+                              : (en ? HINT.practice_en : HINT.practice_zh);
+  try{ localStorage.setItem(LANG_KEY, S.lang); }catch(e){}
+}
+
+function setLang(lang){
+  if(LANGS.indexOf(lang) < 0 || lang === S.lang) return;
+  S.lang = lang;
+  applyLang();
+  /* 只重畫當前題目：保留已選答案與已批改狀態，不重出題、不重複計分 */
+  if(report.classList.contains("show")){ finishRound(); return; }
+  const keep = S.ans.slice(), wasGraded = S.graded, wasReveal = S.lastReveal;
+  renderQ();
+  const q = S.pool[S.idx];
+  if(q && keep.length){ S.ans = keep; reflectAns(q); }
+  if(wasGraded) grade(wasReveal, false);
+}
+
+el("langSeg").addEventListener("click", e=>{
+  const b = e.target.closest("button[data-lang]");
+  if(b) setLang(b.dataset.lang);
+});
+
+/* =====================================================================
+   題庫來源：自製題庫 ⇄ 文件題庫（分數、錯題本、模擬考各自獨立）
+   ===================================================================== */
+function setSource(src){
+  if(src !== "mine" && src !== "doc") return;
+  if(src === S.src) return;
+  S.src = src;
+  BANK = src === "mine" ? BANK_MINE : BANK_DOC;
+  wrongSet = WRONG[src];
+  starSet  = STAR[src];
+  qstat    = QSTAT[src];
+  hist     = HIST[src];
+  closeStat(); closeCfg();
+  el("srcSeg").querySelectorAll("button").forEach(b=>{
+    b.setAttribute("aria-pressed", b.dataset.src === src);
+  });
+  try{ localStorage.setItem(SRC_KEY, src); }catch(e){}
+  applyLang();          /* 頂列的題庫標籤要跟著換 */
+  P_reset();
+  startRound();
+  window.scrollTo(0, 0);
+}
+/* 換題庫等於重開一輪：分數歸零，模擬考也結束 */
+function P_reset(){
+  closeOverview();
+  if(S.exam){
+    S.exam = false;
+    el("examBtn").setAttribute("aria-pressed","false");
+    timerEl.hidden = true; stopTimer();
+    applyLang();
+  }
+  S.right = 0; S.total = 0;
+  S.answers = []; S.gr = []; S.flags = []; S.notes = [];
+}
+el("srcSeg").addEventListener("click", e=>{
+  const b = e.target.closest("button[data-src]");
+  if(b) setSource(b.dataset.src);
+});
+
+/* 主題切換 */
+/* =====================================================================
+   設定面板：題庫來源、主題、重新開始這一輪
+   這三個都是「設定一次就很少動」的，收進來讓頂列只留常用的東西
+   ===================================================================== */
+const openCfg  = ()=>{ paintCfg(); cfgwrap.classList.add("show"); };
+const closeCfg = ()=>{ cfgwrap.classList.remove("show"); resetArm(false); };
+
+function setTheme(mode){
+  if(mode === "light" || mode === "dark") document.documentElement.setAttribute("data-theme", mode);
+  else { document.documentElement.removeAttribute("data-theme"); mode = "system"; }
+  try{ localStorage.setItem(THEME_KEY, mode); }catch(e){}
+  paintCfg();
+}
+const themeMode = () => document.documentElement.getAttribute("data-theme") || "system";
+
+function paintCfg(){
+  el("srcSeg").querySelectorAll("button").forEach(b=>{
+    b.setAttribute("aria-pressed", String(b.dataset.src === S.src));
+  });
+  el("orderSeg").querySelectorAll("button").forEach(b=>{
+    b.setAttribute("aria-pressed", String(b.dataset.order === S.order));
+  });
+  const m = themeMode();
+  el("themeSeg").querySelectorAll("button").forEach(b=>{
+    b.setAttribute("aria-pressed", String(b.dataset.theme === m));
+  });
+}
+
+/* 重新開始：按兩次才算數，避免一個手滑把整輪進度洗掉 */
+let cfgArmed = false, cfgArmId = null;
+function resetArm(on){
+  cfgArmed = on;
+  const b = el("cfgReset"), en = S.lang === "en";
+  b.classList.toggle("armed", on);
+  b.textContent = on ? (en ? "↻ Tap again to confirm" : "↻ 再按一次確認重來")
+                     : (en ? "↻ Restart" : "↻ 重新開始");
+  if(cfgArmId){ clearTimeout(cfgArmId); cfgArmId = null; }
+  if(on) cfgArmId = setTimeout(()=>resetArm(false), 4000);
+}
+
+el("cfgBtn").addEventListener("click", openCfg);
+el("cfgClose").addEventListener("click", closeCfg);
+cfgwrap.addEventListener("click", e=>{ if(e.target === cfgwrap) closeCfg(); });
+el("themeSeg").addEventListener("click", e=>{
+  const b = e.target.closest("button[data-theme]");
+  if(b) setTheme(b.dataset.theme);
+});
+
+/* 出題順序：只管練習模式。這一輪一題都還沒動就直接照新順序重出，
+   已經做了一半就留到下一輪——不會為了換順序把作答進度默默洗掉。 */
+function setOrder(mode){
+  if(mode !== "seq" && mode !== "rand") return;
+  if(mode === S.order){ paintCfg(); return; }
+  S.order = mode;
+  try{ localStorage.setItem(ORDER_KEY, mode); }catch(e){}
+  paintCfg();
+  if(!S.exam && S.idx === 0 && S.total === 0 && !S.graded && !answeredCount()
+     && !report.classList.contains("show")){
+    startRound(true);
+    window.scrollTo(0, 0);
+  }
+}
+el("orderSeg").addEventListener("click", e=>{
+  const b = e.target.closest("button[data-order]");
+  if(b) setOrder(b.dataset.order);
+});
+el("cfgReset").addEventListener("click", ()=>{
+  if(!cfgArmed){ resetArm(true); return; }
+  resetArm(false);
+  closeCfg();
+  startRound(true);
+  window.scrollTo(0, 0);
+});
+
+/* =====================================================================
+   題數說明：解釋「PDF 題號的最大值」與「題庫實際題數」之間的差異
+   缺號不是漏做，是原始文件本身就跳號。標題與內文數字全部從 BANK_DOC
+   現算（docGaps()／infoBtnTitle()），之後補題或改題庫、跳號被補齊，
+   這個面板會自己跟著更新，不會變成過期的說明。
+   ===================================================================== */
+const closeInfo = () => { infowrap.classList.remove("show"); infowrap.innerHTML = ""; };
+
+function docGaps(){
+  const nums = BANK_DOC.map(q => q.n).filter(n => Number.isFinite(n));
+  if(!nums.length) return {total:0, max:0, gaps:[]};
+  const max = Math.max(...nums), seen = new Set(nums), gaps = [];
+  for(let i = 1; i <= max; i++) if(!seen.has(i)) gaps.push(i);
+  return {total:nums.length, max, gaps};
+}
+
+function infoBtnTitle(en){
+  const g = docGaps();
+  if(!g.gaps.length) return en ? `Question count: all ${g.total} questions are present, no gaps`
+                                : `題數說明：全部 ${g.total} 題都在，沒有跳號`;
+  return en ? `Question count: why the document bank has ${g.total} questions, not ${g.max}`
+            : `題數說明：文件題庫為什麼是 ${g.total} 題而不是 ${g.max}`;
+}
+
+function openInfo(){
+  const EN = S.lang === "en";
+  const g = docGaps();
+  const hasGaps = g.gaps.length > 0;
+  const chips = g.gaps.map(n => `<i>#${n}</i>`).join("");
+
+  const body = EN ? `
+    <h2>${hasGaps ? `Why ${g.total} questions, not ${g.max}?` : `All ${g.total} questions are present, no gaps`}</h2>
+    <p class="ovsub">Nothing is missing — the document bank is complete.</p>
+    <div class="infomath">
+      <span>${g.max} − ${g.gaps.length}</span><span>=</span><b>${g.total}</b>
+      <span class="why">highest number in the PDF − numbers the PDF skips = questions that actually exist</span>
+    </div>
+    <div class="infosec">
+      <span class="lab">Skipped numbers</span>
+      <p>These numbers do not exist in the source PDF. Every page was checked one by one — they were never transcribed because there is nothing there to transcribe.</p>
+      <div class="infonums">${chips || "<i>none</i>"}</div>
+      <p style="margin-top:10px">So <em>#${g.max}</em> is the highest question number, not the number of questions. Typing one of the numbers above into the jump box will simply find nothing.</p>
+    </div>
+    <div class="infosec">
+      <span class="lab">Numbering</span>
+      <p>Question numbers here are the PDF's own numbers, so anything you look up in the original document lands on the same question. That is also why the gaps were left as gaps instead of being closed up.</p>
+    </div>` : `
+    <h2>${hasGaps ? `為什麼是 ${g.total} 題，不是 ${g.max} 題？` : `全部 ${g.total} 題都在，沒有跳號`}</h2>
+    <p class="ovsub">沒有漏做，文件題庫已經是完整的。</p>
+    <div class="infomath">
+      <span>${g.max} − ${g.gaps.length}</span><span>=</span><b>${g.total}</b>
+      <span class="why">PDF 最大題號 − 原文跳掉的題號 ＝ 實際存在的題數</span>
+    </div>
+    <div class="infosec">
+      <span class="lab">跳掉的題號</span>
+      <p>這幾個題號在原始 PDF 裡根本不存在。已經逐頁比對確認過，不是轉錄時漏掉，是原本就沒有這幾題。</p>
+      <div class="infonums">${chips || "<i>無</i>"}</div>
+      <p style="margin-top:10px">所以 <em>#${g.max}</em> 是「最大題號」而不是「題目數量」。把上面任何一個號碼打進跳題欄，也只會找不到題目。</p>
+    </div>
+    <div class="infosec">
+      <span class="lab">題號規則</span>
+      <p>這裡的題號沿用 PDF 自己的編號，你在原始文件查到第幾題，這邊就是第幾題。缺號之所以留著不往前補，也是為了維持這個對應關係。</p>
+    </div>`;
+
+  infowrap.innerHTML = `<div class="ovcard">${body}
+    <div class="ovbtns"><button type="button" class="go" data-act="close">${EN ? "Got it" : "知道了"}</button></div>
+  </div>`;
+  infowrap.classList.add("show");
+}
+
+el("infoBtn").addEventListener("click", openInfo);
+infowrap.addEventListener("click", e=>{
+  if(e.target === infowrap || e.target.closest('[data-act="close"]')) closeInfo();
+});
+
+/* 使用說明：收合狀態記起來，不用每次都收 */
+hintBox.addEventListener("toggle", ()=>{
+  try{ localStorage.setItem(HINT_KEY, hintBox.open ? "1" : "0"); }catch(e){}
+});
+
+/* 鍵盤：A-F 選項、Enter 批改／下一題 */
+document.addEventListener("keydown", e=>{
+  if(e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+  const k = e.key.toUpperCase();
+  const li = LETTER.indexOf(k);
+  if(li > -1){
+    const b = qbox.querySelectorAll(".opt")[li];
+    if(b && !b.disabled){ b.click(); e.preventDefault(); }
+    return;
+  }
+  if(e.key === "Enter"){ btnCheck.click(); e.preventDefault(); }
+});
+
+/* sticky 表頭高度 */
+const topBar = document.querySelector("header.top");
+const syncTop = () => document.documentElement.style.setProperty("--topH", topBar.offsetHeight + "px");
+syncTop();
+addEventListener("resize", syncTop);
+addEventListener("orientationchange", syncTop);
+if(window.ResizeObserver) new ResizeObserver(syncTop).observe(topBar);
+
+try{
+  const saved = localStorage.getItem(LANG_KEY);
+  if(LANGS.indexOf(saved) > -1) S.lang = saved;
+  const savedSrc = localStorage.getItem(SRC_KEY);
+  if(savedSrc === "doc" && BANK_DOC.length){    /* 文件題庫還沒匯入就不還原 */
+    S.src = "doc"; BANK = BANK_DOC; wrongSet = WRONG.doc; starSet = STAR.doc;
+  }
+  const savedTab = parseInt(localStorage.getItem(TAB_KEY), 10);
+  if(savedTab >= 0 && savedTab <= TAB_MAX) S.tab = savedTab;
+  if(localStorage.getItem(HINT_KEY) === "1") hintBox.open = true;
+  const savedOrder = localStorage.getItem(ORDER_KEY);
+  if(savedOrder === "seq" || savedOrder === "rand") S.order = savedOrder;
+}catch(e){}
+document.querySelectorAll("nav.tabs button").forEach((b,i)=>b.setAttribute("aria-selected", i === S.tab));
+mergeEN();
+restoreSessions();     /* 上次沒做完的分頁進度，關掉瀏覽器再回來也接得下去 */
+applyLang();
+startRound();
+</script>
+
+</body>
+</html>

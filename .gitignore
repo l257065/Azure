@@ -1,6 +1,7 @@
-# Ignore everything by default; only the AZ900 core files below are tracked.
+# Ignore everything by default; only the core files below are tracked.
 /*
 !/.gitignore
+!/README.md
 
 # Allow AZ900 directory to be traversed
 !/AZ900/
@@ -33,3 +34,33 @@
 !/AZ900/tools/check_review.js
 !/AZ900/tools/check_star_flag.py
 !/AZ900/tools/test_shuffle.js
+
+# Allow AZ104 directory to be traversed
+!/AZ104/
+/AZ104/*
+
+# Core files
+!/AZ104/AZ104-EXAM-TDD.md
+!/AZ104/az104-practice.html
+!/AZ104/AZ104-SPEC.md
+
+# Allow tools directory to be traversed
+!/AZ104/tools/
+/AZ104/tools/*
+
+# Skeleton build scripts (how az104-practice.html is derived from AZ900)
+!/AZ104/tools/build_skeleton.py
+!/AZ104/tools/port_tools.py
+
+# Verification/test scripts
+!/AZ104/tools/smoke.py
+!/AZ104/tools/uitest.py
+!/AZ104/tools/uitest_order.py
+!/AZ104/tools/uitest_skip.py
+!/AZ104/tools/check_star_flag.py
+!/AZ104/tools/vfy.py
+!/AZ104/tools/validate.js
+!/AZ104/tools/audit.js
+!/AZ104/tools/check_layout.js
+!/AZ104/tools/check_review.js
+!/AZ104/tools/test_shuffle.js
