@@ -709,6 +709,27 @@ nav.tabs .dot{
   font-size:.82rem;color:var(--bad);background:var(--bad-soft);
   border:1px solid var(--bad);border-radius:8px;padding:4px 9px;
 }
+/* 題號編碼規則的籌碼：是說明而不是警告，所以不要紅色 */
+.infonums.rule i{
+  color:var(--ink-dim);background:var(--surface-2);border-color:var(--line);
+}
+/* 各段題數：段名｜題數｜段內跳掉的題號 */
+.inforows{margin:8px 0 0;border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.inforow{
+  display:flex;align-items:baseline;gap:10px;padding:7px 11px;font-size:.84rem;
+  background:var(--surface-2);border-top:1px solid var(--line);
+}
+.inforow:first-child{border-top:0}
+.inforow b{flex:0 0 8.5em;font-weight:650}
+.inforow>span{font-family:ui-monospace,monospace;font-variant-numeric:tabular-nums;color:var(--ink-dim)}
+.inforow .miss{margin-left:auto;text-align:right}
+.inforow .miss i{font-style:normal;color:var(--ink-faint)}
+.inforow .miss em{font-style:normal;color:var(--bad);font-weight:650}
+@media (max-width:560px){
+  .inforow{flex-wrap:wrap;gap:4px 10px}
+  .inforow b{flex:1 1 100%}
+  .inforow .miss{margin-left:auto}
+}
 /* ---------- 統計面板 ---------- */
 .stsec{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
 .stsec:first-of-type{border-top:0;margin-top:8px;padding-top:0}
@@ -3293,27 +3314,58 @@ el("cfgReset").addEventListener("click", ()=>{
 });
 
 /* =====================================================================
-   題數說明：解釋「PDF 題號的最大值」與「題庫實際題數」之間的差異
-   缺號不是漏做，是原始文件本身就跳號。標題與內文數字全部從 BANK_DOC
-   現算（docGaps()／infoBtnTitle()），之後補題或改題庫、跳號被補齊，
-   這個面板會自己跟著更新，不會變成過期的說明。
+   題數說明：解釋題號怎麼編、以及缺號是原始文件本身就跳號而不是漏做。
+
+   來源 PDF 分成 Question Set 1–6 與 Testlet 1–10（案例研究），
+   **每一段的 Question # 都從 1 重新算**，所以題號把區段編碼進去：
+
+       Question Set S 第 q 題  →  n = S*1000 + q        1001…6047
+       Testlet T 第 q 題       →  n = 10000 + T*100 + q  10101…11004
+
+   `2017` 就是題組 2 第 17 題。因此**缺號只在同一段之內才有意義**
+   （1040 的下一題是 2001，中間那 960 個號碼不是缺號，是別段的號碼）。
+   數字全部從 BANK_DOC 現算，之後補題就會自己跟著更新。
    ===================================================================== */
 const closeInfo = () => { infowrap.classList.remove("show"); infowrap.innerHTML = ""; };
 
+/* 題號 → {kind:"s" 題組 / "t" 案例, sec 區段編號, q 段內題號} */
+function docNo(n){
+  return n >= 10000 ? {kind:"t", sec:Math.floor((n - 10000)/100), q:n % 100}
+                    : {kind:"s", sec:Math.floor(n/1000),          q:n % 1000};
+}
+const secLabel = (d, en) => d.kind === "s" ? (en ? `Question Set ${d.sec}` : `題組 ${d.sec}`)
+                                           : (en ? `Testlet ${d.sec}`     : `案例 ${d.sec}`);
+const secBase = d => d.kind === "s" ? d.sec*1000 : 10000 + d.sec*100;
+
 function docGaps(){
   const nums = BANK_DOC.map(q => q.n).filter(n => Number.isFinite(n));
-  if(!nums.length) return {total:0, max:0, gaps:[]};
-  const max = Math.max(...nums), seen = new Set(nums), gaps = [];
-  for(let i = 1; i <= max; i++) if(!seen.has(i)) gaps.push(i);
-  return {total:nums.length, max, gaps};
+  if(!nums.length) return {total:0, gaps:[], secs:[]};
+
+  const by = new Map();
+  nums.forEach(n=>{
+    const d = docNo(n), key = d.kind + "-" + d.sec;
+    if(!by.has(key)) by.set(key, {d, qs:[]});
+    by.get(key).qs.push(d.q);
+  });
+
+  const secs = [], gaps = [];
+  [...by.values()]
+    .sort((a,b) => a.d.kind === b.d.kind ? a.d.sec - b.d.sec : (a.d.kind === "s" ? -1 : 1))
+    .forEach(g=>{
+      const max = Math.max(...g.qs), seen = new Set(g.qs), miss = [];
+      for(let i = 1; i <= max; i++) if(!seen.has(i)) miss.push(i);
+      miss.forEach(q => gaps.push(secBase(g.d) + q));
+      secs.push({d:g.d, total:g.qs.length, max, gaps:miss});
+    });
+  return {total:nums.length, gaps, secs};
 }
 
 function infoBtnTitle(en){
   const g = docGaps();
   if(!g.gaps.length) return en ? `Question count: all ${g.total} questions are present, no gaps`
                                 : `題數說明：全部 ${g.total} 題都在，沒有跳號`;
-  return en ? `Question count: why the document bank has ${g.total} questions, not ${g.max}`
-            : `題數說明：文件題庫為什麼是 ${g.total} 題而不是 ${g.max}`;
+  return en ? `Question count: how the ${g.total} questions are numbered, and which numbers the PDF skips`
+            : `題數說明：${g.total} 題的題號怎麼編，以及原文跳掉哪些題號`;
 }
 
 function openInfo(){
@@ -3322,39 +3374,54 @@ function openInfo(){
   const hasGaps = g.gaps.length > 0;
   const chips = g.gaps.map(n => `<i>#${n}</i>`).join("");
 
+  /* 逐段一行：段名、段內題數、段內跳掉的題號 */
+  const secRows = g.secs.map(s => {
+    const miss = s.gaps.length
+      ? `<em>#${s.gaps.map(q => secBase(s.d) + q).join("</em> <em>#")}</em>`
+      : (EN ? "<i>no gaps</i>" : "<i>沒有跳號</i>");
+    return `<div class="inforow"><b>${secLabel(s.d, EN)}</b>`
+         + `<span>${s.total} ${EN ? "questions" : "題"}</span>`
+         + `<span class="miss">${miss}</span></div>`;
+  }).join("");
+
   const body = EN ? `
-    <h2>${hasGaps ? `Why ${g.total} questions, not ${g.max}?` : `All ${g.total} questions are present, no gaps`}</h2>
+    <h2>${hasGaps ? `How the ${g.total} questions are numbered`
+                  : `All ${g.total} questions are present, no gaps`}</h2>
     <p class="ovsub">Nothing is missing — the document bank is complete.</p>
-    <div class="infomath">
-      <span>${g.max} − ${g.gaps.length}</span><span>=</span><b>${g.total}</b>
-      <span class="why">highest number in the PDF − numbers the PDF skips = questions that actually exist</span>
-    </div>
-    <div class="infosec">
-      <span class="lab">Skipped numbers</span>
-      <p>These numbers do not exist in the source PDF. Every page was checked one by one — they were never transcribed because there is nothing there to transcribe.</p>
-      <div class="infonums">${chips || "<i>none</i>"}</div>
-      <p style="margin-top:10px">So <em>#${g.max}</em> is the highest question number, not the number of questions. Typing one of the numbers above into the jump box will simply find nothing.</p>
-    </div>
     <div class="infosec">
       <span class="lab">Numbering</span>
-      <p>Question numbers here are the PDF's own numbers, so anything you look up in the original document lands on the same question. That is also why the gaps were left as gaps instead of being closed up.</p>
-    </div>` : `
-    <h2>${hasGaps ? `為什麼是 ${g.total} 題，不是 ${g.max} 題？` : `全部 ${g.total} 題都在，沒有跳號`}</h2>
-    <p class="ovsub">沒有漏做，文件題庫已經是完整的。</p>
-    <div class="infomath">
-      <span>${g.max} − ${g.gaps.length}</span><span>=</span><b>${g.total}</b>
-      <span class="why">PDF 最大題號 − 原文跳掉的題號 ＝ 實際存在的題數</span>
+      <p>The source PDF is split into <em>Question Set 1–6</em> and <em>Testlet 1–10</em> (case studies), and <b>each section restarts its Question # at 1</b>. So the section is folded into the number:</p>
+      <div class="infonums rule"><i>Question Set S, question q → S×1000 + q</i><i>Testlet T, question q → 10000 + T×100 + q</i></div>
+      <p style="margin-top:10px"><em>#2017</em> is Question Set 2, question 17. <em>#10302</em> is Testlet 3, question 2. Look either one up in the original document and you land on the same question.</p>
     </div>
     <div class="infosec">
-      <span class="lab">跳掉的題號</span>
-      <p>這幾個題號在原始 PDF 裡根本不存在。已經逐頁比對確認過，不是轉錄時漏掉，是原本就沒有這幾題。</p>
-      <div class="infonums">${chips || "<i>無</i>"}</div>
-      <p style="margin-top:10px">所以 <em>#${g.max}</em> 是「最大題號」而不是「題目數量」。把上面任何一個號碼打進跳題欄，也只會找不到題目。</p>
+      <span class="lab">Per section</span>
+      <p>Because numbering restarts, <b>a gap only means anything inside one section</b> — the question after #1040 is #2001, and the 960 numbers in between belong to other sections.</p>
+      <div class="inforows">${secRows}</div>
     </div>
+    ${hasGaps ? `<div class="infosec">
+      <span class="lab">Skipped numbers</span>
+      <p>These ${g.gaps.length} numbers do not exist in the source PDF. Every page was checked one by one — they were never transcribed because there is nothing there to transcribe. Typing one into the jump box will simply find nothing.</p>
+      <div class="infonums">${chips}</div>
+    </div>` : ""}` : `
+    <h2>${hasGaps ? `${g.total} 題的題號怎麼編` : `全部 ${g.total} 題都在，沒有跳號`}</h2>
+    <p class="ovsub">沒有漏做，文件題庫已經是完整的。</p>
     <div class="infosec">
       <span class="lab">題號規則</span>
-      <p>這裡的題號沿用 PDF 自己的編號，你在原始文件查到第幾題，這邊就是第幾題。缺號之所以留著不往前補，也是為了維持這個對應關係。</p>
-    </div>`;
+      <p>來源 PDF 分成 <em>Question Set 1–6</em> 與 <em>Testlet 1–10</em>（案例研究），而且<b>每一段的 Question # 都從 1 重新算</b>。所以題號把區段編了進去：</p>
+      <div class="infonums rule"><i>題組 S 第 q 題 → S×1000 + q</i><i>案例 T 第 q 題 → 10000 + T×100 + q</i></div>
+      <p style="margin-top:10px"><em>#2017</em> 就是題組 2 第 17 題，<em>#10302</em> 就是案例 3 第 2 題。拿這個號碼回原始文件查，還是同一題。</p>
+    </div>
+    <div class="infosec">
+      <span class="lab">各段題數</span>
+      <p>因為題號每段重算，<b>缺號只在同一段之內才有意義</b>——1040 的下一題是 2001，中間那 960 個號碼不是缺號，是別段的號碼。</p>
+      <div class="inforows">${secRows}</div>
+    </div>
+    ${hasGaps ? `<div class="infosec">
+      <span class="lab">跳掉的題號</span>
+      <p>這 ${g.gaps.length} 個題號在原始 PDF 裡根本不存在。已經逐頁比對確認過，不是轉錄時漏掉，是原本就沒有這幾題。把它們打進跳題欄也只會找不到題目。</p>
+      <div class="infonums">${chips}</div>
+    </div>` : ""}`;
 
   infowrap.innerHTML = `<div class="ovcard">${body}
     <div class="ovbtns"><button type="button" class="go" data-act="close">${EN ? "Got it" : "知道了"}</button></div>
