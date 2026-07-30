@@ -58,7 +58,16 @@ with sync_playwright() as p:
     pg.add_init_script("window.addEventListener('error', e => { window.__lastErr = String(e.message) + ' @ ' + e.lineno; });")
     pg.on("console", lambda m: errs.append("console." + m.type + ": " + m.text) if m.type == "error" else None)
     pg.goto(URL)
-    pg.wait_for_function("typeof S !== 'undefined' && S.pool.length > 0")
+    pg.wait_for_function("typeof S !== 'undefined'")
+    # 開頁預設是題庫 A（自製），那一份還是空的，pool 會一直是 0。
+    # 這一支驗的是星號與標記，跟哪一份題庫無關，切到有題目的題庫 B 再跑。
+    pg.evaluate("() => setSource('doc')")
+    pg.wait_for_function("S.pool.length > 0")
+
+    # AZ-900 的星號題是分頁 5，AZ-104 有五個領域所以星號題是分頁 7
+    # （錯題本 6）。別寫死分頁編號，向引擎問。
+    TAB_STAR = pg.evaluate("() => TAB_STAR")
+    STAR_TAB = "#t%d" % TAB_STAR
 
     print("\n=== 1. 練習模式：星號 ===")
     ck("星號鈕存在", not pg.is_hidden("#starBtn"))
@@ -69,18 +78,21 @@ with sync_playwright() as p:
     ck("按下後 aria-pressed=true", pg.get_attribute("#starBtn", "aria-pressed") == "true")
     ck("寫進 starSet", pg.evaluate("starSet.has(S.pool[0].q)"))
     ck("寫進 localStorage",
-       q1 in pg.evaluate("localStorage.getItem('az104.star.v1')"))
+       # 兩個坑：鍵是分題庫的（STAR_KEYS[S.src]），別寫死成 az104.star.v1；
+       # 而且存的是 JSON，題目含 \n 時字面上會變成 \\n，不能拿原字串做子字串比對，
+       # 要先 parse 回來。
+       q1 in pg.evaluate("JSON.parse(localStorage.getItem(STAR_KEYS[S.src]) || '[]')"))
     pg.screenshot(path=str(SHOT / "star_practice.png"))
 
     # 再星第二題，然後切到星號題分頁（沒有「跳過」了，用跳題直接換一題）
     pg.evaluate("S.idx = 1; renderQ()")
     q2 = pg.evaluate("S.pool[S.idx].q")
     pg.click("#starBtn")
-    pg.click("#t5")
+    pg.click(STAR_TAB)
     ck("星號題分頁只出兩題", pg.evaluate("S.pool.length") == 2, pg.evaluate("S.pool.length"))
     ck("星號題分頁題目正確",
        sorted(pg.evaluate("S.pool.map(q=>q.q)")) == sorted([q1, q2]))
-    ck("分頁標題是星號題", "星號題" in pg.inner_text("#t5"))
+    ck("分頁標題是星號題", "星號題" in pg.inner_text(STAR_TAB))
 
     # 取消星號
     pg.click("#starBtn")
@@ -119,30 +131,36 @@ with sync_playwright() as p:
     pg.keyboard.press("ArrowLeft")
     ck("← 回上一題", pg.evaluate("S.idx") == 0)
 
-    print("\n=== 2b. 原廠規則：不給空著跳過 ===")
+    print("\n=== 2b. 練習模式可以跳過，但不計分 ===")
+    # 這一段原本抄自 AZ-900，斷言「練習模式沒有跳過鈕」——但引擎是刻意留著跳過的
+    # （renderQ 裡 btnNext.hidden = last || !S.pool.length，註解寫明「練習是拿來練的，
+    # 不想現在處理的題目直接跳掉」），所以那組斷言在 AZ-900 自己那邊也是紅的。
+    # 這裡改成驗真正的規則：練習可以跳、跳了不批改不計分、最後一題不給跳；
+    # 「不給空著跳過」是模擬考的規則，由下面第 3b 段驗。
     pg.evaluate("S.tab=0; startRound(true)")
     mc_only(pg)
-    ck("作答中沒有「跳過」按鈕", pg.is_hidden("#btnNext"))
+    ck("練習模式有「跳過」按鈕", not pg.is_hidden("#btnNext"))
+    ck("按鈕文字是「跳過」", pg.inner_text("#btnNext").strip() == "跳過",
+       pg.inner_text("#btnNext").strip())
     ck("作答中看得到批改與看答案",
        not pg.is_hidden("#btnCheck") and not pg.is_hidden("#btnReveal"))
-    pg.keyboard.press("ArrowRight")
-    ck("沒作答按 → 不會前進", pg.evaluate("S.idx") == 0)
-    ck("沒作答按 → 會出現提醒", "還沒作答" in pg.inner_text("#verdict"), pg.inner_text("#verdict"))
-    ck("被擋下來時不會計分", pg.evaluate("S.total") == 0)
-    pg.click(".opts .opt >> nth=0")
-    pg.keyboard.press("ArrowRight")
-    ck("選好後按 → 會先幫你批改", pg.evaluate("S.graded") is True)
-    ck("先批改的那一下還不會跳題", pg.evaluate("S.idx") == 0)
-    ck("批改後主鈕才變「下一題」", pg.inner_text("#btnCheck").strip() == "下一題")
-    pg.keyboard.press("ArrowRight")
-    ck("批改完按 → 才前進", pg.evaluate("S.idx") == 1)
+    pg.click("#btnNext")
+    ck("跳過會前進一題", pg.evaluate("S.idx") == 1)
+    ck("跳過不計分", pg.evaluate("S.total") == 0, pg.evaluate("S.total"))
+    ck("跳過不算批改", pg.evaluate("S.graded") is False)
     pg.click("#btnPrev")
-    ck("批改過的題目往回翻不會被擋", pg.evaluate("S.idx") == 0)
+    ck("跳過的題目回頭還能作答", pg.evaluate("S.idx") == 0
+       and not pg.is_disabled(".opts .opt >> nth=0"))
+    # 最後一題不給跳：跳過去就是結算這一輪
+    pg.evaluate("S.idx = S.pool.length - 1; renderQ()")
+    ck("最後一題沒有跳過鈕", pg.is_hidden("#btnNext"))
 
     print("\n=== 3. 模擬考：標記待複習 + 備註 ===")
     pg.click("#examBtn")
     pg.wait_for_function("S.exam === true && S.pool.length > 1")
-    ck("抽 40 題", pg.evaluate("S.pool.length") == 40, pg.evaluate("S.pool.length"))
+    # 模擬考抽 EXAM_N 題（AZ-104 是 50，AZ-900 是 40），題庫還沒收滿就抽全部
+    want = min(pg.evaluate("() => EXAM_N"), pg.evaluate("() => BANK.length"))
+    ck("抽 %d 題" % want, pg.evaluate("S.pool.length") == want, pg.evaluate("S.pool.length"))
     ck("計時器有出現", not pg.is_hidden("#timer"))
     ck("考試中有標記鈕", pg.locator(".qtools .tbtn.flag").count() == 1)
     ck("考試中沒有星號鈕（星號只屬於練習）", pg.is_hidden("#starBtn"))
@@ -186,9 +204,13 @@ with sync_playwright() as p:
     ck("跳出總覽而不是直接給分", pg.is_visible("#ovwrap"))
     ck("此時還沒有成績單", not pg.evaluate("report.classList.contains('show')"))
     ck("標題是確認交卷", "確定要交卷嗎" in pg.inner_text(".ovcard h2"))
-    ck("總覽有 40 格", pg.locator(".ovcell").count() == 40, pg.locator(".ovcell").count())
+    ck("總覽有 %d 格" % want, pg.locator(".ovcell").count() == want, pg.locator(".ovcell").count())
     ck("已作答的格子標 done", pg.locator(".ovcell.done").count() >= 1)
-    ck("未作答的格子標 blank", pg.locator(".ovcell.blank").count() >= 38)
+    # 原本寫死 >= 38（40 題抽考、只答了 1 題）。改成「沒答的就是總數減掉答過的」，
+    # 題庫還沒收滿 EXAM_N 題時才不會誤報。
+    done = pg.locator(".ovcell.done").count()
+    ck("未作答的格子標 blank", pg.locator(".ovcell.blank").count() == want - done,
+       "blank=%d done=%d want=%d" % (pg.locator(".ovcell.blank").count(), done, want))
     ck("標記的格子標 flag", pg.locator(".ovcell.flag").count() == 2, pg.locator(".ovcell.flag").count())
     ck("標記清單列出備註", "在 B 跟 D 之間猶豫" in pg.inner_text(".ovnotes"))
     ck("沒寫備註的顯示佔位字", "（沒有備註）" in pg.inner_text(".ovnotes"))
@@ -217,7 +239,7 @@ with sync_playwright() as p:
     pg.click(".ovbtns [data-act='submit']")
     ck("確定交卷後出現成績單", pg.evaluate("report.classList.contains('show')"))
     ck("成績單標題是模擬考", "模擬考" in pg.inner_text("#eyebrow"))
-    ck("逐題檢討有 40 題", pg.locator(".rev .item").count() == 40, pg.locator(".rev .item").count())
+    ck("逐題檢討有 %d 題" % want, pg.locator(".rev .item").count() == want, pg.locator(".rev .item").count())
     ck("檢討帶出標記與備註",
        pg.locator(".rev .flagln").count() == 2 and "在 B 跟 D 之間猶豫" in pg.inner_text(".rev"))
     ck("交卷後總覽關閉", pg.is_hidden("#ovwrap"))
@@ -228,7 +250,7 @@ with sync_playwright() as p:
 
     print("\n=== 6. 時間到自動交卷 ===")
     pg.click("#btnCheck")                       # 再來一輪（仍在模擬考模式）
-    pg.wait_for_function("S.exam === true && S.pool.length === 40")
+    pg.wait_for_function("S.exam === true && S.pool.length === %d" % want)
     pg.evaluate("S.left = 1")
     pg.wait_for_function("report.classList.contains('show')", timeout=5000)
     ck("時間到自動結算", pg.evaluate("report.classList.contains('show')"))
@@ -236,7 +258,7 @@ with sync_playwright() as p:
     print("\n=== 7. 英文模式與重新載入 ===")
     pg.click("#examBtn")                        # 離開模擬考
     pg.click("[data-lang='en']")
-    ck("EN 分頁名稱", pg.inner_text("#t5").strip().endswith("Starred"))
+    ck("EN 分頁名稱", pg.inner_text(STAR_TAB).strip().endswith("Starred"))
     ck("EN 星號鈕", "Star" in (pg.get_attribute("#starBtn", "title") or ""))
     ck("EN 上一題鈕", pg.get_attribute("#btnPrev", "aria-label") == "Back")
     pg.click("[data-lang='zh']")
@@ -244,11 +266,11 @@ with sync_playwright() as p:
     pg.reload()
     pg.wait_for_function("typeof S !== 'undefined' && S.pool.length > 0")
     ck("重新載入後星號有留著", pg.evaluate("starSet.size") == 1, pg.evaluate("starSet.size"))
-    pg.click("#t5")
+    pg.click(STAR_TAB)
     ck("重新載入後星號題分頁仍可用", pg.evaluate("S.pool.length") == 1)
 
     print("\n=== 8. 空的星號題分頁 ===")
-    pg.evaluate("starSet.clear(); saveStar(); S.tab=5; startRound(true)")
+    pg.evaluate("starSet.clear(); saveStar(); S.tab=" + str(TAB_STAR) + "; startRound(true)")
     ck("清空後顯示提示", "還沒有打星號的題目" in pg.inner_text("#qbox"))
 
     print("\n=== 9. 分頁進度不會被切分頁洗掉 ===")
@@ -344,12 +366,23 @@ with sync_playwright() as p:
     ck("離開考試回到原本的練習進度", pg.evaluate("S.idx") == keep_idx and pg.evaluate("S.pool[S.idx].q") == keep_q)
 
     print("\n=== 13. 題庫來源各自記進度 ===")
-    ck("切到文件題庫", pg.evaluate("BANK_DOC.length") > 0)
-    set_src(pg, "doc")
-    ck("文件題庫是新的一輪", pg.evaluate("S.idx") == 0 and pg.evaluate("S.src") == "doc")
+    # 這一段原本假設「目前在題庫 A、切去題庫 B 再切回來」。題庫 A 由另一位負責、
+    # 現在還是空的，所以改成從有題目的那一份出發：切走、再切回來，進度要留著。
+    # 兩份都有題目之後，另一個方向也會一起驗到。
+    other = "mine" if pg.evaluate("S.src") == "doc" else "doc"
+    n_other = pg.evaluate("(%s).length" % ("BANK_MINE" if other == "mine" else "BANK_DOC"))
+    set_src(pg, other)
+    ck("切到另一份題庫", pg.evaluate("S.src") == other)
+    if n_other:
+        ck("另一份題庫是新的一輪", pg.evaluate("S.idx") == 0)
+    else:
+        ck("另一份題庫還沒有題目，pool 是空的（%s 0 題）" % other,
+           pg.evaluate("S.pool.length") == 0)
     ck("切題庫後圓點跟著換", pg.locator("#t1 .dot").count() == 0)
-    set_src(pg, "mine")
-    ck("切回自製題庫，進度還在", pg.evaluate("S.idx") == keep_idx and pg.evaluate("S.pool[S.idx].q") == keep_q)
+    set_src(pg, "doc" if other == "mine" else "mine")
+    ck("切回來進度還在",
+       pg.evaluate("S.idx") == keep_idx and pg.evaluate("S.pool[S.idx].q") == keep_q,
+       (keep_idx, pg.evaluate("S.idx")))
     ck("切回來圓點也回來", pg.locator("#t1 .dot").count() == 1)
 
     print("\n=== 14. 重新整理後進度還在 ===")
@@ -377,8 +410,8 @@ with sync_playwright() as p:
       gr:S.gr.map(x=>x?!!x.reveal:null)
     })""")
     ck("有寫進 localStorage",
-       pg.evaluate("!!localStorage.getItem('az104.sess.v1|mine|1')"))
-    size = pg.evaluate("(localStorage.getItem('az104.sess.v1|mine|1')||'').length")
+       pg.evaluate("!!localStorage.getItem('az104.sess.v1|' + S.src + '|1')"))
+    size = pg.evaluate("(localStorage.getItem('az104.sess.v1|' + S.src + '|1')||'').length")
     print("       進度大小：%.1f KB / %d 題" % (size / 1024.0, before["len"]))
 
     pg.reload()
@@ -410,7 +443,7 @@ with sync_playwright() as p:
 
     print("\n=== 15. 題庫改過就讓舊進度作廢 ===")
     pg.evaluate("""
-      const k='az104.sess.v1|mine|1';
+      const k='az104.sess.v1|' + S.src + '|1';
       const o=JSON.parse(localStorage.getItem(k)); o.sig='bogus.sig';
       localStorage.setItem(k, JSON.stringify(o));
     """)
@@ -418,11 +451,11 @@ with sync_playwright() as p:
     pg.wait_for_function("typeof S !== 'undefined' && S.pool.length > 0")
     ck("指紋對不上就丟掉舊進度", pg.evaluate("S.idx") == 0 and pg.evaluate("S.total") == 0)
     ck("壞掉的進度會從 localStorage 清掉",
-       not pg.evaluate("!!localStorage.getItem('az104.sess.v1|mine|1')"))
+       not pg.evaluate("!!localStorage.getItem('az104.sess.v1|' + S.src + '|1')"))
     ck("剛開一輪沒進度時不寫檔",
-       not pg.evaluate("!!localStorage.getItem('az104.sess.v1|mine|0')"))
+       not pg.evaluate("!!localStorage.getItem('az104.sess.v1|' + S.src + '|0')"))
     # 壞掉的 JSON 也不能讓程式掛掉
-    pg.evaluate("localStorage.setItem('az104.sess.v1|mine|2', '{壞掉的 json')")
+    pg.evaluate("localStorage.setItem('az104.sess.v1|' + S.src + '|2', '{壞掉的 json')")
     pg.reload()
     pg.wait_for_function("typeof S !== 'undefined' && S.pool.length > 0")
     ck("壞掉的 JSON 不會讓程式掛掉", pg.evaluate("S.pool.length") > 0)
@@ -431,15 +464,15 @@ with sync_playwright() as p:
     pg.click("#t1")
     pg.wait_for_selector(".opts .opt")
     answer_next(pg)
-    ck("有存檔", pg.evaluate("!!localStorage.getItem('az104.sess.v1|mine|1')"))
+    ck("有存檔", pg.evaluate("!!localStorage.getItem('az104.sess.v1|' + S.src + '|1')"))
     restart(pg)
     ck("重新開始後存檔清空",
-       not pg.evaluate("!!localStorage.getItem('az104.sess.v1|mine|1')"))
+       not pg.evaluate("!!localStorage.getItem('az104.sess.v1|' + S.src + '|1')"))
     pg.evaluate("S.idx = S.pool.length - 1; renderQ()")
-    ck("重新開始後又有存檔", pg.evaluate("!!localStorage.getItem('az104.sess.v1|mine|1')"))
+    ck("重新開始後又有存檔", pg.evaluate("!!localStorage.getItem('az104.sess.v1|' + S.src + '|1')"))
     pg.evaluate("S.idx = S.pool.length; finishRound()")     # 直接結算最後一輪
     ck("整輪做完後存檔清空",
-       not pg.evaluate("!!localStorage.getItem('az104.sess.v1|mine|1')"))
+       not pg.evaluate("!!localStorage.getItem('az104.sess.v1|' + S.src + '|1')"))
 
     print("\n=== 17. 統計：常錯題與領域答對率 ===")
     pg.evaluate("""
@@ -459,7 +492,7 @@ with sync_playwright() as p:
     pg.click("#btnCheck")
     ck("答錯有記進 qstat", pg.evaluate("qstat[%r] && qstat[%r].n === 1 && qstat[%r].w === 1"
                                        % (wrong_q, wrong_q, wrong_q)))
-    ck("qstat 有寫進 localStorage", pg.evaluate("!!localStorage.getItem('az104.qstat.v1')"))
+    ck("qstat 有寫進 localStorage", pg.evaluate("!!localStorage.getItem(QSTAT_KEYS[S.src])"))
     pg.click("#btnCheck")            # 下一題
     right_pick = pg.evaluate("S.pool[1].a[0]")
     pg.click(".opts .opt >> nth=%d" % right_pick)
@@ -496,7 +529,7 @@ with sync_playwright() as p:
        pg.evaluate("hist[0].k === 'practice' && hist[0].t === 2 && hist[0].r === 1"),
        pg.evaluate("JSON.stringify(hist[0])"))
     ck("那一筆有三領域細項", pg.evaluate("!!hist[0].d && hist[0].d['1'][1] === 2"))
-    ck("歷次成績有寫進 localStorage", pg.evaluate("!!localStorage.getItem('az104.hist.v1')"))
+    ck("歷次成績有寫進 localStorage", pg.evaluate("!!localStorage.getItem(HIST_KEYS[S.src])"))
 
     # 第二輪：兩題全部答對 → 應該看得出進步
     pg.wait_for_selector(".opts .opt")
@@ -517,7 +550,7 @@ with sync_playwright() as p:
     pg.click("#statwrap [data-act='close']")
 
     # 同一題重複做，統計要累加：星號題分頁只有 1 題，做兩輪最好驗
-    pg.click("#t5")
+    pg.click(STAR_TAB)
     star_q = pg.evaluate("S.pool[0].q")
     n0 = pg.evaluate("qstat[%r] ? qstat[%r].n : 0" % (star_q, star_q))
     for _ in range(2):
@@ -556,25 +589,40 @@ with sync_playwright() as p:
     path = dl.value.path()
     import json
     saved = json.loads(pathlib.Path(path).read_text(encoding="utf-8"))
-    ck("匯出檔有 app 標記", saved.get("app") == "az900-practice")
-    ck("匯出檔含統計", "az104.qstat.v1" in saved["data"])
-    ck("匯出檔含歷次成績", "az104.hist.v1" in saved["data"])
-    ck("匯出檔含星號", "az104.star.v1" in saved["data"])
-    ck("匯出檔含錯題本", "az104.wrong.v1" in saved["data"])
-    ck("檔名有日期", dl.value.suggested_filename.startswith("az900-progress-"))
+    ck("匯出檔有 app 標記", saved.get("app") == "az104-practice")
+    keys = pg.evaluate("() => ({qstat:QSTAT_KEYS[S.src], hist:HIST_KEYS[S.src],"
+                       " star:STAR_KEYS[S.src], wrong:WRONG_KEYS[S.src]})")
+    ck("匯出檔含統計", keys["qstat"] in saved["data"], keys["qstat"])
+    ck("匯出檔含歷次成績", keys["hist"] in saved["data"], keys["hist"])
+    ck("匯出檔含星號", keys["star"] in saved["data"], keys["star"])
+    ck("匯出檔含錯題本", keys["wrong"] in saved["data"], keys["wrong"])
+    ck("檔名有日期", dl.value.suggested_filename.startswith("az104-progress-"))
     print("       匯出檔：%s（%.1f KB）" % (dl.value.suggested_filename,
                                           pathlib.Path(path).stat().st_size / 1024.0))
     hist_len = pg.evaluate("hist.length")
     star_n   = pg.evaluate("starSet.size")
+    print("       匯出前：歷次成績 %d 筆、星號 %d 題" % (hist_len, star_n))
 
     # 砍掉所有資料，再匯入回來
+    src_before = pg.evaluate("S.src")
     pg.evaluate("Object.keys(localStorage).filter(k=>k.startsWith('az104.')).forEach(k=>localStorage.removeItem(k))")
     pg.reload()
-    pg.wait_for_function("typeof S !== 'undefined' && S.pool.length > 0")
+    pg.wait_for_function("typeof S !== 'undefined'")
+    pg.evaluate("(s) => setSource(s)", src_before)   # 連 S.src 都被清掉了，切回來
+    pg.wait_for_function("S.pool.length > 0")
     ck("清空後統計是空的", pg.evaluate("hist.length") == 0 and pg.evaluate("Object.keys(qstat).length") == 0)
     pg.click("#statBtn")
-    pg.set_input_files("#impFile", path)
-    pg.wait_for_function("typeof hist !== 'undefined' && hist.length > 0", timeout=8000)
+    # 匯入完引擎會延遲 500ms 自己 location.reload()。一定要等那次導覽真的發生，
+    # 否則接下來的 evaluate 都打在舊頁面上、重整後全部被沖掉。
+    with pg.expect_navigation():
+        pg.set_input_files("#impFile", path)
+    pg.wait_for_function("typeof S !== 'undefined'")
+    # 存檔裡只有統計／歷史／星號／錯題本，沒有「目前選哪一份題庫」，
+    # 所以重整後會回到預設的題庫 A，得再切回來。
+    ck("重整後 qstat / hist 有跟著題庫換", pg.evaluate("hist === HIST[S.src]")
+       and pg.evaluate("qstat === QSTAT[S.src]"), pg.evaluate("S.src"))
+    pg.evaluate("(s) => setSource(s)", src_before)
+    pg.wait_for_function("hist.length > 0", timeout=8000)
     ck("匯入後歷次成績回來", pg.evaluate("hist.length") == hist_len, pg.evaluate("hist.length"))
     ck("匯入後統計回來", pg.evaluate("Object.keys(qstat).length") > 0)
     ck("匯入後星號回來", pg.evaluate("starSet.size") == star_n, pg.evaluate("starSet.size"))

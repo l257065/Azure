@@ -3438,6 +3438,10 @@ try{
   const savedSrc = localStorage.getItem(SRC_KEY);
   if(savedSrc === "doc" && BANK_DOC.length){    /* 文件題庫還沒匯入就不還原 */
     S.src = "doc"; BANK = BANK_DOC; wrongSet = WRONG.doc; starSet = STAR.doc;
+    /* qstat 與 hist 也要一起換。漏掉這兩個的話，在文件題庫重新整理之後，
+       統計與歷次成績會讀到自製題庫那一份，而且新的紀錄也寫進自製題庫的鍵，
+       兩份題庫「各自獨立」的保證就破了。setSource() 有換，這裡原本漏了。 */
+    qstat = QSTAT.doc; hist = HIST.doc;
   }
   const savedTab = parseInt(localStorage.getItem(TAB_KEY), 10);
   if(savedTab >= 0 && savedTab <= TAB_MAX) S.tab = savedTab;

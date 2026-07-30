@@ -88,3 +88,6 @@
 !/AZ104/tools/check_layout.js
 !/AZ104/tools/check_review.js
 !/AZ104/tools/test_shuffle.js
+
+# Per-batch transcription scratch files (tools/batch_*.js) stay untracked;
+# banks/ is the source of truth once append.py has merged them in.

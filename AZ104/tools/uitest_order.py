@@ -38,7 +38,10 @@ with sync_playwright() as p:
     check("S.order 預設 seq", pg.evaluate("() => S.order") == "seq")
     ns = pg.evaluate(NUMS)
     check("本輪題號由小到大", asc(ns), "%s ... %s" % (ns[:5], ns[-2:]))
-    check("第 1 題就是 #1", ns[0] == 1, "n=%s" % ns[0])
+    # AZ-104 的題號把題組編了進去（題組 1 第 1 題 = 1001），所以最小題號不是 1。
+    # 拿題庫實際的最小題號來比，別寫死。
+    lo = pg.evaluate("() => Math.min(...BANK.map(q => q.n))")
+    check("第 1 題就是最小題號 #%d" % lo, ns[0] == lo, "n=%s" % ns[0])
 
     print("\n[2] 設定面板")
     pg.click("#cfgBtn")
@@ -101,7 +104,10 @@ with sync_playwright() as p:
     pg.click("#examBtn")
     pg.wait_for_selector("#qbox .prompt")
     ex = pg.evaluate(NUMS)
-    check("抽 40 題", len(ex) == 40, "n=%d" % len(ex))
+    # 模擬考抽 EXAM_N 題，但題庫還沒收滿 EXAM_N 題時就只能抽到題庫的全部。
+    # 別寫死題數，否則收錄過程中這一項會一直是紅的。
+    want = min(pg.evaluate("() => EXAM_N"), pg.evaluate("() => BANK.length"))
+    check("抽 %d 題" % want, len(ex) == want, "n=%d" % len(ex))
     check("不是照題號排的", not asc(ex), "%s ..." % ex[:6])
 
     print("\n[9] console")

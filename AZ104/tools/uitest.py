@@ -39,6 +39,25 @@ with sync_playwright() as p:
     pg.goto(URL)
     pg.wait_for_selector("#qbox")
 
+    # 這一支從頭到尾都在操作原廠題型與複選題，題庫 B 還沒有這些題型的時候
+    # 一格都跑不動。缺什麼就講清楚缺什麼再結束，不要讓它撞成 TypeError
+    # ——收錄到第一題 hs / dd / dl 與第一題複選之後就會自己開始跑。
+    have = pg.evaluate("""() => {
+      const kinds = new Set(BANK_DOC.map(q => q.k || 'mc'));
+      return {kinds:[...kinds], total:BANK_DOC.length,
+              multi:BANK_DOC.some(q => (q.k||'mc') === 'mc' && q.a.length > 1)};
+    }""")
+    missing = [k for k in ("hs", "dd", "dl") if k not in have["kinds"]]
+    if not have["multi"]:
+        missing.append("複選（a 有兩個以上）")
+    if missing:
+        print("SKIP：題庫 B 目前 %d 題，題型只有 %s。"
+              % (have["total"], "、".join(have["kinds"]) or "無"))
+        print("      這支測試要有 %s 才跑得動，收錄到那些題型之後再跑。"
+              % "、".join(missing))
+        b.close()
+        sys.exit(0)
+
     # ---------- 1. HOTSPOT 是非表 ----------
     print("\n[1] HOTSPOT 是非表 hs")
     info = pg.evaluate(FORCE, "hs")
