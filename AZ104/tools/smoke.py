@@ -146,6 +146,35 @@ def main():
             if k != "mc":       # 多格題型：答案格數要等於答案數
                 check("%s 題的答案數對得上格數" % k, info["a"] == info["want"],
                       "a=%d 格=%d" % (info["a"], info["want"]))
+        # 題目與解析的輕量 markdown：**粗體**、`行內程式碼`、``` 區塊 ```。
+        # 這幾個欄位是純文字，容器是 white-space:pre-line——它保留換行但會把連續
+        # 空白壓掉，所以程式碼區塊一定要走 <pre> 才留得住縮排。曾經整段字面顯示過。
+        md = pg.evaluate("""() => {
+          const el = document.createElement("div");
+          paintHl(el, "**粗** 與 `碼` 與 ⟦標⟧\\n```\\nfoo\\n  bar\\n```\\n尾");
+          return {b:el.querySelectorAll("b").length,
+                  code:el.querySelectorAll("code").length,
+                  pre:el.querySelectorAll("pre.code").length,
+                  mark:el.querySelectorAll("mark.hl").length,
+                  preText:(el.querySelector("pre.code")||{}).textContent || "",
+                  literal:el.textContent};
+        }""")
+        check("markdown 轉得出 <b> / <code> / <pre> / <mark>",
+              [md["b"], md["code"], md["pre"], md["mark"]] == [1, 1, 1, 1], md)
+        check("程式碼區塊保住縮排（pre-line 會壓掉連續空白）",
+              md["preText"] == "foo\n  bar", repr(md["preText"]))
+        check("畫面上不留字面的 ** 與 ```",
+              "**" not in md["literal"] and "```" not in md["literal"],
+              md["literal"][:60])
+        # 落單的標記要當字面文字放過，不能把後面整段吃掉
+        stray = pg.evaluate("""() => {
+          const el = document.createElement("div");
+          paintHl(el, "落單的 ** 星號與 ` 反引號都要原樣留著");
+          return el.textContent;
+        }""")
+        check("落單的標記原樣留著，不會吃掉後面的字",
+              stray == "落單的 ** 星號與 ` 反引號都要原樣留著", stray)
+
         # 模擬考成績單：領域細項必須有 D_MAX 格。
         # 這一段原本寫死三格（AZ-900 的殘留），只要抽到領域 4／5 的題目，
         # byD[4] 就是 undefined，整張成績單會爆掉——題庫只有領域 1-3 時看不出來。

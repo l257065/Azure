@@ -20,6 +20,21 @@ DOC.forEach(q => {
   /* 領域超出 1..D_MAX 的話，成績單與歷次統計會抓不到那一格（曾經因此爆掉） */
   if (!Number.isInteger(q.d) || q.d < 1 || q.d > 5)
     fail('領域 d 要是 1-5：' + qid(q) + ' d=' + q.d);
+
+  /* 輕量 markdown 的標記沒成對，畫面上就會出現字面的 ** 或 ``` 。
+     mdHtml() 對落單的標記不做任何處理，所以只能在這裡擋。 */
+  const mdFields = [['q', q.q], ['e', q.e], ['en.q', q.en && q.en.q], ['en.e', q.en && q.en.e]];
+  for (const [lab, v] of mdFields) {
+    if (typeof v !== 'string') continue;
+    const fence = (v.match(/```/g) || []).length;
+    if (fence % 2) fail('``` 沒成對 ' + qid(q) + ' ' + lab + '（' + fence + ' 個）');
+    const bold = (v.match(/\*\*/g) || []).length;
+    if (bold % 2) fail('** 沒成對 ' + qid(q) + ' ' + lab + '（' + bold + ' 個）');
+    /* 反引號要成對，但程式碼區塊裡的內容不算（PowerShell 的續行符號就是反引號） */
+    const outside = v.replace(/```[\s\S]*?```/g, '');
+    const tick = (outside.match(/`/g) || []).length;
+    if (tick % 2) fail('行內反引號沒成對 ' + qid(q) + ' ' + lab + '（' + tick + ' 個）');
+  }
   if (!q.q || !q.a || !q.en) fail('缺欄位 ' + qid(q));
   if (!q.e || !q.e.trim()) fail('缺中文解析 ' + qid(q));
   if (!q.en.e || !q.en.e.trim()) fail('缺英文解析 ' + qid(q));
