@@ -1,4 +1,8 @@
 const fs = require('fs');
+/* 來源座標 sec+no（每一段題號都從 1 重新算，要兩格才認得出是哪一題）*/
+const qid = q => (q.sec && Number.isFinite(q.no)) ? q.sec + "#" + q.no
+                                                  : (q.t || String(q.q || "").slice(0, 18));
+
 const src = fs.readFileSync(process.argv[2], 'utf8');
 const DOC = eval('[' + src.match(/const BANK_DOC = \[([\s\S]*?)\n\];/)[1] + ']');
 const stripHl = s => String(s).replace(/⟦([^⟧]*)⟧/g, '$1');
@@ -10,9 +14,9 @@ DOC.forEach(q => {
     const segs = String(text).split('\n').map(s => s.trim()).filter(Boolean);
     // 有前言的題目，前言必須自成一段，且後面還要有真正的題目
     const hasNote = isNote(segs[0]);
-    if (hasNote && segs.length < 2) { console.log('!! #' + q.n + ' ' + tag + ' 前言後沒有題目'); bad++; }
+    if (hasNote && segs.length < 2) { console.log('!! ' + qid(q) + ' ' + tag + ' 前言後沒有題目'); bad++; }
     segs.slice(1).forEach(s => {
-      if (isNote(s)) { console.log('!! #' + q.n + ' ' + tag + ' 前言不在第一段'); bad++; }
+      if (isNote(s)) { console.log('!! ' + qid(q) + ' ' + tag + ' 前言不在第一段'); bad++; }
     });
   });
 });

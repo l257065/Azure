@@ -10,7 +10,7 @@ URL = (ROOT / "az104-practice.html").as_uri()
 SHOT = ROOT / "shots"
 SHOT.mkdir(exist_ok=True)
 
-NUMS = "() => S.pool.map(q => q.n)"          # 本輪題號（文件題庫才有 n）
+NUMS = "() => S.pool.map(srcRank)"   # 本輪順序：來源座標的名次（題組→案例→增題，段內依題號）
 
 results = []
 def check(name, cond, detail=""):
@@ -38,10 +38,12 @@ with sync_playwright() as p:
     check("S.order 預設 seq", pg.evaluate("() => S.order") == "seq")
     ns = pg.evaluate(NUMS)
     check("本輪題號由小到大", asc(ns), "%s ... %s" % (ns[:5], ns[-2:]))
-    # AZ-104 的題號把題組編了進去（題組 1 第 1 題 = 1001），所以最小題號不是 1。
-    # 拿題庫實際的最小題號來比，別寫死。
-    lo = pg.evaluate("() => Math.min(...BANK.map(q => q.n))")
-    check("第 1 題就是最小題號 #%d" % lo, ns[0] == lo, "n=%s" % ns[0])
+    # 題號是 sec + no 兩格（題組 1 第 1 題 = S1#1），沒有單一的「最小題號」，
+    # 所以比的是來源座標的名次：依題號排時第 1 題就該是名次最小的那一題。
+    lo = pg.evaluate("() => Math.min(...BANK.map(srcRank))")
+    lab = pg.evaluate("() => { const q = BANK.find(x => srcRank(x) === Math.min(...BANK.map(srcRank)));"
+                      " return q ? q.sec + '#' + q.no : '—'; }")
+    check("第 1 題就是文件上最前面那一題（%s）" % lab, ns[0] == lo, "rank=%s" % ns[0])
 
     print("\n[2] 設定面板")
     pg.click("#cfgBtn")
@@ -83,9 +85,9 @@ with sync_playwright() as p:
         pg.query_selector_all(".opt")[i].click()
     pg.click("#btnCheck")
     pg.click("#btnCheck")                     # 批改後主鈕＝下一題
-    before = pg.evaluate("() => ({i:S.idx, t:S.total, ns:S.pool.map(q=>q.n)})")
+    before = pg.evaluate("() => ({i:S.idx, t:S.total, ns:S.pool.map(srcRank)})")
     pg.evaluate("() => setOrder('rand')")
-    after = pg.evaluate("() => ({i:S.idx, t:S.total, ns:S.pool.map(q=>q.n)})")
+    after = pg.evaluate("() => ({i:S.idx, t:S.total, ns:S.pool.map(srcRank)})")
     check("設定有記下來", pg.evaluate("() => S.order") == "rand")
     check("這一輪順序沒被動", after["ns"] == before["ns"])
     check("停在原本那一題", after["i"] == before["i"], "idx=%d" % after["i"])

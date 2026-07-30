@@ -33,7 +33,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from scan_pdf import scan  # noqa: E402
+from scan_pdf import scan, sec_rank  # noqa: E402
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FILES = [
@@ -76,8 +76,7 @@ def split_q(text, is_case=False):
 
 
 def short(r):
-    sec = r["sec"].replace("Question Set", "S").replace("Testlet", "T")
-    return "%s %s#%d" % (r["tag"], sec, r["q"])
+    return "%s %s" % (r["tag"], r["label"])
 
 
 def jac(a, b):
@@ -99,18 +98,18 @@ def print_series(系列題):
           % (len(系列題), total))
     print("=" * 78)
 
-    order = sorted(系列題, key=lambda gb: min(r["n"] for r in gb[0]))
+    order = sorted(系列題, key=lambda gb: min((sec_rank(r["sec"]), r["no"]) for r in gb[0]))
     for i, (grp, buckets) in enumerate(order, 1):
-        grp = sorted(grp, key=lambda r: r["n"])
+        grp = sorted(grp, key=lambda r: (sec_rank(r["sec"]), r["no"]))
         print("\n[%2d] %d 題 / %d 種解法    n = %s"
               % (i, len(grp), len(buckets),
-                 ", ".join(str(r["n"]) for r in grp)))
+                 ", ".join(r["label"] for r in grp)))
         print("     文件位置：%s" % "、".join(short(r) for r in grp))
         print("     共用情境：%s" % topic(grp[0]["scen"], 66))
         for r in grp:
             sol = re.sub(r"\s+", " ", r["sol"]).strip()
-            print("       n=%-6d %-9s ans=%-4s %s"
-                  % (r["n"], short(r).split(" ", 1)[1] if " " in short(r) else "",
+            print("       %-11s %-13s ans=%-4s %s"
+                  % (r["label"], r["tag"],
                      (r["ans"] or "—")[:4],
                      ("解法：" + sol[:52] + ("…" if len(sol) > 52 else "")) if sol
                      else "（這一題沒有 Solution: 行）"))
@@ -120,9 +119,9 @@ def print_series(系列題):
         print("\n注意 1：有 %d 組的解法數少於題數，代表組內還有解法重複的題"
               "（那幾題才是真重複，已另計在真重複裡）：" % len(dup_in))
         for grp, buckets in dup_in:
-            print("        %d 題 / %d 種解法：n = %s"
+            print("        %d 題 / %d 種解法：%s"
                   % (len(grp), len(buckets),
-                     ", ".join(str(r["n"]) for r in sorted(grp, key=lambda r: r["n"]))))
+                     ", ".join(r["label"] for r in sorted(grp, key=lambda r: (sec_rank(r["sec"]), r["no"])))))
 
     # 這類系列題的答案只有 Yes/No。原廠樣板明說「有些系列可能沒有正確解法」，
     # 所以整組都是 No 是合法的；但那也是標記出錯最容易藏身的地方，值得回頭看。
@@ -136,8 +135,8 @@ def print_series(系列題):
               % len(no_yes))
         print("        樣板允許這種情況，但也最容易藏標記錯誤，收錄時值得回頭確認：")
         for grp, _ in no_yes:
-            print("        n = %s（%s）"
-                  % (", ".join(str(r["n"]) for r in sorted(grp, key=lambda r: r["n"])),
+            print("        %s（%s）"
+                  % (", ".join(r["label"] for r in sorted(grp, key=lambda r: (sec_rank(r["sec"]), r["no"]))),
                      topic(grp[0]["scen"], 44)))
 
 
@@ -149,7 +148,7 @@ def main():
                .replace("NewQuestion-AZ-104-", "").replace(".pdf", ""))[:12]
         for r in rs:
             r["tag"] = tag
-            r["scen"], r["sol"] = split_q(r["text"], r["sec"].startswith("Testlet"))
+            r["scen"], r["sol"] = split_q(r["text"], r["sec"].startswith("T"))
             rows.append(r)
 
     print("三份檔案原始題數合計 %d" % len(rows))

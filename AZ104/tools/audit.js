@@ -47,10 +47,14 @@ const normDesc = s => norm(String(strip(s))
   .replace(/^(\s*\w+?)s\b/, "$1"));
 
 /* 被歸類成「已知差異」而不再列進待確認的項目，最後只印總數 */
+/* 來源座標 sec+no（每一段題號都從 1 重新算，要兩格才認得出是哪一題）*/
+const qid = q => (q.sec && Number.isFinite(q.no)) ? q.sec + "#" + q.no
+                                                  : (q.t || String(q.q || "").slice(0, 18));
+
 const soft = { desc: [], diagram: [], manual: [] };
 
 for (const q of BANK) {
-  const n = q.n, k = q.k || "mc";
+  const n = qid(q), k = q.k || "mc";
 
   /* ---- 3. 標記成對 ---- */
   for (const [lab, v] of [["q", q.q], ["e", q.e], ["en.q", q.en && q.en.q], ["en.e", q.en && q.en.e],
@@ -233,11 +237,11 @@ const mentions = (q, other) =>
   new RegExp(`(第\\s*${other}\\s*[、,，]|第\\s*${other}\\s*題|questions?\\s+[\\d,\\s和and]*\\b${other}\\b|#${other}\\b)`)
     .test(q.e + "\n" + q.q + "\n" + (q.en ? q.en.e + "\n" + q.en.q : ""));
 for (const g of [...groups.values()].filter(v => v.length > 1)) {
-  const ns = g.map(q => q.n);
+  const ns = g.map(q => qid(q));
   for (const q of g) {
-    const missing = ns.filter(x => x !== q.n && !mentions(q, x));
+    const missing = ns.filter(x => x !== qid(q) && !mentions(q, x));
     if (missing.length)
-      add(warn, q.n, `與 #${missing.join("、#")} 內容相同，但解析沒有指名對方的題號`);
+      add(warn, qid(q), `與 ${missing.join("、")} 內容相同，但解析沒有指名對方的題號`);
   }
 }
 

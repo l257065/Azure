@@ -709,10 +709,6 @@ nav.tabs .dot{
   font-size:.82rem;color:var(--bad);background:var(--bad-soft);
   border:1px solid var(--bad);border-radius:8px;padding:4px 9px;
 }
-/* 題號編碼規則的籌碼：是說明而不是警告，所以不要紅色 */
-.infonums.rule i{
-  color:var(--ink-dim);background:var(--surface-2);border-color:var(--line);
-}
 /* 各段題數：段名｜題數｜段內跳掉的題號 */
 .inforows{margin:8px 0 0;border:1px solid var(--line);border-radius:11px;overflow:hidden}
 .inforow{
@@ -984,11 +980,13 @@ const BANK_MINE = [
 
    與題庫 A 完全獨立，切換時互不影響分數與錯題本。
    欄位同題庫 A：q/o/e 為中文，en 為 {q,o,e} 英文原文。
-   n = 原始文件中的題號，方便對照 PDF。
+   sec + no = 這一題在原始文件的位置（sec:"S1" = Question Set 1、
+   "T3" = Testlet 3、"NewQ" = 兩份增題），no 就是題目上印的 Question #。
+   每一段的題號都從 1 重新算，所以要兩格才認得出是哪一題。
    四種題型 mc / hs / dd / dl 的完整規格見 ../AZ900/AZ900-SPEC.md §5
    ===================================================================== */
 const BANK_DOC = [
-{n:1001, d:1, t:"標記與資源組織", tEn:"Tags & resource organisation",
+{sec:"S1", no:1, d:1, t:"標記與資源組織", tEn:"Tags & resource organisation",
  q:"你的公司底下有多個部門，每個部門各有若干台虛擬機器（VM）。\n公司有一個 Azure 訂用帳戶，裡面有一個名為 RG1 的資源群組，⟦所有 VM 都放在 RG1 裡⟧。\n你希望⟦把每一台 VM 與它所屬的部門關聯起來⟧。你應該怎麼做？",
  o:["為每個部門建立 Azure 管理群組（Management Group）","為每個部門建立一個資源群組","為虛擬機器指派標記（Tag）","修改虛擬機器的設定"],
  a:[2],
@@ -997,7 +995,7 @@ const BANK_DOC = [
      o:["Create Azure Management Groups for each department.","Create a resource group for each department.","Assign tags to the virtual machines.","Modify the settings of the virtual machines."],
      e:"Azure organises resources in four levels, each able to do different things:\n・Management group — a container above subscriptions, used to apply policy and RBAC across many subscriptions at once. It governs subscriptions, not individual VMs.\n・Subscription — the billing and quota boundary.\n・Resource group — a lifecycle container. A resource belongs to exactly one resource group, and resource groups cannot be nested.\n・Tag — a name/value pair that can be attached to subscriptions, resource groups and individual resources, up to 50 tags per resource. Tags are the only mechanism that classifies resources *across* resource group boundaries, and they are what cost analysis and Azure Policy filter on.\nThe binding constraint here is that all the VMs are already in RG1, and the question only asks for an association, not a move. Since a resource can only live in one resource group, using resource groups per department would mean relocating every VM — expensive and not what was asked. Management groups sit too high to touch a single VM, and 'modify the settings of the virtual machines' offers no field for a department. So the answer is to tag each VM, for example Department=Sales.\nIn practice, pair this with an Azure Policy that requires a Department tag on new resources so nobody forgets."}},
 
-{n:1002, d:1, t:"條件式存取", tEn:"Conditional Access",
+{sec:"S1", no:2, d:1, t:"條件式存取", tEn:"Conditional Access",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司有一個 Azure Active Directory（Azure AD）訂用帳戶，你要實作一項 Azure AD 條件式存取原則。\n這項原則必須要求⟦全域管理員（Global Administrators）群組的成員，從不受信任的位置連線到 Azure AD 時，必須使用多重要素驗證（MFA）並且使用已加入 Azure AD 的裝置⟧。\n⟦解法：你進入多重要素驗證頁面去變更使用者設定⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -1006,7 +1004,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"This set of questions is about which blade can express the requirement. First, separate the two:\n・The multi-factor authentication page (per-user MFA) — the legacy Azure AD mechanism. It only sets each user's state to Disabled, Enabled or Enforced. It is an 'always require MFA' switch: it cannot see the connection location, cannot see device state, and certainly cannot demand that the device be Azure AD-joined.\n・Conditional Access — the modern mechanism, requiring Azure AD Premium P1 or above. It works as 'if… then…'. Assignments pick users/groups, cloud apps and conditions (location, device platform, client app, sign-in risk); access controls split into two:\n　・Grant — allow or block, and when allowing it can require MFA, require the device be marked compliant, require hybrid Azure AD joined, or require an approved client app.\n　・Session — sign-in frequency, persistent browser session, app-enforced restrictions: behaviour *after* sign-in.\nThe requirement here bundles three things: a specific group, an untrusted-location condition, and both MFA and an Azure AD-joined device. Location conditions and device requirements exist only in Conditional Access; the per-user MFA page can do none of them. So this solution does not meet the goal."}},
 
-{n:1003, d:1, t:"條件式存取", tEn:"Conditional Access",
+{sec:"S1", no:3, d:1, t:"條件式存取", tEn:"Conditional Access",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司有一個 Azure Active Directory（Azure AD）訂用帳戶，你要實作一項 Azure AD 條件式存取原則。\n這項原則必須要求⟦全域管理員（Global Administrators）群組的成員，從不受信任的位置連線到 Azure AD 時，必須使用多重要素驗證（MFA）並且使用已加入 Azure AD 的裝置⟧。\n⟦解法：你進入 Azure 入口網站去變更該條件式存取原則的工作階段控制（session control）⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -1015,7 +1013,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"This time the blade is right (Conditional Access) but the wrong section is being changed. Conditional Access access controls split into two, governing quite different things:\n・Grant controls — decide 'is this sign-in allowed, and what must be satisfied first'. You can block access, or grant access and require one or more of: multi-factor authentication, device marked as compliant, hybrid Azure AD joined device, approved client app, app protection policy, password change. **Both requirements in this question — MFA and an Azure AD-joined device — live here.**\n・Session controls — decide 'once signed in, how is the session constrained'. They cover app-enforced restrictions, Conditional Access App Control via Microsoft Defender for Cloud Apps, sign-in frequency, persistent browser session and customise continuous access evaluation. They cannot require MFA and cannot require a device state.\nRule of thumb: if the requirement says a particular authentication method or device state *must* be used, it is a grant control; if it is about how often to re-authenticate, whether the browser stays signed in, or read-only access, it is a session control.\nThis question asks for an authentication method and a device state, so it is a grant control. Altering session control does not meet the goal."}},
 
-{n:1004, d:1, t:"條件式存取", tEn:"Conditional Access",
+{sec:"S1", no:4, d:1, t:"條件式存取", tEn:"Conditional Access",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司有一個 Azure Active Directory（Azure AD）訂用帳戶，你要實作一項 Azure AD 條件式存取原則。\n這項原則必須要求⟦全域管理員（Global Administrators）群組的成員，從不受信任的位置連線到 Azure AD 時，必須使用多重要素驗證（MFA）並且使用已加入 Azure AD 的裝置⟧。\n⟦解法：你進入 Azure 入口網站去變更該條件式存取原則的授權控制（grant control）⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[0],
@@ -1024,7 +1022,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"This is the only solution of the three that meets the goal. Break the policy apart and each requirement lands in a specific box:\n・Assignments — Users and groups: pick the Global Administrator directory role, matching 'members of the Global Administrators group'.\n・Assignments — Cloud apps or actions: pick Microsoft Azure Management (or all cloud apps), matching 'connect to Azure AD'.\n・Assignments — Conditions: Locations. Define the corporate trusted IP ranges under Named locations, then set the condition to Any location excluding All trusted locations — which is exactly 'untrusted locations'.\n・Access controls — Grant: Grant access, then tick Require multi-factor authentication plus Require hybrid Azure AD joined device (or Require device to be marked as compliant in a cloud-only estate), and set the footer to Require all the selected controls. **This one box satisfies both the MFA and the device requirement.**\n・Access controls — Session: nothing needed for this question.\nSo the three requirements are carried by the group assignment, the location condition and the grant control respectively. Both requirements named in the stem live in the grant control, so the answer is Yes.\nWorth noting: choosing 'Require all the selected controls' rather than 'Require one of the selected controls' matters — the latter would accept MFA *or* the device, which would not meet the requirement."}},
 
-{n:1005, d:3, t:"自訂部署 cloud-init", tEn:"Custom deployment with cloud-init",
+{sec:"S1", no:5, d:3, t:"自訂部署 cloud-init", tEn:"Custom deployment with cloud-init",
  q:"你打算把一台 ⟦Ubuntu Server⟧ 虛擬機器部署到公司的 Azure 訂用帳戶。\n你必須實作一個自訂部署，其中包含⟦加入一個特定的受信任根憑證授權單位（CA）⟧。\n你應該用下列哪一個來建立這台虛擬機器？",
  o:["New-AzureRmVm Cmdlet","New-AzVM Cmdlet","Create-AzVM Cmdlet","az vm create 命令"],
  a:[3],
@@ -1033,7 +1031,7 @@ const BANK_DOC = [
      o:["The New-AzureRmVm cmdlet.","The New-AzVM cmdlet.","The Create-AzVM cmdlet.","The az vm create command."],
      e:"To customise the OS while creating a Linux VM (adding root certificates, installing packages, writing files, creating users), the standard route is cloud-init: write a cloud-init.txt and pass it in with the --custom-data parameter at create time, and the VM runs it on first boot.\nTaking the four options in turn:\n・New-AzureRmVm — from the legacy AzureRM PowerShell module, retired (support ended February 2024), and it has no cloud-init parameter.\n・New-AzVM — the current Az PowerShell cmdlet for creating a VM, but it has no --custom-data parameter of its own. Sending custom data means building it up via Set-AzVMOperatingSystem -CustomData or switching to an ARM/Bicep template — not one line.\n・Create-AzVM — no such cmdlet. PowerShell's verb for creating a resource is New-, not Create-; any Az cmdlet starting with Create- can be discarded on sight.\n・az vm create — the Azure CLI command, which supports --custom-data directly: just give it the full path to cloud-init.txt, e.g. az vm create --custom-data cloud-init.txt.\nSo the answer is az vm create.\nMnemonic: Linux VM + cloud-init + custom initial configuration → Azure CLI's --custom-data. The Windows equivalent is the Custom Script Extension."}},
 
-{n:1006, d:1, t:"MFA 提供者使用模型", tEn:"MFA provider usage model",
+{sec:"S1", no:6, d:1, t:"MFA 提供者使用模型", tEn:"MFA provider usage model",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司在使用者不在辦公室時會使用多重要素驗證（MFA），使用模型（usage model）設定為⟦每次驗證計費（Per Authentication）⟧。\n公司併購了一家較小的企業，並把新員工加進 Azure Active Directory（Azure AD），你被告知這些員工也要使用 MFA。\n為此，使用模型必須改成⟦每位已啟用的使用者計費（Per Enabled User）⟧。\n⟦解法：你透過 Azure 入口網站重新設定現有的使用模型⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -1042,7 +1040,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"An Azure Multi-Factor Authentication Provider has two usage models, which are really two billing models:\n・Per Enabled User — billed on the number of users enabled for MFA, regardless of how often each authenticates. Suits few users authenticating often.\n・Per Authentication — billed on the total number of authentications, regardless of how many users. Suits many users authenticating only occasionally (for example, MFA only on external sign-ins).\nThe binding constraint: **the usage model is chosen when the provider is created and cannot be changed afterwards.** That is the point of this question set, and it holds whichever interface you reach for:\n・Azure portal — the provider's usage model field is read-only (this question).\n・Azure CLI / PowerShell — there is no command for it.\nSo the only way is to create a new MFA provider with the desired usage model, then re-activate the existing MFA server using activation credentials from the new provider.\nReconfiguring the existing usage model via the portal therefore does not meet the goal: the answer is No.\nAside: this question set concerns the legacy MFA provider model. Today an Azure AD Premium P1/P2 licence includes MFA outright and no separate provider is needed; only providers created before September 2018 still exist. The exam still tests this restriction."}},
 
-{n:1007, d:1, t:"MFA 提供者使用模型", tEn:"MFA provider usage model",
+{sec:"S1", no:7, d:1, t:"MFA 提供者使用模型", tEn:"MFA provider usage model",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司在使用者不在辦公室時會使用多重要素驗證（MFA），使用模型（usage model）設定為⟦每次驗證計費（Per Authentication）⟧。\n公司併購了一家較小的企業，並把新員工加進 Azure Active Directory（Azure AD），你被告知這些員工也要使用 MFA。\n為此，使用模型必須改成⟦每位已啟用的使用者計費（Per Enabled User）⟧。\n⟦解法：你透過 Azure CLI 重新設定現有的使用模型⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -1051,7 +1049,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"Same point as the previous question, with the interface swapped from the Azure portal to the Azure CLI.\nRestating the constraint: **an MFA provider's usage model is fixed at creation and cannot be changed afterwards, through any interface.** Changing tools achieves nothing:\n・Azure portal — the usage model field is read-only.\n・Azure CLI — no az command changes an MFA provider's usage model. The az ad commands manage Azure AD directory objects; an MFA provider's billing model is not among them.\n・Azure PowerShell — likewise no cmdlet for it.\n・Reconfiguring the MFA Server — that is the on-premises component and cannot reach the cloud provider's billing model.\nThe only workable route is to create a new MFA provider, choosing Per Enabled User at creation time, then re-activate the existing MFA Server with activation credentials from the new provider.\nThe answer is No.\nExam tip: throughout this set, any solution that reconfigures the usage model of the *existing* provider is No — portal, CLI or PowerShell alike. Only creating a *new* provider can possibly be Yes."}},
 
-{n:1008, d:1, t:"MFA 提供者使用模型", tEn:"MFA provider usage model",
+{sec:"S1", no:8, d:1, t:"MFA 提供者使用模型", tEn:"MFA provider usage model",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司在使用者不在辦公室時會使用多重要素驗證（MFA），使用模型（usage model）設定為⟦每次驗證計費（Per Authentication）⟧。\n公司併購了一家較小的企業，並把新員工加進 Azure Active Directory（Azure AD），你被告知這些員工也要使用 MFA。\n為此，使用模型必須改成⟦每位已啟用的使用者計費（Per Enabled User）⟧。\n⟦解法：你用現有多重要素驗證提供者資料的備份，建立一個新的多重要素驗證提供者⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -1060,7 +1058,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"First, the constraint in full: **an MFA provider's usage model is decided at creation and cannot be changed later.** To switch models, the documented route has three steps:\n1. Create a new MFA provider, selecting the desired usage model at creation (here, Per Enabled User).\n2. If an on-premises MFA Server exists, export (back up) the user data from the old provider and import it into the new one.\n3. Re-activate the existing MFA Server using activation credentials from the new provider.\nThis question's solution covers steps 1 and 2.\n⚠️ **Note: the source document marks this as No, but that marking is clearly disputed in the community.** The document's own explanatory note says 'since it is not possible to change the usage model of an existing provider, you have to create a new one and reactivate your existing server with activation credentials from the new provider' — which is precisely what this solution does. Most community answers hold that this should be Yes, since it is the only solution in the set that takes the right route (the other two try to change the existing provider).\nThe only defence of No is that the solution never states step 3, re-activating the MFA Server with the new activation credentials, so strictly the migration is unfinished. That reasoning is thin.\nThis entry transcribes the source marking (No) as required, but **if the same wording appears in the real exam, Yes is the safer answer**."}},
 
-{n:1009, d:1, t:"Azure AD Connect 同步", tEn:"Azure AD Connect sync",
+{sec:"S1", no:9, d:1, t:"Azure AD Connect 同步", tEn:"Azure AD Connect sync",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司有一個名為 weyland.com 的 Azure Active Directory（Azure AD）租用戶，並與本地端 Active Directory 網域設定為混合式共存。\n你有一台名為 DirSync1 的伺服器，設定為 DirSync 伺服器。\n你在本地端 Active Directory 建立了一個新的使用者帳戶，現在需要⟦立刻⟧把這個使用者資訊複寫到 Azure AD。\n⟦解法：你執行 Start-ADSyncSyncCycle -PolicyType Initial 這個 PowerShell Cmdlet⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -1069,7 +1067,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"The cmdlet that manually triggers an Azure AD Connect sync is Start-ADSyncSyncCycle, and it takes two -PolicyType values:\n・Delta — processes only objects changed since the last sync. This is what the built-in 30-minute schedule runs, and what you want when you have just changed something and need it pushed now. Usually seconds to a couple of minutes.\n・Initial — a full re-import of the whole directory with all sync rules re-evaluated. Used after changing sync rules, altering filtering scope, or adding attribute mappings. On a large directory it can run for hours.\nHere a single user account was added and the requirement is to replicate that one change immediately, so the correct call is Start-ADSyncSyncCycle -PolicyType Delta. Initial would eventually sync the user too, but it performs a full re-import, which contradicts 'immediately' and can load a production server for a long time.\nSo the answer is No.\nA note on names: the stem says 'DirSync server'. DirSync was the original directory sync tool, which became Azure AD Sync and then today's Azure AD Connect (now Microsoft Entra Connect). Start-ADSyncSyncCycle belongs to Azure AD Connect's ADSync module; genuine legacy DirSync used Start-OnlineCoexistenceSync. Exam questions mix these names freely — read them as Azure AD Connect."}},
 
-{n:1010, d:1, t:"Azure AD Connect 同步", tEn:"Azure AD Connect sync",
+{sec:"S1", no:10, d:1, t:"Azure AD Connect 同步", tEn:"Azure AD Connect sync",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司有一個名為 weyland.com 的 Azure Active Directory（Azure AD）租用戶，並與本地端 Active Directory 網域設定為混合式共存。\n你有一台名為 DirSync1 的伺服器，設定為 DirSync 伺服器。\n你在本地端 Active Directory 建立了一個新的使用者帳戶，現在需要⟦立刻⟧把這個使用者資訊複寫到 Azure AD。\n⟦解法：你使用「Active Directory 站台及服務」強制在某台網域控制站上複寫全域編錄（Global Catalog）⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -1078,7 +1076,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"The point here is to separate two quite different kinds of replication:\n・Replication between on-premises AD domain controllers — managed by Active Directory Sites and Services, following AD's own replication topology to carry changes from one DC to another, including Global Catalog replication. Its scope is entirely within the on-premises domain.\n・Synchronisation from on-premises AD to Azure AD — handled by Azure AD Connect (formerly DirSync / Azure AD Sync), running a delta sync every 30 minutes by default, or on demand via Start-ADSyncSyncCycle -PolicyType Delta. This is the only path that puts objects in the cloud.\nThe requirement is to get the new user into Azure AD, which is the second kind. Forcing Global Catalog replication with Sites and Services only makes the new user appear sooner on other on-premises DCs; it does nothing for Azure AD, which still waits for Azure AD Connect's next sync cycle.\nSo the answer is No.\nAside: the action is not entirely pointless in real life. If the DC that the Azure AD Connect server talks to has not received the change yet, forcing replication makes sure the next sync picks it up — but it does not trigger a sync itself, so it cannot satisfy 'replicate to Azure AD immediately'."}},
 
-{n:1011, d:1, t:"Azure AD Connect 同步", tEn:"Azure AD Connect sync",
+{sec:"S1", no:11, d:1, t:"Azure AD Connect 同步", tEn:"Azure AD Connect sync",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司有一個名為 weyland.com 的 Azure Active Directory（Azure AD）租用戶，並與本地端 Active Directory 網域設定為混合式共存。\n你有一台名為 DirSync1 的伺服器，設定為 DirSync 伺服器。\n你在本地端 Active Directory 建立了一個新的使用者帳戶，現在需要⟦立刻⟧把這個使用者資訊複寫到 Azure AD。\n⟦解法：你在某台網域控制站上重新啟動 NetLogon 服務⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -1087,7 +1085,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"The Net Logon service is responsible for the secure channel used to authenticate users and services against domain controllers, for DC locator (registering SRV records in DNS), and for computer account password changes. It has nothing to do with directory synchronisation.\nLining up all three solutions in this set shows what is being tested:\n・Start-ADSyncSyncCycle -PolicyType Initial — right tool (Azure AD Connect), wrong policy type; Delta is what is needed.\n・Forcing Global Catalog replication in Active Directory Sites and Services — governs replication between on-premises DCs and cannot reach Azure AD.\n・Restarting the NetLogon service (this question) — governs the authentication channel and DC locator, entirely unrelated to sync; restarting it may even leave that DC briefly unable to service authentication requests.\nNone of the three replicates the new user to Azure AD immediately. The one correct approach is to run, on the Azure AD Connect server:\nImport-Module ADSync\nStart-ADSyncSyncCycle -PolicyType Delta\nSo the answer is No.\nMnemonic: if a solution does not touch Azure AD Connect / ADSync, it cannot push anything to Azure AD."}},
 
-{n:1012, d:2, t:"儲存體備援", tEn:"Storage redundancy",
+{sec:"S1", no:12, d:2, t:"儲存體備援", tEn:"Storage redundancy",
  q:"你的公司有一個 Microsoft Azure 訂用帳戶，並在洛杉磯與紐約各有一座資料中心。\n你正把這兩座資料中心設定為異地叢集站台，以提供站台層級的復原能力，並需要建議一個 Azure 儲存體備援選項。\n你有下列資料儲存需求：\n・資料必須存放在多個節點上。\n・資料必須存放在分處不同地理位置的節點上。\n・⟦除了主要位置之外，也必須能夠從次要位置讀取資料⟧。\n你應該建議下列哪一個 Azure 儲存體備援選項？",
  o:["異地備援儲存體（Geo-redundant storage，GRS）","唯讀異地備援儲存體（Read-only geo-redundant storage，RA-GRS）","區域備援儲存體（Zone-redundant storage，ZRS）","本機備援儲存體（Locally redundant storage，LRS）"],
  a:[1],
@@ -1096,7 +1094,7 @@ const BANK_DOC = [
      o:["Geo-redundant storage (GRS)","Read-only geo-redundant storage (RA-GRS)","Zone-redundant storage (ZRS)","Locally redundant storage (LRS)"],
      e:"Azure Storage redundancy options, weakest to strongest:\n・LRS, locally redundant — 3 copies inside a single datacenter. Protects against disk or rack failure only; eleven 9s of annual durability.\n・ZRS, zone-redundant — 1 copy in each of 3 availability zones in the same region. Survives the loss of one datacenter but does not cross regions; twelve 9s.\n・GRS, geo-redundant — LRS (3 copies) in the primary region, then asynchronous replication to a paired region hundreds of kilometres away, where another 3 copies are held. **The secondary copy is completely inaccessible in normal operation** — it becomes usable only after Microsoft initiates a failover, or you perform an account failover yourself. Sixteen 9s.\n・RA-GRS, read-access geo-redundant — GRS plus a permanently available read-only secondary endpoint (account name suffixed with -secondary), readable at any time.\n・GZRS, geo-zone-redundant — ZRS in the primary region (across 3 availability zones), replicated to the paired region as LRS. Covers both in-region and cross-region failure.\n・RA-GZRS — GZRS with a readable secondary; the highest level of redundancy.\nApplying the three requirements: 'multiple nodes' is met by all four; 'separate geographic locations' eliminates LRS and ZRS, since both stay within one region; 'read from the secondary' eliminates GRS, whose secondary cannot normally be read. RA-GRS is what remains, so the answer is option B.\nRule of thumb: whenever a stem says the secondary must be readable, it is one of the RA- options (RA-GRS or RA-GZRS); plain 'geo-redundant' with no mention of reading is GRS."}},
 
-{n:1013, d:1, t:"檢視 ARM 範本", tEn:"Reviewing an ARM template",
+{sec:"S1", no:13, d:1, t:"檢視 ARM 範本", tEn:"Reviewing an ARM template",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司有一個 Azure 訂用帳戶，裡面包含一個儲存體帳戶、一個資源群組、一個 Blob 容器和一個檔案共用。\n一位名叫 Jon Ross 的同事⟦用單一個 Azure Resource Manager（ARM）範本⟧部署了一台虛擬機器和一個額外的 Azure 儲存體帳戶。\n你想要⟦檢視 Jon Ross 所使用的那個 ARM 範本⟧。\n⟦解法：你進入「虛擬機器」刀鋒⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -1109,6 +1107,61 @@ const BANK_DOC = [
 
 /* 目前作答中的題庫（由上方來源切換決定） */
 let BANK = BANK_MINE;
+
+/* =====================================================================
+   來源座標：sec + no
+   -----------------------------------------------------------------
+   題庫 B 的每一題都直接記它在原始 PDF 的位置，不壓成一個合成數字：
+
+       {sec:"S1",   no:1}    Question Set 1 · Question #1
+       {sec:"T3",   no:2}    Testlet 3 · Question #2
+       {sec:"NewQ", no:63}   NewQ #63
+
+   來源 PDF 分成 Question Set 1–6、Testlet 1–10（案例研究）與兩份增題的 NewQ，
+   **每一段的題號都從 1 重新算**，所以單靠一個號碼認不出是哪一題，一定要兩個欄位。
+   直接存這兩格，維護的人打開題庫檔就能一比一對回 PDF，不必心算。
+
+   題庫 A 是依大綱自己編寫的、沒有來源文件，所以沒有這兩個欄位——
+   hasSrc() 為 false 的題目一律不顯示來源標籤，也不參與跳題與缺號統計。
+   ===================================================================== */
+const hasSrc = q => !!q && typeof q.sec === "string" && Number.isFinite(q.no);
+
+/* 區段代號 → 看得懂的名字。中文意譯，英文照 PDF 原文 */
+function secName(sec, en){
+  let m;
+  if((m = /^S(\d+)$/.exec(sec))) return en ? `Question Set ${m[1]}` : `題組 ${m[1]}`;
+  if((m = /^T(\d+)$/.exec(sec))) return en ? `Testlet ${m[1]}`      : `案例 ${m[1]}`;
+  if(sec === "NewQ")             return en ? "NewQ"                 : "增題";
+  return sec;
+}
+
+/* 題目上方與解析標題用的來源標籤：「題組 1 · 第 1 題」/「Question Set 1 · #1」 */
+const srcLabel = (q, en) => hasSrc(q)
+  ? secName(q.sec, en) + (en ? ` · #${q.no}` : ` · 第 ${q.no} 題`) : "";
+
+/* 排序與範圍顯示用的名次：題組 → 案例 → 增題，段內再依題號 */
+function secRank(sec){
+  let m;
+  if((m = /^S(\d+)$/.exec(sec))) return 1000 + Number(m[1]);
+  if((m = /^T(\d+)$/.exec(sec))) return 2000 + Number(m[1]);
+  return 3000;
+}
+const srcRank = q => hasSrc(q) ? secRank(q.sec) * 1000 + q.no : Infinity;
+
+/* 跳題框吃的寫法（大小寫都可以，空白會先去掉）：
+     2-17 / S2-17   → 題組 2 第 17 題
+     T3-2           → 案例 3 第 2 題
+     N63 / NewQ-63  → NewQ 第 63 題
+     17             → 本輪第 17 題（和「作答總覽」的編號一樣）           */
+function parseJump(raw){
+  const s = String(raw).trim().replace(/\s+/g, "").replace(/^[#第]/, "");
+  let m;
+  if((m = /^(?:s)?(\d+)[-\/.](\d+)$/i.exec(s))      ) return {sec:"S" + m[1],  no:Number(m[2])};
+  if((m = /^t(\d+)[-\/.](\d+)$/i.exec(s))           ) return {sec:"T" + m[1],  no:Number(m[2])};
+  if((m = /^(?:n|newq)[-\/.]?(\d+)$/i.exec(s))      ) return {sec:"NewQ",      no:Number(m[1])};
+  if((m = /^(\d+)題?$/.exec(s))                      ) return {pos:Number(m[1])};
+  return null;
+}
 
 /* =====================================================================
    英文版題目：以中文題目為鍵，與中文題庫解耦，缺漏時自動退回中文。
@@ -1730,7 +1783,7 @@ function renderQ(){
   const meta = document.createElement("p");
   meta.className = "meta";
   meta.textContent = `${dname(q.d)} · ${(EN && q.tEn) ? q.tEn : q.t}`
-                   + (q.n ? (EN ? ` · #${q.n}` : ` · 第 ${q.n} 題`) : "");
+                   + (hasSrc(q) ? ` · ${srcLabel(q, EN)}` : "");
   /* 這一題是把第一版拆開的子題合併還原回來的，不是直接從原始文件轉錄。
      還沒回頭逐字核對前先標出來，讓作答的人知道措辭可能與原文有出入。 */
   /* q.ext：這一題**不在原始 PDF 裡**（作者當初沒收錄那個題號），是由外部來源補進來的。
@@ -2424,8 +2477,8 @@ function grade(revealOnly, rescore){
 
   /* 文件題庫沒有解析，就只顯示出處，不要留一個空框 */
   expl.className = "expl show";
-  const lab = q.n
-    ? (EN ? `Explanation · PDF question #${q.n}` : `解析 · 原始文件第 ${q.n} 題`)
+  const lab = hasSrc(q)
+    ? (EN ? `Explanation · PDF ${srcLabel(q, true)}` : `解析 · 原始文件 ${srcLabel(q, false)}`)
     : (EN ? "Explanation · " : "解析 · ") + q.t;
   expl.innerHTML = '<span class="lab">' + esc(lab) + "</span>";
   if(V.e){
@@ -2433,7 +2486,7 @@ function grade(revealOnly, rescore){
     paintHl(body, V.e);
     expl.append(body);
   }
-  else if(!q.n) expl.className = "expl";
+  else if(!hasSrc(q)) expl.className = "expl";
   if(EN && !q.en){
     const note = document.createElement("div");
     note.style.cssText = "margin-top:6px;font-size:.8rem;opacity:.75";
@@ -3031,29 +3084,49 @@ function sayJump(txt, bad){
 
 /* 沒題目、或整輪做完正在看成績單時就不給跳 */
 const jumpOff = () => !S.pool.length || report.classList.contains("show");
-/* 這一輪的題目有沒有自己的題號（文件題庫有，自製題庫沒有） */
-const jumpNumbered = () => S.pool.some(q => q.n);
-/* 輸入的數字要當成哪一種號碼："no" = 題目自己的題號、"pos" = 本輪第幾題 */
-const jumpMode = () => (!S.exam && jumpNumbered()) ? "no" : "pos";
-/* 這個分頁跳得到的題號範圍：分類分頁、錯題本只含部分題目，所以不是連號 */
-function jumpRange(){
-  const ns = S.pool.map(q => Number(q.n)).filter(Number.isFinite);
-  return ns.length ? Math.min(...ns) + "-" + Math.max(...ns) : "";
+/* 這一輪的題目有沒有來源座標（文件題庫有，自製題庫沒有） */
+const jumpNumbered = () => S.pool.some(hasSrc);
+/* 這個分頁跳得到的來源題號有哪些段：分類分頁、錯題本只含部分題目，所以不是連號 */
+function jumpRange(en){
+  const by = new Map();
+  S.pool.filter(hasSrc).forEach(q=>{
+    const r = by.get(q.sec) || {lo:Infinity, hi:-Infinity};
+    r.lo = Math.min(r.lo, q.no); r.hi = Math.max(r.hi, q.no);
+    by.set(q.sec, r);
+  });
+  return [...by.entries()]
+    .sort((a,b) => secRank(a[0]) - secRank(b[0]))
+    .map(([sec, r]) => secName(sec, en) + " " + (r.lo === r.hi ? "#" + r.lo
+                                                              : `#${r.lo}-${r.hi}`))
+    .join("、");
 }
 
 function paintJump(){
   const EN = S.lang === "en";
   const off = jumpOff();
-  const byNo = jumpMode() === "no";
   const cur = S.pool[S.idx];
+  const numbered = jumpNumbered();
   jumpForm.dataset.off = off ? "1" : "0";
   jumpNo.disabled = jumpBtn.disabled = off;
-  /* 提示框裡放目前這一題的號碼，一眼就知道這個欄位認的是哪一種號碼 */
-  jumpNo.placeholder = (byNo && cur && cur.n) ? "#" + cur.n : (EN ? "no." : "題號");
+  /* 提示框裡放目前這一題的來源題號，一眼就知道這個欄位吃什麼寫法 */
+  jumpNo.placeholder = hasSrc(cur)
+    ? cur.sec.replace(/^S/, "") + "-" + cur.no
+    : (EN ? "no." : "題號");
   jumpBtn.textContent = EN ? "Go" : "跳題";
-  jumpForm.title = byNo
-    ? (EN ? `Type the number printed on the question — the #N above the stem, not its position in this shuffled round — then press Enter (this tab holds ${S.pool.length} questions, nos. ${jumpRange()}). Press / to focus.`
-          : `輸入題目上標的題號（題目本文上方那個「第 N 題」，不是本輪的第幾題）按 Enter 就跳過去（這個分頁收了 ${S.pool.length} 題，題號 ${jumpRange()}）。按 / 鍵可以快速跳到這個欄位。`)
+  /* 一個數字＝本輪第幾題；「段-題號」＝原始文件上的位置。兩種寫法都吃 */
+  jumpForm.title = numbered
+    ? (EN ? `Two ways to jump, then press Enter:\n`
+          + `  17     — no. 17 of this round (same numbering as the overview, 1-${S.pool.length})\n`
+          + `  2-17   — Question Set 2, question #17 as printed in the PDF\n`
+          + `  T3-2   — Testlet 3, question #2\n`
+          + `  N63    — NewQ #63\n`
+          + `This tab holds ${S.pool.length} questions: ${jumpRange(true)}. Press / to focus.`
+          : `兩種寫法，打完按 Enter：\n`
+          + `  17     — 本輪第 17 題（和「作答總覽」的編號一樣，本輪 1-${S.pool.length} 題）\n`
+          + `  2-17   — 原始文件的題組 2 第 17 題\n`
+          + `  T3-2   — 案例 3 第 2 題\n`
+          + `  N63    — 增題 NewQ 第 63 題\n`
+          + `這個分頁收了 ${S.pool.length} 題：${jumpRange(false)}。按 / 鍵可以快速跳到這個欄位。`)
     : (EN ? `Type a question number (1-${S.pool.length}, same numbering as the overview) and press Enter. Press / to focus.`
           : `輸入題號按 Enter 直接跳到那一題（本輪 1-${S.pool.length} 題，和「作答總覽」的編號一樣）。按 / 鍵可以快速跳到這個欄位。`);
   if(off) sayJump("");
@@ -3062,35 +3135,36 @@ function paintJump(){
 function jumpTo(raw){
   const EN = S.lang === "en";
   if(jumpOff()) return false;
-  const n = parseInt(String(raw).replace(/[^0-9]/g, ""), 10);   /* 連 #316、第 316 題 這種寫法也吃 */
-  if(!Number.isFinite(n)){
-    sayJump(EN ? "Enter a question number." : "請先輸入題號。", true);
+  const want = parseJump(raw);
+  if(!want){
+    sayJump(EN ? "Type 17 for no. 17 of this round, or 2-17 / T3-2 / N63 for the number printed in the PDF."
+               : "打 17 跳本輪第 17 題；打 2-17、T3-2、N63 跳原始文件上的題號。", true);
     return false;
   }
 
-  const findByNo = () => S.pool.findIndex(q => Number(q.n) === n);
+  const n = want.pos;
   let i = -1, byNo = false;
-  if(jumpMode() === "no"){
-    i = findByNo(); byNo = i >= 0;                 /* 練習模式：只照題目自己的題號 */
-  } else {
-    if(n >= 1 && n <= S.pool.length) i = n - 1;    /* 本輪第幾題 */
-    else if(jumpNumbered()){ i = findByNo(); byNo = i >= 0; }   /* 超出範圍才試題號 */
+  if(want.sec){                                    /* 「段-題號」＝原始文件上的位置 */
+    i = S.pool.findIndex(q => hasSrc(q) && q.sec === want.sec && q.no === want.no);
+    byNo = i >= 0;
+  } else if(n >= 1 && n <= S.pool.length){
+    i = n - 1;                                     /* 一個數字＝本輪第幾題 */
   }
   if(i < 0){
-    sayJump(jumpMode() === "no"
-      ? (EN ? `Question ${n} is not in this tab (${S.pool.length} questions, nos. ${jumpRange()}).`
-            : `這個分頁裡沒有第 ${n} 題（這裡收了 ${S.pool.length} 題，題號 ${jumpRange()}）。`)
+    sayJump(want.sec
+      ? (EN ? `${secName(want.sec, true)} #${want.no} is not in this tab (${S.pool.length} questions: ${jumpRange(true)}).`
+            : `這個分頁裡沒有${secName(want.sec, false)}第 ${want.no} 題（這裡收了 ${S.pool.length} 題：${jumpRange(false)}）。`)
       : (EN ? `No question ${n} in this round (1-${S.pool.length}).`
             : `這一輪沒有第 ${n} 題（可跳 1-${S.pool.length} 題）。`), true);
     return false;
   }
   /* 跳到哪一題就講清楚是照哪一種號碼跳的，免得和另一種號碼搞混 */
-  const qn = S.pool[i].n;
+  const lab = srcLabel(S.pool[i], EN);
   const where = byNo
-    ? (EN ? `question ${n} — no. ${i+1} of ${S.pool.length} this round`
-          : `第 ${n} 題（本輪第 ${i+1} / ${S.pool.length} 題）`)
-    : (EN ? `no. ${i+1} of this round${qn ? ` — question ${qn}` : ""}`
-          : `本輪第 ${i+1} 題${qn ? `（題目上標的是第 ${qn} 題）` : ""}`);
+    ? (EN ? `${lab} — no. ${i+1} of ${S.pool.length} this round`
+          : `${lab}（本輪第 ${i+1} / ${S.pool.length} 題）`)
+    : (EN ? `no. ${i+1} of this round${lab ? ` — ${lab}` : ""}`
+          : `本輪第 ${i+1} 題${lab ? `（題目上標的是${lab}）` : ""}`);
   if(i === S.idx){
     sayJump((EN ? "Already on " : "已經在") + where + (EN ? "." : "了。"));
     return true;
@@ -3430,89 +3504,66 @@ el("cfgReset").addEventListener("click", ()=>{
 });
 
 /* =====================================================================
-   題數說明：解釋題號怎麼編、以及缺號是原始文件本身就跳號而不是漏做。
-
-   來源 PDF 分成 Question Set 1–6 與 Testlet 1–10（案例研究），
-   **每一段的 Question # 都從 1 重新算**，所以題號把區段編碼進去：
-
-       Question Set S 第 q 題  →  n = S*1000 + q        1001…6047
-       Testlet T 第 q 題       →  n = 10000 + T*100 + q  10101…11004
-
-   `2017` 就是題組 2 第 17 題。因此**缺號只在同一段之內才有意義**
-   （1040 的下一題是 2001，中間那 960 個號碼不是缺號，是別段的號碼）。
+   題數說明：逐段列出題數，並解釋缺號是原始文件本身就跳號而不是漏做。
    數字全部從 BANK_DOC 現算，之後補題就會自己跟著更新。
    ===================================================================== */
 const closeInfo = () => { infowrap.classList.remove("show"); infowrap.innerHTML = ""; };
 
-/* 題號 → {kind:"s" 題組 / "t" 案例, sec 區段編號, q 段內題號} */
-function docNo(n){
-  return n >= 10000 ? {kind:"t", sec:Math.floor((n - 10000)/100), q:n % 100}
-                    : {kind:"s", sec:Math.floor(n/1000),          q:n % 1000};
-}
-const secLabel = (d, en) => d.kind === "s" ? (en ? `Question Set ${d.sec}` : `題組 ${d.sec}`)
-                                           : (en ? `Testlet ${d.sec}`     : `案例 ${d.sec}`);
-const secBase = d => d.kind === "s" ? d.sec*1000 : 10000 + d.sec*100;
-
 function docGaps(){
-  const nums = BANK_DOC.map(q => q.n).filter(n => Number.isFinite(n));
-  if(!nums.length) return {total:0, gaps:[], secs:[]};
+  const src = BANK_DOC.filter(hasSrc);
+  if(!src.length) return {total:0, gaps:[], secs:[]};
 
   const by = new Map();
-  nums.forEach(n=>{
-    const d = docNo(n), key = d.kind + "-" + d.sec;
-    if(!by.has(key)) by.set(key, {d, qs:[]});
-    by.get(key).qs.push(d.q);
+  src.forEach(q=>{
+    if(!by.has(q.sec)) by.set(q.sec, []);
+    by.get(q.sec).push(q.no);
   });
 
   const secs = [], gaps = [];
-  [...by.values()]
-    .sort((a,b) => a.d.kind === b.d.kind ? a.d.sec - b.d.sec : (a.d.kind === "s" ? -1 : 1))
-    .forEach(g=>{
-      const max = Math.max(...g.qs), seen = new Set(g.qs), miss = [];
+  [...by.entries()]
+    .sort((a,b) => secRank(a[0]) - secRank(b[0]))
+    .forEach(([sec, nos])=>{
+      const max = Math.max(...nos), seen = new Set(nos), miss = [];
       for(let i = 1; i <= max; i++) if(!seen.has(i)) miss.push(i);
-      miss.forEach(q => gaps.push(secBase(g.d) + q));
-      secs.push({d:g.d, total:g.qs.length, max, gaps:miss});
+      miss.forEach(no => gaps.push({sec, no}));
+      secs.push({sec, total:nos.length, max, gaps:miss});
     });
-  return {total:nums.length, gaps, secs};
+  return {total:src.length, gaps, secs};
 }
 
 function infoBtnTitle(en){
   const g = docGaps();
   if(!g.gaps.length) return en ? `Question count: all ${g.total} questions are present, no gaps`
                                 : `題數說明：全部 ${g.total} 題都在，沒有跳號`;
-  return en ? `Question count: how the ${g.total} questions are numbered, and which numbers the PDF skips`
-            : `題數說明：${g.total} 題的題號怎麼編，以及原文跳掉哪些題號`;
+  return en ? `Question count: ${g.total} questions by section, and which numbers the PDF skips`
+            : `題數說明：${g.total} 題的逐段分布，以及原文跳掉哪些題號`;
 }
 
 function openInfo(){
   const EN = S.lang === "en";
   const g = docGaps();
   const hasGaps = g.gaps.length > 0;
-  const chips = g.gaps.map(n => `<i>#${n}</i>`).join("");
+  const chip = x => `<i>${secName(x.sec, EN)} #${x.no}</i>`;
+  const chips = g.gaps.map(chip).join("");
 
   /* 逐段一行：段名、段內題數、段內跳掉的題號 */
   const secRows = g.secs.map(s => {
     const miss = s.gaps.length
-      ? `<em>#${s.gaps.map(q => secBase(s.d) + q).join("</em> <em>#")}</em>`
+      ? `<em>#${s.gaps.join("</em> <em>#")}</em>`
       : (EN ? "<i>no gaps</i>" : "<i>沒有跳號</i>");
-    return `<div class="inforow"><b>${secLabel(s.d, EN)}</b>`
+    return `<div class="inforow"><b>${secName(s.sec, EN)}</b>`
          + `<span>${s.total} ${EN ? "questions" : "題"}</span>`
          + `<span class="miss">${miss}</span></div>`;
   }).join("");
 
   const body = EN ? `
-    <h2>${hasGaps ? `How the ${g.total} questions are numbered`
+    <h2>${hasGaps ? `${g.total} questions, by section`
                   : `All ${g.total} questions are present, no gaps`}</h2>
     <p class="ovsub">Nothing is missing — the document bank is complete.</p>
     <div class="infosec">
-      <span class="lab">Numbering</span>
-      <p>The source PDF is split into <em>Question Set 1–6</em> and <em>Testlet 1–10</em> (case studies), and <b>each section restarts its Question # at 1</b>. So the section is folded into the number:</p>
-      <div class="infonums rule"><i>Question Set S, question q → S×1000 + q</i><i>Testlet T, question q → 10000 + T×100 + q</i></div>
-      <p style="margin-top:10px"><em>#2017</em> is Question Set 2, question 17. <em>#10302</em> is Testlet 3, question 2. Look either one up in the original document and you land on the same question.</p>
-    </div>
-    <div class="infosec">
-      <span class="lab">Per section</span>
-      <p>Because numbering restarts, <b>a gap only means anything inside one section</b> — the question after #1040 is #2001, and the 960 numbers in between belong to other sections.</p>
+      <span class="lab">Where the numbers come from</span>
+      <p>Each question carries the position it has in the source PDF — the section plus the <em>Question #</em> printed on it. The PDF is split into <em>Question Set 1–6</em>, <em>Testlet 1–10</em> (case studies) and the <em>NewQ</em> supplements, and <b>each section restarts its numbering at 1</b>, so it takes both parts to name a question.</p>
+      <p>That is why a gap <b>only means anything inside one section</b>: Question Set 1 ends at #40 and Question Set 2 starts again at #1.</p>
       <div class="inforows">${secRows}</div>
     </div>
     ${hasGaps ? `<div class="infosec">
@@ -3520,17 +3571,12 @@ function openInfo(){
       <p>These ${g.gaps.length} numbers do not exist in the source PDF. Every page was checked one by one — they were never transcribed because there is nothing there to transcribe. Typing one into the jump box will simply find nothing.</p>
       <div class="infonums">${chips}</div>
     </div>` : ""}` : `
-    <h2>${hasGaps ? `${g.total} 題的題號怎麼編` : `全部 ${g.total} 題都在，沒有跳號`}</h2>
+    <h2>${hasGaps ? `${g.total} 題的逐段分布` : `全部 ${g.total} 題都在，沒有跳號`}</h2>
     <p class="ovsub">沒有漏做，文件題庫已經是完整的。</p>
     <div class="infosec">
-      <span class="lab">題號規則</span>
-      <p>來源 PDF 分成 <em>Question Set 1–6</em> 與 <em>Testlet 1–10</em>（案例研究），而且<b>每一段的 Question # 都從 1 重新算</b>。所以題號把區段編了進去：</p>
-      <div class="infonums rule"><i>題組 S 第 q 題 → S×1000 + q</i><i>案例 T 第 q 題 → 10000 + T×100 + q</i></div>
-      <p style="margin-top:10px"><em>#2017</em> 就是題組 2 第 17 題，<em>#10302</em> 就是案例 3 第 2 題。拿這個號碼回原始文件查，還是同一題。</p>
-    </div>
-    <div class="infosec">
-      <span class="lab">各段題數</span>
-      <p>因為題號每段重算，<b>缺號只在同一段之內才有意義</b>——1040 的下一題是 2001，中間那 960 個號碼不是缺號，是別段的號碼。</p>
+      <span class="lab">題號是怎麼來的</span>
+      <p>每一題都直接帶著它在原始文件裡的位置——所屬區段，加上題目上印的 <em>Question #</em>。來源 PDF 分成 <em>Question Set 1–6</em>、<em>Testlet 1–10</em>（案例研究）與兩份 <em>NewQ</em> 增題，而且<b>每一段的題號都從 1 重新算</b>，所以要兩格才認得出是哪一題。</p>
+      <p>也因此，<b>缺號只在同一段之內才有意義</b>：題組 1 到 #40 就結束，題組 2 又從 #1 開始。</p>
       <div class="inforows">${secRows}</div>
     </div>
     ${hasGaps ? `<div class="infosec">

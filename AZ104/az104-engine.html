@@ -702,10 +702,6 @@ nav.tabs .dot{
   font-size:.82rem;color:var(--bad);background:var(--bad-soft);
   border:1px solid var(--bad);border-radius:8px;padding:4px 9px;
 }
-/* 題號編碼規則的籌碼：是說明而不是警告，所以不要紅色 */
-.infonums.rule i{
-  color:var(--ink-dim);background:var(--surface-2);border-color:var(--line);
-}
 /* 各段題數：段名｜題數｜段內跳掉的題號 */
 .inforows{margin:8px 0 0;border:1px solid var(--line);border-radius:11px;overflow:hidden}
 .inforow{
@@ -965,6 +961,61 @@ const BANK_DOC = [
 
 /* 目前作答中的題庫（由上方來源切換決定） */
 let BANK = BANK_MINE;
+
+/* =====================================================================
+   來源座標：sec + no
+   -----------------------------------------------------------------
+   題庫 B 的每一題都直接記它在原始 PDF 的位置，不壓成一個合成數字：
+
+       {sec:"S1",   no:1}    Question Set 1 · Question #1
+       {sec:"T3",   no:2}    Testlet 3 · Question #2
+       {sec:"NewQ", no:63}   NewQ #63
+
+   來源 PDF 分成 Question Set 1–6、Testlet 1–10（案例研究）與兩份增題的 NewQ，
+   **每一段的題號都從 1 重新算**，所以單靠一個號碼認不出是哪一題，一定要兩個欄位。
+   直接存這兩格，維護的人打開題庫檔就能一比一對回 PDF，不必心算。
+
+   題庫 A 是依大綱自己編寫的、沒有來源文件，所以沒有這兩個欄位——
+   hasSrc() 為 false 的題目一律不顯示來源標籤，也不參與跳題與缺號統計。
+   ===================================================================== */
+const hasSrc = q => !!q && typeof q.sec === "string" && Number.isFinite(q.no);
+
+/* 區段代號 → 看得懂的名字。中文意譯，英文照 PDF 原文 */
+function secName(sec, en){
+  let m;
+  if((m = /^S(\d+)$/.exec(sec))) return en ? `Question Set ${m[1]}` : `題組 ${m[1]}`;
+  if((m = /^T(\d+)$/.exec(sec))) return en ? `Testlet ${m[1]}`      : `案例 ${m[1]}`;
+  if(sec === "NewQ")             return en ? "NewQ"                 : "增題";
+  return sec;
+}
+
+/* 題目上方與解析標題用的來源標籤：「題組 1 · 第 1 題」/「Question Set 1 · #1」 */
+const srcLabel = (q, en) => hasSrc(q)
+  ? secName(q.sec, en) + (en ? ` · #${q.no}` : ` · 第 ${q.no} 題`) : "";
+
+/* 排序與範圍顯示用的名次：題組 → 案例 → 增題，段內再依題號 */
+function secRank(sec){
+  let m;
+  if((m = /^S(\d+)$/.exec(sec))) return 1000 + Number(m[1]);
+  if((m = /^T(\d+)$/.exec(sec))) return 2000 + Number(m[1]);
+  return 3000;
+}
+const srcRank = q => hasSrc(q) ? secRank(q.sec) * 1000 + q.no : Infinity;
+
+/* 跳題框吃的寫法（大小寫都可以，空白會先去掉）：
+     2-17 / S2-17   → 題組 2 第 17 題
+     T3-2           → 案例 3 第 2 題
+     N63 / NewQ-63  → NewQ 第 63 題
+     17             → 本輪第 17 題（和「作答總覽」的編號一樣）           */
+function parseJump(raw){
+  const s = String(raw).trim().replace(/\s+/g, "").replace(/^[#第]/, "");
+  let m;
+  if((m = /^(?:s)?(\d+)[-\/.](\d+)$/i.exec(s))      ) return {sec:"S" + m[1],  no:Number(m[2])};
+  if((m = /^t(\d+)[-\/.](\d+)$/i.exec(s))           ) return {sec:"T" + m[1],  no:Number(m[2])};
+  if((m = /^(?:n|newq)[-\/.]?(\d+)$/i.exec(s))      ) return {sec:"NewQ",      no:Number(m[1])};
+  if((m = /^(\d+)題?$/.exec(s))                      ) return {pos:Number(m[1])};
+  return null;
+}
 
 /* =====================================================================
    英文版題目：以中文題目為鍵，與中文題庫解耦，缺漏時自動退回中文。
@@ -1586,7 +1637,7 @@ function renderQ(){
   const meta = document.createElement("p");
   meta.className = "meta";
   meta.textContent = `${dname(q.d)} · ${(EN && q.tEn) ? q.tEn : q.t}`
-                   + (q.n ? (EN ? ` · #${q.n}` : ` · 第 ${q.n} 題`) : "");
+                   + (hasSrc(q) ? ` · ${srcLabel(q, EN)}` : "");
   /* 這一題是把第一版拆開的子題合併還原回來的，不是直接從原始文件轉錄。
      還沒回頭逐字核對前先標出來，讓作答的人知道措辭可能與原文有出入。 */
   /* q.ext：這一題**不在原始 PDF 裡**（作者當初沒收錄那個題號），是由外部來源補進來的。
@@ -2280,8 +2331,8 @@ function grade(revealOnly, rescore){
 
   /* 文件題庫沒有解析，就只顯示出處，不要留一個空框 */
   expl.className = "expl show";
-  const lab = q.n
-    ? (EN ? `Explanation · PDF question #${q.n}` : `解析 · 原始文件第 ${q.n} 題`)
+  const lab = hasSrc(q)
+    ? (EN ? `Explanation · PDF ${srcLabel(q, true)}` : `解析 · 原始文件 ${srcLabel(q, false)}`)
     : (EN ? "Explanation · " : "解析 · ") + q.t;
   expl.innerHTML = '<span class="lab">' + esc(lab) + "</span>";
   if(V.e){
@@ -2289,7 +2340,7 @@ function grade(revealOnly, rescore){
     paintHl(body, V.e);
     expl.append(body);
   }
-  else if(!q.n) expl.className = "expl";
+  else if(!hasSrc(q)) expl.className = "expl";
   if(EN && !q.en){
     const note = document.createElement("div");
     note.style.cssText = "margin-top:6px;font-size:.8rem;opacity:.75";
@@ -2887,29 +2938,49 @@ function sayJump(txt, bad){
 
 /* 沒題目、或整輪做完正在看成績單時就不給跳 */
 const jumpOff = () => !S.pool.length || report.classList.contains("show");
-/* 這一輪的題目有沒有自己的題號（文件題庫有，自製題庫沒有） */
-const jumpNumbered = () => S.pool.some(q => q.n);
-/* 輸入的數字要當成哪一種號碼："no" = 題目自己的題號、"pos" = 本輪第幾題 */
-const jumpMode = () => (!S.exam && jumpNumbered()) ? "no" : "pos";
-/* 這個分頁跳得到的題號範圍：分類分頁、錯題本只含部分題目，所以不是連號 */
-function jumpRange(){
-  const ns = S.pool.map(q => Number(q.n)).filter(Number.isFinite);
-  return ns.length ? Math.min(...ns) + "-" + Math.max(...ns) : "";
+/* 這一輪的題目有沒有來源座標（文件題庫有，自製題庫沒有） */
+const jumpNumbered = () => S.pool.some(hasSrc);
+/* 這個分頁跳得到的來源題號有哪些段：分類分頁、錯題本只含部分題目，所以不是連號 */
+function jumpRange(en){
+  const by = new Map();
+  S.pool.filter(hasSrc).forEach(q=>{
+    const r = by.get(q.sec) || {lo:Infinity, hi:-Infinity};
+    r.lo = Math.min(r.lo, q.no); r.hi = Math.max(r.hi, q.no);
+    by.set(q.sec, r);
+  });
+  return [...by.entries()]
+    .sort((a,b) => secRank(a[0]) - secRank(b[0]))
+    .map(([sec, r]) => secName(sec, en) + " " + (r.lo === r.hi ? "#" + r.lo
+                                                              : `#${r.lo}-${r.hi}`))
+    .join("、");
 }
 
 function paintJump(){
   const EN = S.lang === "en";
   const off = jumpOff();
-  const byNo = jumpMode() === "no";
   const cur = S.pool[S.idx];
+  const numbered = jumpNumbered();
   jumpForm.dataset.off = off ? "1" : "0";
   jumpNo.disabled = jumpBtn.disabled = off;
-  /* 提示框裡放目前這一題的號碼，一眼就知道這個欄位認的是哪一種號碼 */
-  jumpNo.placeholder = (byNo && cur && cur.n) ? "#" + cur.n : (EN ? "no." : "題號");
+  /* 提示框裡放目前這一題的來源題號，一眼就知道這個欄位吃什麼寫法 */
+  jumpNo.placeholder = hasSrc(cur)
+    ? cur.sec.replace(/^S/, "") + "-" + cur.no
+    : (EN ? "no." : "題號");
   jumpBtn.textContent = EN ? "Go" : "跳題";
-  jumpForm.title = byNo
-    ? (EN ? `Type the number printed on the question — the #N above the stem, not its position in this shuffled round — then press Enter (this tab holds ${S.pool.length} questions, nos. ${jumpRange()}). Press / to focus.`
-          : `輸入題目上標的題號（題目本文上方那個「第 N 題」，不是本輪的第幾題）按 Enter 就跳過去（這個分頁收了 ${S.pool.length} 題，題號 ${jumpRange()}）。按 / 鍵可以快速跳到這個欄位。`)
+  /* 一個數字＝本輪第幾題；「段-題號」＝原始文件上的位置。兩種寫法都吃 */
+  jumpForm.title = numbered
+    ? (EN ? `Two ways to jump, then press Enter:\n`
+          + `  17     — no. 17 of this round (same numbering as the overview, 1-${S.pool.length})\n`
+          + `  2-17   — Question Set 2, question #17 as printed in the PDF\n`
+          + `  T3-2   — Testlet 3, question #2\n`
+          + `  N63    — NewQ #63\n`
+          + `This tab holds ${S.pool.length} questions: ${jumpRange(true)}. Press / to focus.`
+          : `兩種寫法，打完按 Enter：\n`
+          + `  17     — 本輪第 17 題（和「作答總覽」的編號一樣，本輪 1-${S.pool.length} 題）\n`
+          + `  2-17   — 原始文件的題組 2 第 17 題\n`
+          + `  T3-2   — 案例 3 第 2 題\n`
+          + `  N63    — 增題 NewQ 第 63 題\n`
+          + `這個分頁收了 ${S.pool.length} 題：${jumpRange(false)}。按 / 鍵可以快速跳到這個欄位。`)
     : (EN ? `Type a question number (1-${S.pool.length}, same numbering as the overview) and press Enter. Press / to focus.`
           : `輸入題號按 Enter 直接跳到那一題（本輪 1-${S.pool.length} 題，和「作答總覽」的編號一樣）。按 / 鍵可以快速跳到這個欄位。`);
   if(off) sayJump("");
@@ -2918,35 +2989,36 @@ function paintJump(){
 function jumpTo(raw){
   const EN = S.lang === "en";
   if(jumpOff()) return false;
-  const n = parseInt(String(raw).replace(/[^0-9]/g, ""), 10);   /* 連 #316、第 316 題 這種寫法也吃 */
-  if(!Number.isFinite(n)){
-    sayJump(EN ? "Enter a question number." : "請先輸入題號。", true);
+  const want = parseJump(raw);
+  if(!want){
+    sayJump(EN ? "Type 17 for no. 17 of this round, or 2-17 / T3-2 / N63 for the number printed in the PDF."
+               : "打 17 跳本輪第 17 題；打 2-17、T3-2、N63 跳原始文件上的題號。", true);
     return false;
   }
 
-  const findByNo = () => S.pool.findIndex(q => Number(q.n) === n);
+  const n = want.pos;
   let i = -1, byNo = false;
-  if(jumpMode() === "no"){
-    i = findByNo(); byNo = i >= 0;                 /* 練習模式：只照題目自己的題號 */
-  } else {
-    if(n >= 1 && n <= S.pool.length) i = n - 1;    /* 本輪第幾題 */
-    else if(jumpNumbered()){ i = findByNo(); byNo = i >= 0; }   /* 超出範圍才試題號 */
+  if(want.sec){                                    /* 「段-題號」＝原始文件上的位置 */
+    i = S.pool.findIndex(q => hasSrc(q) && q.sec === want.sec && q.no === want.no);
+    byNo = i >= 0;
+  } else if(n >= 1 && n <= S.pool.length){
+    i = n - 1;                                     /* 一個數字＝本輪第幾題 */
   }
   if(i < 0){
-    sayJump(jumpMode() === "no"
-      ? (EN ? `Question ${n} is not in this tab (${S.pool.length} questions, nos. ${jumpRange()}).`
-            : `這個分頁裡沒有第 ${n} 題（這裡收了 ${S.pool.length} 題，題號 ${jumpRange()}）。`)
+    sayJump(want.sec
+      ? (EN ? `${secName(want.sec, true)} #${want.no} is not in this tab (${S.pool.length} questions: ${jumpRange(true)}).`
+            : `這個分頁裡沒有${secName(want.sec, false)}第 ${want.no} 題（這裡收了 ${S.pool.length} 題：${jumpRange(false)}）。`)
       : (EN ? `No question ${n} in this round (1-${S.pool.length}).`
             : `這一輪沒有第 ${n} 題（可跳 1-${S.pool.length} 題）。`), true);
     return false;
   }
   /* 跳到哪一題就講清楚是照哪一種號碼跳的，免得和另一種號碼搞混 */
-  const qn = S.pool[i].n;
+  const lab = srcLabel(S.pool[i], EN);
   const where = byNo
-    ? (EN ? `question ${n} — no. ${i+1} of ${S.pool.length} this round`
-          : `第 ${n} 題（本輪第 ${i+1} / ${S.pool.length} 題）`)
-    : (EN ? `no. ${i+1} of this round${qn ? ` — question ${qn}` : ""}`
-          : `本輪第 ${i+1} 題${qn ? `（題目上標的是第 ${qn} 題）` : ""}`);
+    ? (EN ? `${lab} — no. ${i+1} of ${S.pool.length} this round`
+          : `${lab}（本輪第 ${i+1} / ${S.pool.length} 題）`)
+    : (EN ? `no. ${i+1} of this round${lab ? ` — ${lab}` : ""}`
+          : `本輪第 ${i+1} 題${lab ? `（題目上標的是${lab}）` : ""}`);
   if(i === S.idx){
     sayJump((EN ? "Already on " : "已經在") + where + (EN ? "." : "了。"));
     return true;
@@ -3286,89 +3358,66 @@ el("cfgReset").addEventListener("click", ()=>{
 });
 
 /* =====================================================================
-   題數說明：解釋題號怎麼編、以及缺號是原始文件本身就跳號而不是漏做。
-
-   來源 PDF 分成 Question Set 1–6 與 Testlet 1–10（案例研究），
-   **每一段的 Question # 都從 1 重新算**，所以題號把區段編碼進去：
-
-       Question Set S 第 q 題  →  n = S*1000 + q        1001…6047
-       Testlet T 第 q 題       →  n = 10000 + T*100 + q  10101…11004
-
-   `2017` 就是題組 2 第 17 題。因此**缺號只在同一段之內才有意義**
-   （1040 的下一題是 2001，中間那 960 個號碼不是缺號，是別段的號碼）。
+   題數說明：逐段列出題數，並解釋缺號是原始文件本身就跳號而不是漏做。
    數字全部從 BANK_DOC 現算，之後補題就會自己跟著更新。
    ===================================================================== */
 const closeInfo = () => { infowrap.classList.remove("show"); infowrap.innerHTML = ""; };
 
-/* 題號 → {kind:"s" 題組 / "t" 案例, sec 區段編號, q 段內題號} */
-function docNo(n){
-  return n >= 10000 ? {kind:"t", sec:Math.floor((n - 10000)/100), q:n % 100}
-                    : {kind:"s", sec:Math.floor(n/1000),          q:n % 1000};
-}
-const secLabel = (d, en) => d.kind === "s" ? (en ? `Question Set ${d.sec}` : `題組 ${d.sec}`)
-                                           : (en ? `Testlet ${d.sec}`     : `案例 ${d.sec}`);
-const secBase = d => d.kind === "s" ? d.sec*1000 : 10000 + d.sec*100;
-
 function docGaps(){
-  const nums = BANK_DOC.map(q => q.n).filter(n => Number.isFinite(n));
-  if(!nums.length) return {total:0, gaps:[], secs:[]};
+  const src = BANK_DOC.filter(hasSrc);
+  if(!src.length) return {total:0, gaps:[], secs:[]};
 
   const by = new Map();
-  nums.forEach(n=>{
-    const d = docNo(n), key = d.kind + "-" + d.sec;
-    if(!by.has(key)) by.set(key, {d, qs:[]});
-    by.get(key).qs.push(d.q);
+  src.forEach(q=>{
+    if(!by.has(q.sec)) by.set(q.sec, []);
+    by.get(q.sec).push(q.no);
   });
 
   const secs = [], gaps = [];
-  [...by.values()]
-    .sort((a,b) => a.d.kind === b.d.kind ? a.d.sec - b.d.sec : (a.d.kind === "s" ? -1 : 1))
-    .forEach(g=>{
-      const max = Math.max(...g.qs), seen = new Set(g.qs), miss = [];
+  [...by.entries()]
+    .sort((a,b) => secRank(a[0]) - secRank(b[0]))
+    .forEach(([sec, nos])=>{
+      const max = Math.max(...nos), seen = new Set(nos), miss = [];
       for(let i = 1; i <= max; i++) if(!seen.has(i)) miss.push(i);
-      miss.forEach(q => gaps.push(secBase(g.d) + q));
-      secs.push({d:g.d, total:g.qs.length, max, gaps:miss});
+      miss.forEach(no => gaps.push({sec, no}));
+      secs.push({sec, total:nos.length, max, gaps:miss});
     });
-  return {total:nums.length, gaps, secs};
+  return {total:src.length, gaps, secs};
 }
 
 function infoBtnTitle(en){
   const g = docGaps();
   if(!g.gaps.length) return en ? `Question count: all ${g.total} questions are present, no gaps`
                                 : `題數說明：全部 ${g.total} 題都在，沒有跳號`;
-  return en ? `Question count: how the ${g.total} questions are numbered, and which numbers the PDF skips`
-            : `題數說明：${g.total} 題的題號怎麼編，以及原文跳掉哪些題號`;
+  return en ? `Question count: ${g.total} questions by section, and which numbers the PDF skips`
+            : `題數說明：${g.total} 題的逐段分布，以及原文跳掉哪些題號`;
 }
 
 function openInfo(){
   const EN = S.lang === "en";
   const g = docGaps();
   const hasGaps = g.gaps.length > 0;
-  const chips = g.gaps.map(n => `<i>#${n}</i>`).join("");
+  const chip = x => `<i>${secName(x.sec, EN)} #${x.no}</i>`;
+  const chips = g.gaps.map(chip).join("");
 
   /* 逐段一行：段名、段內題數、段內跳掉的題號 */
   const secRows = g.secs.map(s => {
     const miss = s.gaps.length
-      ? `<em>#${s.gaps.map(q => secBase(s.d) + q).join("</em> <em>#")}</em>`
+      ? `<em>#${s.gaps.join("</em> <em>#")}</em>`
       : (EN ? "<i>no gaps</i>" : "<i>沒有跳號</i>");
-    return `<div class="inforow"><b>${secLabel(s.d, EN)}</b>`
+    return `<div class="inforow"><b>${secName(s.sec, EN)}</b>`
          + `<span>${s.total} ${EN ? "questions" : "題"}</span>`
          + `<span class="miss">${miss}</span></div>`;
   }).join("");
 
   const body = EN ? `
-    <h2>${hasGaps ? `How the ${g.total} questions are numbered`
+    <h2>${hasGaps ? `${g.total} questions, by section`
                   : `All ${g.total} questions are present, no gaps`}</h2>
     <p class="ovsub">Nothing is missing — the document bank is complete.</p>
     <div class="infosec">
-      <span class="lab">Numbering</span>
-      <p>The source PDF is split into <em>Question Set 1–6</em> and <em>Testlet 1–10</em> (case studies), and <b>each section restarts its Question # at 1</b>. So the section is folded into the number:</p>
-      <div class="infonums rule"><i>Question Set S, question q → S×1000 + q</i><i>Testlet T, question q → 10000 + T×100 + q</i></div>
-      <p style="margin-top:10px"><em>#2017</em> is Question Set 2, question 17. <em>#10302</em> is Testlet 3, question 2. Look either one up in the original document and you land on the same question.</p>
-    </div>
-    <div class="infosec">
-      <span class="lab">Per section</span>
-      <p>Because numbering restarts, <b>a gap only means anything inside one section</b> — the question after #1040 is #2001, and the 960 numbers in between belong to other sections.</p>
+      <span class="lab">Where the numbers come from</span>
+      <p>Each question carries the position it has in the source PDF — the section plus the <em>Question #</em> printed on it. The PDF is split into <em>Question Set 1–6</em>, <em>Testlet 1–10</em> (case studies) and the <em>NewQ</em> supplements, and <b>each section restarts its numbering at 1</b>, so it takes both parts to name a question.</p>
+      <p>That is why a gap <b>only means anything inside one section</b>: Question Set 1 ends at #40 and Question Set 2 starts again at #1.</p>
       <div class="inforows">${secRows}</div>
     </div>
     ${hasGaps ? `<div class="infosec">
@@ -3376,17 +3425,12 @@ function openInfo(){
       <p>These ${g.gaps.length} numbers do not exist in the source PDF. Every page was checked one by one — they were never transcribed because there is nothing there to transcribe. Typing one into the jump box will simply find nothing.</p>
       <div class="infonums">${chips}</div>
     </div>` : ""}` : `
-    <h2>${hasGaps ? `${g.total} 題的題號怎麼編` : `全部 ${g.total} 題都在，沒有跳號`}</h2>
+    <h2>${hasGaps ? `${g.total} 題的逐段分布` : `全部 ${g.total} 題都在，沒有跳號`}</h2>
     <p class="ovsub">沒有漏做，文件題庫已經是完整的。</p>
     <div class="infosec">
-      <span class="lab">題號規則</span>
-      <p>來源 PDF 分成 <em>Question Set 1–6</em> 與 <em>Testlet 1–10</em>（案例研究），而且<b>每一段的 Question # 都從 1 重新算</b>。所以題號把區段編了進去：</p>
-      <div class="infonums rule"><i>題組 S 第 q 題 → S×1000 + q</i><i>案例 T 第 q 題 → 10000 + T×100 + q</i></div>
-      <p style="margin-top:10px"><em>#2017</em> 就是題組 2 第 17 題，<em>#10302</em> 就是案例 3 第 2 題。拿這個號碼回原始文件查，還是同一題。</p>
-    </div>
-    <div class="infosec">
-      <span class="lab">各段題數</span>
-      <p>因為題號每段重算，<b>缺號只在同一段之內才有意義</b>——1040 的下一題是 2001，中間那 960 個號碼不是缺號，是別段的號碼。</p>
+      <span class="lab">題號是怎麼來的</span>
+      <p>每一題都直接帶著它在原始文件裡的位置——所屬區段，加上題目上印的 <em>Question #</em>。來源 PDF 分成 <em>Question Set 1–6</em>、<em>Testlet 1–10</em>（案例研究）與兩份 <em>NewQ</em> 增題，而且<b>每一段的題號都從 1 重新算</b>，所以要兩格才認得出是哪一題。</p>
+      <p>也因此，<b>缺號只在同一段之內才有意義</b>：題組 1 到 #40 就結束，題組 2 又從 #1 開始。</p>
       <div class="inforows">${secRows}</div>
     </div>
     ${hasGaps ? `<div class="infosec">

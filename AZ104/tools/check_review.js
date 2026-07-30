@@ -1,4 +1,8 @@
 const fs = require('fs');
+/* 來源座標 sec+no（每一段題號都從 1 重新算，要兩格才認得出是哪一題）*/
+const qid = q => (q.sec && Number.isFinite(q.no)) ? q.sec + "#" + q.no
+                                                  : (q.t || String(q.q || "").slice(0, 18));
+
 const src = fs.readFileSync(process.argv[2], 'utf8');
 const DOC = eval('[' + src.match(/const BANK_DOC = \[([\s\S]*?)\n\];/)[1] + ']');
 const MINE = eval('[' + src.match(/const BANK_MINE = \[([\s\S]*?)\n\];/)[1] + ']');
@@ -59,7 +63,7 @@ let bad = 0;
 DOC.concat(MINE).filter(q => kindOf(q) === "mc").forEach(q => {
   const rs = review(q, [0], false);
   const greens = rs.filter(r => r.cls === "ok" || r.cls === "miss").length;
-  if (greens !== q.a.length) { console.log("!! 綠色數量不符", q.n || q.q.slice(0, 20)); bad++; }
+  if (greens !== q.a.length) { console.log("!! 綠色數量不符", qid(q)); bad++; }
 });
 console.log("\n單複選題的正解標示數量正確:", bad ? "FAIL" : "OK");
 
@@ -89,6 +93,6 @@ if (dl) {
 let bad2 = 0;
 DOC.filter(q => kindOf(q) !== "mc").forEach(q => {
   const n = kindOf(q) === "hs" ? q.s.length : kindOf(q) === "dd" ? q.tgt.length : q.dd.length;
-  if (q.a.length !== n) { console.log("!! 逐格答案數不符 #" + q.n); bad2++; }
+  if (q.a.length !== n) { console.log("!! 逐格答案數不符 " + qid(q)); bad2++; }
 });
 console.log("\n原廠題型的逐格答案數正確:", bad2 ? "FAIL" : "OK");

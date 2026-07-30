@@ -6,11 +6,13 @@
 
    與題庫 A 完全獨立，切換時互不影響分數與錯題本。
    欄位同題庫 A：q/o/e 為中文，en 為 {q,o,e} 英文原文。
-   n = 原始文件中的題號，方便對照 PDF。
+   sec + no = 這一題在原始文件的位置（sec:"S1" = Question Set 1、
+   "T3" = Testlet 3、"NewQ" = 兩份增題），no 就是題目上印的 Question #。
+   每一段的題號都從 1 重新算，所以要兩格才認得出是哪一題。
    四種題型 mc / hs / dd / dl 的完整規格見 ../AZ900/AZ900-SPEC.md §5
    ===================================================================== */
 const BANK_DOC = [
-{n:1001, d:1, t:"標記與資源組織", tEn:"Tags & resource organisation",
+{sec:"S1", no:1, d:1, t:"標記與資源組織", tEn:"Tags & resource organisation",
  q:"你的公司底下有多個部門，每個部門各有若干台虛擬機器（VM）。\n公司有一個 Azure 訂用帳戶，裡面有一個名為 RG1 的資源群組，⟦所有 VM 都放在 RG1 裡⟧。\n你希望⟦把每一台 VM 與它所屬的部門關聯起來⟧。你應該怎麼做？",
  o:["為每個部門建立 Azure 管理群組（Management Group）","為每個部門建立一個資源群組","為虛擬機器指派標記（Tag）","修改虛擬機器的設定"],
  a:[2],
@@ -19,7 +21,7 @@ const BANK_DOC = [
      o:["Create Azure Management Groups for each department.","Create a resource group for each department.","Assign tags to the virtual machines.","Modify the settings of the virtual machines."],
      e:"Azure organises resources in four levels, each able to do different things:\n・Management group — a container above subscriptions, used to apply policy and RBAC across many subscriptions at once. It governs subscriptions, not individual VMs.\n・Subscription — the billing and quota boundary.\n・Resource group — a lifecycle container. A resource belongs to exactly one resource group, and resource groups cannot be nested.\n・Tag — a name/value pair that can be attached to subscriptions, resource groups and individual resources, up to 50 tags per resource. Tags are the only mechanism that classifies resources *across* resource group boundaries, and they are what cost analysis and Azure Policy filter on.\nThe binding constraint here is that all the VMs are already in RG1, and the question only asks for an association, not a move. Since a resource can only live in one resource group, using resource groups per department would mean relocating every VM — expensive and not what was asked. Management groups sit too high to touch a single VM, and 'modify the settings of the virtual machines' offers no field for a department. So the answer is to tag each VM, for example Department=Sales.\nIn practice, pair this with an Azure Policy that requires a Department tag on new resources so nobody forgets."}},
 
-{n:1002, d:1, t:"條件式存取", tEn:"Conditional Access",
+{sec:"S1", no:2, d:1, t:"條件式存取", tEn:"Conditional Access",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司有一個 Azure Active Directory（Azure AD）訂用帳戶，你要實作一項 Azure AD 條件式存取原則。\n這項原則必須要求⟦全域管理員（Global Administrators）群組的成員，從不受信任的位置連線到 Azure AD 時，必須使用多重要素驗證（MFA）並且使用已加入 Azure AD 的裝置⟧。\n⟦解法：你進入多重要素驗證頁面去變更使用者設定⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -28,7 +30,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"This set of questions is about which blade can express the requirement. First, separate the two:\n・The multi-factor authentication page (per-user MFA) — the legacy Azure AD mechanism. It only sets each user's state to Disabled, Enabled or Enforced. It is an 'always require MFA' switch: it cannot see the connection location, cannot see device state, and certainly cannot demand that the device be Azure AD-joined.\n・Conditional Access — the modern mechanism, requiring Azure AD Premium P1 or above. It works as 'if… then…'. Assignments pick users/groups, cloud apps and conditions (location, device platform, client app, sign-in risk); access controls split into two:\n　・Grant — allow or block, and when allowing it can require MFA, require the device be marked compliant, require hybrid Azure AD joined, or require an approved client app.\n　・Session — sign-in frequency, persistent browser session, app-enforced restrictions: behaviour *after* sign-in.\nThe requirement here bundles three things: a specific group, an untrusted-location condition, and both MFA and an Azure AD-joined device. Location conditions and device requirements exist only in Conditional Access; the per-user MFA page can do none of them. So this solution does not meet the goal."}},
 
-{n:1003, d:1, t:"條件式存取", tEn:"Conditional Access",
+{sec:"S1", no:3, d:1, t:"條件式存取", tEn:"Conditional Access",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司有一個 Azure Active Directory（Azure AD）訂用帳戶，你要實作一項 Azure AD 條件式存取原則。\n這項原則必須要求⟦全域管理員（Global Administrators）群組的成員，從不受信任的位置連線到 Azure AD 時，必須使用多重要素驗證（MFA）並且使用已加入 Azure AD 的裝置⟧。\n⟦解法：你進入 Azure 入口網站去變更該條件式存取原則的工作階段控制（session control）⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -37,7 +39,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"This time the blade is right (Conditional Access) but the wrong section is being changed. Conditional Access access controls split into two, governing quite different things:\n・Grant controls — decide 'is this sign-in allowed, and what must be satisfied first'. You can block access, or grant access and require one or more of: multi-factor authentication, device marked as compliant, hybrid Azure AD joined device, approved client app, app protection policy, password change. **Both requirements in this question — MFA and an Azure AD-joined device — live here.**\n・Session controls — decide 'once signed in, how is the session constrained'. They cover app-enforced restrictions, Conditional Access App Control via Microsoft Defender for Cloud Apps, sign-in frequency, persistent browser session and customise continuous access evaluation. They cannot require MFA and cannot require a device state.\nRule of thumb: if the requirement says a particular authentication method or device state *must* be used, it is a grant control; if it is about how often to re-authenticate, whether the browser stays signed in, or read-only access, it is a session control.\nThis question asks for an authentication method and a device state, so it is a grant control. Altering session control does not meet the goal."}},
 
-{n:1004, d:1, t:"條件式存取", tEn:"Conditional Access",
+{sec:"S1", no:4, d:1, t:"條件式存取", tEn:"Conditional Access",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司有一個 Azure Active Directory（Azure AD）訂用帳戶，你要實作一項 Azure AD 條件式存取原則。\n這項原則必須要求⟦全域管理員（Global Administrators）群組的成員，從不受信任的位置連線到 Azure AD 時，必須使用多重要素驗證（MFA）並且使用已加入 Azure AD 的裝置⟧。\n⟦解法：你進入 Azure 入口網站去變更該條件式存取原則的授權控制（grant control）⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[0],
@@ -46,7 +48,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"This is the only solution of the three that meets the goal. Break the policy apart and each requirement lands in a specific box:\n・Assignments — Users and groups: pick the Global Administrator directory role, matching 'members of the Global Administrators group'.\n・Assignments — Cloud apps or actions: pick Microsoft Azure Management (or all cloud apps), matching 'connect to Azure AD'.\n・Assignments — Conditions: Locations. Define the corporate trusted IP ranges under Named locations, then set the condition to Any location excluding All trusted locations — which is exactly 'untrusted locations'.\n・Access controls — Grant: Grant access, then tick Require multi-factor authentication plus Require hybrid Azure AD joined device (or Require device to be marked as compliant in a cloud-only estate), and set the footer to Require all the selected controls. **This one box satisfies both the MFA and the device requirement.**\n・Access controls — Session: nothing needed for this question.\nSo the three requirements are carried by the group assignment, the location condition and the grant control respectively. Both requirements named in the stem live in the grant control, so the answer is Yes.\nWorth noting: choosing 'Require all the selected controls' rather than 'Require one of the selected controls' matters — the latter would accept MFA *or* the device, which would not meet the requirement."}},
 
-{n:1005, d:3, t:"自訂部署 cloud-init", tEn:"Custom deployment with cloud-init",
+{sec:"S1", no:5, d:3, t:"自訂部署 cloud-init", tEn:"Custom deployment with cloud-init",
  q:"你打算把一台 ⟦Ubuntu Server⟧ 虛擬機器部署到公司的 Azure 訂用帳戶。\n你必須實作一個自訂部署，其中包含⟦加入一個特定的受信任根憑證授權單位（CA）⟧。\n你應該用下列哪一個來建立這台虛擬機器？",
  o:["New-AzureRmVm Cmdlet","New-AzVM Cmdlet","Create-AzVM Cmdlet","az vm create 命令"],
  a:[3],
@@ -55,7 +57,7 @@ const BANK_DOC = [
      o:["The New-AzureRmVm cmdlet.","The New-AzVM cmdlet.","The Create-AzVM cmdlet.","The az vm create command."],
      e:"To customise the OS while creating a Linux VM (adding root certificates, installing packages, writing files, creating users), the standard route is cloud-init: write a cloud-init.txt and pass it in with the --custom-data parameter at create time, and the VM runs it on first boot.\nTaking the four options in turn:\n・New-AzureRmVm — from the legacy AzureRM PowerShell module, retired (support ended February 2024), and it has no cloud-init parameter.\n・New-AzVM — the current Az PowerShell cmdlet for creating a VM, but it has no --custom-data parameter of its own. Sending custom data means building it up via Set-AzVMOperatingSystem -CustomData or switching to an ARM/Bicep template — not one line.\n・Create-AzVM — no such cmdlet. PowerShell's verb for creating a resource is New-, not Create-; any Az cmdlet starting with Create- can be discarded on sight.\n・az vm create — the Azure CLI command, which supports --custom-data directly: just give it the full path to cloud-init.txt, e.g. az vm create --custom-data cloud-init.txt.\nSo the answer is az vm create.\nMnemonic: Linux VM + cloud-init + custom initial configuration → Azure CLI's --custom-data. The Windows equivalent is the Custom Script Extension."}},
 
-{n:1006, d:1, t:"MFA 提供者使用模型", tEn:"MFA provider usage model",
+{sec:"S1", no:6, d:1, t:"MFA 提供者使用模型", tEn:"MFA provider usage model",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司在使用者不在辦公室時會使用多重要素驗證（MFA），使用模型（usage model）設定為⟦每次驗證計費（Per Authentication）⟧。\n公司併購了一家較小的企業，並把新員工加進 Azure Active Directory（Azure AD），你被告知這些員工也要使用 MFA。\n為此，使用模型必須改成⟦每位已啟用的使用者計費（Per Enabled User）⟧。\n⟦解法：你透過 Azure 入口網站重新設定現有的使用模型⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -64,7 +66,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"An Azure Multi-Factor Authentication Provider has two usage models, which are really two billing models:\n・Per Enabled User — billed on the number of users enabled for MFA, regardless of how often each authenticates. Suits few users authenticating often.\n・Per Authentication — billed on the total number of authentications, regardless of how many users. Suits many users authenticating only occasionally (for example, MFA only on external sign-ins).\nThe binding constraint: **the usage model is chosen when the provider is created and cannot be changed afterwards.** That is the point of this question set, and it holds whichever interface you reach for:\n・Azure portal — the provider's usage model field is read-only (this question).\n・Azure CLI / PowerShell — there is no command for it.\nSo the only way is to create a new MFA provider with the desired usage model, then re-activate the existing MFA server using activation credentials from the new provider.\nReconfiguring the existing usage model via the portal therefore does not meet the goal: the answer is No.\nAside: this question set concerns the legacy MFA provider model. Today an Azure AD Premium P1/P2 licence includes MFA outright and no separate provider is needed; only providers created before September 2018 still exist. The exam still tests this restriction."}},
 
-{n:1007, d:1, t:"MFA 提供者使用模型", tEn:"MFA provider usage model",
+{sec:"S1", no:7, d:1, t:"MFA 提供者使用模型", tEn:"MFA provider usage model",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司在使用者不在辦公室時會使用多重要素驗證（MFA），使用模型（usage model）設定為⟦每次驗證計費（Per Authentication）⟧。\n公司併購了一家較小的企業，並把新員工加進 Azure Active Directory（Azure AD），你被告知這些員工也要使用 MFA。\n為此，使用模型必須改成⟦每位已啟用的使用者計費（Per Enabled User）⟧。\n⟦解法：你透過 Azure CLI 重新設定現有的使用模型⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -73,7 +75,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"Same point as the previous question, with the interface swapped from the Azure portal to the Azure CLI.\nRestating the constraint: **an MFA provider's usage model is fixed at creation and cannot be changed afterwards, through any interface.** Changing tools achieves nothing:\n・Azure portal — the usage model field is read-only.\n・Azure CLI — no az command changes an MFA provider's usage model. The az ad commands manage Azure AD directory objects; an MFA provider's billing model is not among them.\n・Azure PowerShell — likewise no cmdlet for it.\n・Reconfiguring the MFA Server — that is the on-premises component and cannot reach the cloud provider's billing model.\nThe only workable route is to create a new MFA provider, choosing Per Enabled User at creation time, then re-activate the existing MFA Server with activation credentials from the new provider.\nThe answer is No.\nExam tip: throughout this set, any solution that reconfigures the usage model of the *existing* provider is No — portal, CLI or PowerShell alike. Only creating a *new* provider can possibly be Yes."}},
 
-{n:1008, d:1, t:"MFA 提供者使用模型", tEn:"MFA provider usage model",
+{sec:"S1", no:8, d:1, t:"MFA 提供者使用模型", tEn:"MFA provider usage model",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司在使用者不在辦公室時會使用多重要素驗證（MFA），使用模型（usage model）設定為⟦每次驗證計費（Per Authentication）⟧。\n公司併購了一家較小的企業，並把新員工加進 Azure Active Directory（Azure AD），你被告知這些員工也要使用 MFA。\n為此，使用模型必須改成⟦每位已啟用的使用者計費（Per Enabled User）⟧。\n⟦解法：你用現有多重要素驗證提供者資料的備份，建立一個新的多重要素驗證提供者⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -82,7 +84,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"First, the constraint in full: **an MFA provider's usage model is decided at creation and cannot be changed later.** To switch models, the documented route has three steps:\n1. Create a new MFA provider, selecting the desired usage model at creation (here, Per Enabled User).\n2. If an on-premises MFA Server exists, export (back up) the user data from the old provider and import it into the new one.\n3. Re-activate the existing MFA Server using activation credentials from the new provider.\nThis question's solution covers steps 1 and 2.\n⚠️ **Note: the source document marks this as No, but that marking is clearly disputed in the community.** The document's own explanatory note says 'since it is not possible to change the usage model of an existing provider, you have to create a new one and reactivate your existing server with activation credentials from the new provider' — which is precisely what this solution does. Most community answers hold that this should be Yes, since it is the only solution in the set that takes the right route (the other two try to change the existing provider).\nThe only defence of No is that the solution never states step 3, re-activating the MFA Server with the new activation credentials, so strictly the migration is unfinished. That reasoning is thin.\nThis entry transcribes the source marking (No) as required, but **if the same wording appears in the real exam, Yes is the safer answer**."}},
 
-{n:1009, d:1, t:"Azure AD Connect 同步", tEn:"Azure AD Connect sync",
+{sec:"S1", no:9, d:1, t:"Azure AD Connect 同步", tEn:"Azure AD Connect sync",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司有一個名為 weyland.com 的 Azure Active Directory（Azure AD）租用戶，並與本地端 Active Directory 網域設定為混合式共存。\n你有一台名為 DirSync1 的伺服器，設定為 DirSync 伺服器。\n你在本地端 Active Directory 建立了一個新的使用者帳戶，現在需要⟦立刻⟧把這個使用者資訊複寫到 Azure AD。\n⟦解法：你執行 Start-ADSyncSyncCycle -PolicyType Initial 這個 PowerShell Cmdlet⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -91,7 +93,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"The cmdlet that manually triggers an Azure AD Connect sync is Start-ADSyncSyncCycle, and it takes two -PolicyType values:\n・Delta — processes only objects changed since the last sync. This is what the built-in 30-minute schedule runs, and what you want when you have just changed something and need it pushed now. Usually seconds to a couple of minutes.\n・Initial — a full re-import of the whole directory with all sync rules re-evaluated. Used after changing sync rules, altering filtering scope, or adding attribute mappings. On a large directory it can run for hours.\nHere a single user account was added and the requirement is to replicate that one change immediately, so the correct call is Start-ADSyncSyncCycle -PolicyType Delta. Initial would eventually sync the user too, but it performs a full re-import, which contradicts 'immediately' and can load a production server for a long time.\nSo the answer is No.\nA note on names: the stem says 'DirSync server'. DirSync was the original directory sync tool, which became Azure AD Sync and then today's Azure AD Connect (now Microsoft Entra Connect). Start-ADSyncSyncCycle belongs to Azure AD Connect's ADSync module; genuine legacy DirSync used Start-OnlineCoexistenceSync. Exam questions mix these names freely — read them as Azure AD Connect."}},
 
-{n:1010, d:1, t:"Azure AD Connect 同步", tEn:"Azure AD Connect sync",
+{sec:"S1", no:10, d:1, t:"Azure AD Connect 同步", tEn:"Azure AD Connect sync",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司有一個名為 weyland.com 的 Azure Active Directory（Azure AD）租用戶，並與本地端 Active Directory 網域設定為混合式共存。\n你有一台名為 DirSync1 的伺服器，設定為 DirSync 伺服器。\n你在本地端 Active Directory 建立了一個新的使用者帳戶，現在需要⟦立刻⟧把這個使用者資訊複寫到 Azure AD。\n⟦解法：你使用「Active Directory 站台及服務」強制在某台網域控制站上複寫全域編錄（Global Catalog）⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -100,7 +102,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"The point here is to separate two quite different kinds of replication:\n・Replication between on-premises AD domain controllers — managed by Active Directory Sites and Services, following AD's own replication topology to carry changes from one DC to another, including Global Catalog replication. Its scope is entirely within the on-premises domain.\n・Synchronisation from on-premises AD to Azure AD — handled by Azure AD Connect (formerly DirSync / Azure AD Sync), running a delta sync every 30 minutes by default, or on demand via Start-ADSyncSyncCycle -PolicyType Delta. This is the only path that puts objects in the cloud.\nThe requirement is to get the new user into Azure AD, which is the second kind. Forcing Global Catalog replication with Sites and Services only makes the new user appear sooner on other on-premises DCs; it does nothing for Azure AD, which still waits for Azure AD Connect's next sync cycle.\nSo the answer is No.\nAside: the action is not entirely pointless in real life. If the DC that the Azure AD Connect server talks to has not received the change yet, forcing replication makes sure the next sync picks it up — but it does not trigger a sync itself, so it cannot satisfy 'replicate to Azure AD immediately'."}},
 
-{n:1011, d:1, t:"Azure AD Connect 同步", tEn:"Azure AD Connect sync",
+{sec:"S1", no:11, d:1, t:"Azure AD Connect 同步", tEn:"Azure AD Connect sync",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司有一個名為 weyland.com 的 Azure Active Directory（Azure AD）租用戶，並與本地端 Active Directory 網域設定為混合式共存。\n你有一台名為 DirSync1 的伺服器，設定為 DirSync 伺服器。\n你在本地端 Active Directory 建立了一個新的使用者帳戶，現在需要⟦立刻⟧把這個使用者資訊複寫到 Azure AD。\n⟦解法：你在某台網域控制站上重新啟動 NetLogon 服務⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],
@@ -109,7 +111,7 @@ const BANK_DOC = [
      o:["Yes","No"],
      e:"The Net Logon service is responsible for the secure channel used to authenticate users and services against domain controllers, for DC locator (registering SRV records in DNS), and for computer account password changes. It has nothing to do with directory synchronisation.\nLining up all three solutions in this set shows what is being tested:\n・Start-ADSyncSyncCycle -PolicyType Initial — right tool (Azure AD Connect), wrong policy type; Delta is what is needed.\n・Forcing Global Catalog replication in Active Directory Sites and Services — governs replication between on-premises DCs and cannot reach Azure AD.\n・Restarting the NetLogon service (this question) — governs the authentication channel and DC locator, entirely unrelated to sync; restarting it may even leave that DC briefly unable to service authentication requests.\nNone of the three replicates the new user to Azure AD immediately. The one correct approach is to run, on the Azure AD Connect server:\nImport-Module ADSync\nStart-ADSyncSyncCycle -PolicyType Delta\nSo the answer is No.\nMnemonic: if a solution does not touch Azure AD Connect / ADSync, it cannot push anything to Azure AD."}},
 
-{n:1012, d:2, t:"儲存體備援", tEn:"Storage redundancy",
+{sec:"S1", no:12, d:2, t:"儲存體備援", tEn:"Storage redundancy",
  q:"你的公司有一個 Microsoft Azure 訂用帳戶，並在洛杉磯與紐約各有一座資料中心。\n你正把這兩座資料中心設定為異地叢集站台，以提供站台層級的復原能力，並需要建議一個 Azure 儲存體備援選項。\n你有下列資料儲存需求：\n・資料必須存放在多個節點上。\n・資料必須存放在分處不同地理位置的節點上。\n・⟦除了主要位置之外，也必須能夠從次要位置讀取資料⟧。\n你應該建議下列哪一個 Azure 儲存體備援選項？",
  o:["異地備援儲存體（Geo-redundant storage，GRS）","唯讀異地備援儲存體（Read-only geo-redundant storage，RA-GRS）","區域備援儲存體（Zone-redundant storage，ZRS）","本機備援儲存體（Locally redundant storage，LRS）"],
  a:[1],
@@ -118,7 +120,7 @@ const BANK_DOC = [
      o:["Geo-redundant storage (GRS)","Read-only geo-redundant storage (RA-GRS)","Zone-redundant storage (ZRS)","Locally redundant storage (LRS)"],
      e:"Azure Storage redundancy options, weakest to strongest:\n・LRS, locally redundant — 3 copies inside a single datacenter. Protects against disk or rack failure only; eleven 9s of annual durability.\n・ZRS, zone-redundant — 1 copy in each of 3 availability zones in the same region. Survives the loss of one datacenter but does not cross regions; twelve 9s.\n・GRS, geo-redundant — LRS (3 copies) in the primary region, then asynchronous replication to a paired region hundreds of kilometres away, where another 3 copies are held. **The secondary copy is completely inaccessible in normal operation** — it becomes usable only after Microsoft initiates a failover, or you perform an account failover yourself. Sixteen 9s.\n・RA-GRS, read-access geo-redundant — GRS plus a permanently available read-only secondary endpoint (account name suffixed with -secondary), readable at any time.\n・GZRS, geo-zone-redundant — ZRS in the primary region (across 3 availability zones), replicated to the paired region as LRS. Covers both in-region and cross-region failure.\n・RA-GZRS — GZRS with a readable secondary; the highest level of redundancy.\nApplying the three requirements: 'multiple nodes' is met by all four; 'separate geographic locations' eliminates LRS and ZRS, since both stay within one region; 'read from the secondary' eliminates GRS, whose secondary cannot normally be read. RA-GRS is what remains, so the answer is option B.\nRule of thumb: whenever a stem says the secondary must be readable, it is one of the RA- options (RA-GRS or RA-GZRS); plain 'geo-redundant' with no mention of reading is GRS."}},
 
-{n:1013, d:1, t:"檢視 ARM 範本", tEn:"Reviewing an ARM template",
+{sec:"S1", no:13, d:1, t:"檢視 ARM 範本", tEn:"Reviewing an ARM template",
  q:"注意：本題與另外數題的情境完全相同，但每一題提出的解法不同，請個別判斷解法是否達成目標。\n你的公司有一個 Azure 訂用帳戶，裡面包含一個儲存體帳戶、一個資源群組、一個 Blob 容器和一個檔案共用。\n一位名叫 Jon Ross 的同事⟦用單一個 Azure Resource Manager（ARM）範本⟧部署了一台虛擬機器和一個額外的 Azure 儲存體帳戶。\n你想要⟦檢視 Jon Ross 所使用的那個 ARM 範本⟧。\n⟦解法：你進入「虛擬機器」刀鋒⟧。這個解法是否達成目標？",
  o:["是","否"],
  a:[1],

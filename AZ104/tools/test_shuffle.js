@@ -10,6 +10,10 @@
 */
 const fs = require("fs"), vm = require("vm"), path = require("path");
 
+/* 來源座標 sec+no（每一段題號都從 1 重新算，要兩格才認得出是哪一題）*/
+const qid = q => (q.sec && Number.isFinite(q.no)) ? q.sec + "#" + q.no
+                                                  : (q.t || String(q.q || "").slice(0, 18));
+
 const html = fs.readFileSync(path.join(__dirname, "..", "az104-practice.html"), "utf8");
 const grab = (name) => {
   const i = html.indexOf("const " + name);
@@ -119,7 +123,7 @@ for (const orig of BANK) {
 }
 
 const icoQs = BANK.filter(q => q.ico);
-console.log(`題數 ${BANK.length}　有服務圖示的題 ${icoQs.length}（${icoQs.map(q => "#" + q.n).join(", ") || "—"}）`);
+console.log(`題數 ${BANK.length}　有服務圖示的題 ${icoQs.length}（${icoQs.map(q => qid(q)).join(", ") || "—"}）`);
 if (bad.length) {
   const uniq = [...new Set(bad)];
   console.log(`\n洗牌不變式失敗 ${uniq.length} 項：`);

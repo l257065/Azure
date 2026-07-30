@@ -3,7 +3,7 @@
 
 `uitest.py` 那一組要有題目才跑得動（它會實際點是非表、拖曳配對、選下拉），
 在收錄任何題目之前完全跑不了。這一支填的就是那段空窗，收錄開始之後也繼續有用：
-確認沒有 JS 例外、分頁數對、五個領域名對、AZ-104 的常數對、題號編碼算得出來，
+確認沒有 JS 例外、分頁數對、五個領域名對、AZ-104 的常數對、來源座標 sec+no 解得出來，
 以及題庫空的時候有好好講人話、有題目的時候真的畫得出來。
 
     python tools/smoke.py        # 需要 pip install playwright && playwright install chromium
@@ -62,15 +62,22 @@ def main():
         check("模擬考參數：50 題 / 100 分鐘",
               pg.evaluate("[EXAM_N, EXAM_SEC/60, PASS]") == [50, 100, 70])
 
-        # 題號編碼：題組 S 第 q 題 = S*1000+q、案例 T 第 q 題 = 10000+T*100+q
-        check("題號解碼正確（2017 → 題組 2 第 17 題、10302 → 案例 3 第 2 題）",
-              pg.evaluate("[docNo(2017), docNo(10302)]")
-              == [{"kind": "s", "sec": 2, "q": 17}, {"kind": "t", "sec": 3, "q": 2}])
+        # 來源座標 sec + no：區段名稱與跳題寫法的解析
+        check("區段代號翻得出名字（S2 / T3 / NewQ）",
+              pg.evaluate("[secName('S2',false), secName('T3',false), secName('NewQ',false),"
+                          " secName('S2',true)]")
+              == ["題組 2", "案例 3", "增題", "Question Set 2"])
+        check("跳題吃「段-題號」與純數字兩種寫法",
+              pg.evaluate("[parseJump('2-17'), parseJump('T3-2'), parseJump('N63'),"
+                          " parseJump('17'), parseJump('亂打')]")
+              == [{"sec": "S2", "no": 17}, {"sec": "T3", "no": 2},
+                  {"sec": "NewQ", "no": 63}, {"pos": 17}, None])
         gaps = pg.evaluate("docGaps()")
         check("段內缺號算得出來，而且不會把別段的號碼當缺號",
               gaps["total"] == n_doc and len(gaps["gaps"]) == 0,
-              "共 %d 題、%d 段、缺號 %s"
-              % (gaps["total"], len(gaps["secs"]), gaps["gaps"] or "無"))
+              "共 %d 題、%d 段（%s）、缺號 %s"
+              % (gaps["total"], len(gaps["secs"]),
+                 "／".join(x["sec"] for x in gaps["secs"]), gaps["gaps"] or "無"))
 
         # 開頁預設是題庫 A。兩份題庫各自檢查：有題目就要畫得出題目，
         # 沒題目就要給說明而不是白畫面。
