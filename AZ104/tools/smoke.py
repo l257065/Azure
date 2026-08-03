@@ -67,12 +67,19 @@ def main():
               pg.evaluate("[secName('S2',false), secName('T3',false), secName('NewQ',false),"
                           " secName('S2',true)]")
               == ["題組 2", "案例 3", "增題", "Question Set 2"])
+        # 缺號只在同一段之內才有意義。收錄過程中一定會有段內缺號（例如題組 2
+        # 只先收了純文字題），所以不能斷言「缺號為 0」——要驗的是結構：
+        # 題數對得上、每個缺號都屬於某個存在的區段、而且不超過該段的最大題號。
         gaps = pg.evaluate("docGaps()")
-        check("段內缺號算得出來，而且不會把別段的號碼當缺號",
-              gaps["total"] == n_doc and len(gaps["gaps"]) == 0,
-              "共 %d 題、%d 段（%s）、缺號 %s"
+        secmax = {x["sec"]: x["max"] for x in gaps["secs"]}
+        ok = (gaps["total"] == n_doc
+              and all(g["sec"] in secmax and 1 <= g["no"] < secmax[g["sec"]]
+                      for g in gaps["gaps"]))
+        check("段內缺號算得出來，而且不會把別段的號碼當缺號", ok,
+              "共 %d 題、%d 段（%s）、段內缺號 %d 個"
               % (gaps["total"], len(gaps["secs"]),
-                 "／".join(x["sec"] for x in gaps["secs"]), gaps["gaps"] or "無"))
+                 "／".join("%s:%d題" % (x["sec"], x["total"]) for x in gaps["secs"]),
+                 len(gaps["gaps"])))
 
         # 真的操作跳題那兩格。端對端才驗得到 select 的選項、input 的
         # pattern／maxlength、以及瀏覽器的表單驗證有沒有把輸入擋在程式之外
@@ -88,8 +95,13 @@ def main():
 
         opts = pg.eval_on_selector_all(
             "#jumpSec option", "els => els.map(e => [e.value, e.textContent])")
+        # 選項要剛好等於題庫裡實際有的區段（依題組→案例→增題排序），不多不少。
+        want_secs = pg.evaluate(
+            "[...new Set(BANK_DOC.filter(hasSrc).map(q => q.sec))]"
+            ".sort((a,b) => secRank(a) - secRank(b))")
         check("左格就是這一輪有的區段，沒有多加別的選項",
-              [o[0] for o in opts] == ["S1"] and opts[0][1] == "題組 1", opts)
+              [o[0] for o in opts] == want_secs, "%s vs 題庫 %s"
+              % ([o[0] for o in opts], want_secs))
         check("這一輪有來源座標，左格看得見", not pg.is_hidden("#jumpSec"))
 
         for sec, num, want in (("S1", "6", ("S1", 6)), ("S1", "13", ("S1", 13))):
