@@ -51,10 +51,14 @@
 !/AZ104/az104-practice.html
 
 # Question banks: one file per owner so A and B never collide on merge.
+# C is split by SOURCE, not by owner -- Q606's two PDFs use the same question
+# numbers as 470Q, so mixing them into B makes the origin unrecoverable.
+# See AZ104/AZ104-SPEC.md 1-1-5.
 !/AZ104/banks/
 /AZ104/banks/*
 !/AZ104/banks/bank_a_mine.js
 !/AZ104/banks/bank_b_doc.js
+!/AZ104/banks/bank_c_q606.js
 
 # Allow tools directory to be traversed
 !/AZ104/tools/
@@ -76,6 +80,10 @@
 !/AZ104/tools/dupes.py
 !/AZ104/tools/scan_review.py
 !/AZ104/tools/sort_bank.py
+
+# One-shot: how bank C was carved out of bank B. Kept so the split criterion
+# (diff against commit 391b0f7) stays auditable. See AZ104-SPEC.md 1-1-5.
+!/AZ104/tools/split_bank.py
 
 # Skeleton build scripts (how az104-engine.html is derived from AZ900)
 !/AZ104/tools/build_skeleton.py
