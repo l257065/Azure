@@ -42,6 +42,7 @@
 # Core files
 !/AZ104/AZ104-EXAM-TDD.md
 !/AZ104/AZ104-SPEC.md
+!/AZ104/AZ104-PARALLEL.md
 !/AZ104/.gitattributes
 
 # az104-engine.html is the SOURCE (engine template, banks empty).
@@ -80,6 +81,13 @@
 !/AZ104/tools/dupes.py
 !/AZ104/tools/scan_review.py
 !/AZ104/tools/sort_bank.py
+
+# 每批收題都會跑的流程與關卡（SPEC 1-0-0 第三步、4-5 都指到它們）
+!/AZ104/tools/vfy_batch.sh
+!/AZ104/tools/fix_batch.py
+!/AZ104/tools/check_answers.py
+!/AZ104/tools/refresh_counts.py
+!/AZ104/tools/clip.py
 
 # One-shot: how bank C was carved out of bank B. Kept so the split criterion
 # (diff against commit 391b0f7) stays auditable. See AZ104-SPEC.md 1-1-5.
