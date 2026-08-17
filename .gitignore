@@ -93,6 +93,7 @@
 # 比不到的（答案畫成圖）用 audit_findpage.py 問頁碼再出圖看。見 SPEC 1-0-1、1-0-2。
 !/AZ104/tools/audit_answers_full.py
 !/AZ104/tools/audit_findpage.py
+!/AZ104/tools/answer_shot.py
 !/AZ104/tools/show_q.js
 
 # One-shot: how bank C was carved out of bank B. Kept so the split criterion
