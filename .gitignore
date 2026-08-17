@@ -1,6 +1,7 @@
-# Ignore everything by default; only the AZ900 core files below are tracked.
+# Ignore everything by default; only the core files below are tracked.
 /*
 !/.gitignore
+!/README.md
 
 # Allow AZ900 directory to be traversed
 !/AZ900/
@@ -39,17 +40,75 @@
 /AZ104/*
 
 # Core files
+!/AZ104/AZ104-EXAM-TDD.md
 !/AZ104/AZ104-SPEC.md
-!/AZ104/AZ104-DOC-BANK-SPEC.md
+!/AZ104/AZ104-PARALLEL.md
+!/AZ104/.gitattributes
+
+# az104-engine.html is the SOURCE (engine template, banks empty).
+# az104-practice.html is the BUILD OUTPUT of tools/build.py -- tracked so the
+# page can be opened straight from the repo, but never edited by hand.
+!/AZ104/az104-engine.html
 !/AZ104/az104-practice.html
+
+# Question banks: one file per owner so A and B never collide on merge.
+# C is split by SOURCE, not by owner -- Q606's two PDFs use the same question
+# numbers as 470Q, so mixing them into B makes the origin unrecoverable.
+# See AZ104/AZ104-SPEC.md 1-1-5.
+!/AZ104/banks/
+/AZ104/banks/*
+!/AZ104/banks/bank_a_mine.js
+!/AZ104/banks/bank_b_doc.js
+!/AZ104/banks/bank_c_q606.js
 
 # Allow tools directory to be traversed
 !/AZ104/tools/
 /AZ104/tools/*
 
-# Reusable transcription/build tools (not the per-quiz batch files or bank data itself,
-# same convention as AZ900's bank_doc.current.js/batch_*.js staying untracked)
-!/AZ104/tools/extract_quiz.py
-!/AZ104/tools/build_practice_html.js
-!/AZ104/tools/merge_batch.js
+# Build (mandatory: this is how az104-practice.html is produced and how a
+# merge conflict on it is resolved) and the transcription workflow scripts
+# the documented verification pipeline depends on.
+!/AZ104/tools/build.py
+!/AZ104/tools/append.py
+!/AZ104/tools/extract_html.py
+!/AZ104/tools/render.py
+
+# Source-PDF survey: question index, per-question text dump, duplicate finder,
+# the Q606 review-file reader (answers + community votes) and the bank sorter
+# the documented "append then re-sort" step depends on.
+!/AZ104/tools/scan_pdf.py
+!/AZ104/tools/qtext.py
+!/AZ104/tools/dupes.py
+!/AZ104/tools/scan_review.py
+!/AZ104/tools/sort_bank.py
+
+# 每批收題都會跑的流程與關卡（SPEC 1-0-0 第三步、4-5 都指到它們）
+!/AZ104/tools/vfy_batch.sh
+!/AZ104/tools/fix_batch.py
+!/AZ104/tools/check_answers.py
+!/AZ104/tools/refresh_counts.py
+!/AZ104/tools/clip.py
+
+# One-shot: how bank C was carved out of bank B. Kept so the split criterion
+# (diff against commit 391b0f7) stays auditable. See AZ104-SPEC.md 1-1-5.
+!/AZ104/tools/split_bank.py
+
+# Skeleton build scripts (how az104-engine.html is derived from AZ900)
+!/AZ104/tools/build_skeleton.py
+!/AZ104/tools/port_tools.py
+
+# Verification/test scripts
+!/AZ104/tools/smoke.py
+!/AZ104/tools/uitest.py
+!/AZ104/tools/uitest_order.py
+!/AZ104/tools/uitest_skip.py
+!/AZ104/tools/check_star_flag.py
+!/AZ104/tools/vfy.py
 !/AZ104/tools/validate.js
+!/AZ104/tools/audit.js
+!/AZ104/tools/check_layout.js
+!/AZ104/tools/check_review.js
+!/AZ104/tools/test_shuffle.js
+
+# Per-batch transcription scratch files (tools/batch_*.js) stay untracked;
+# banks/ is the source of truth once append.py has merged them in.
