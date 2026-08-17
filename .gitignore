@@ -51,14 +51,11 @@
 !/AZ104/az104-engine.html
 !/AZ104/az104-practice.html
 
-# Question banks: one file per owner so A and B never collide on merge.
-# C is split by SOURCE, not by owner -- Q606's two PDFs use the same question
-# numbers as 470Q, so mixing them into B makes the origin unrecoverable.
-# See AZ104/AZ104-SPEC.md 1-1-5.
+# The question bank. There used to be three (A own / B 470Q / C Q606) plus a
+# bank-switcher in the engine; 2026-08-17 the user decided to focus on Q606 only
+# and A and B were removed. See AZ104/AZ104-SPEC.md 1-1-7.
 !/AZ104/banks/
 /AZ104/banks/*
-!/AZ104/banks/bank_a_mine.js
-!/AZ104/banks/bank_b_doc.js
 !/AZ104/banks/bank_c_q606.js
 
 # Allow tools directory to be traversed
