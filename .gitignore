@@ -46,10 +46,14 @@
 !/AZ104/.gitattributes
 
 # az104-engine.html is the SOURCE (engine template, banks empty).
-# az104-practice.html is the BUILD OUTPUT of tools/build.py -- tracked so the
-# page can be opened straight from the repo, but never edited by hand.
+#
+# az104-practice.html (the build output of tools/build.py) is DELIBERATELY NOT
+# TRACKED any more. It used to be, so the page could be opened straight from the
+# repo -- but this repo is public and GitHub Pages was serving it, which meant the
+# whole 563-question bank with answers was downloadable by anyone with the URL.
+# Untracked 2026-08-17 to take it offline while password protection is set up.
+# Build it locally with `python tools/build.py` when you need it.
 !/AZ104/az104-engine.html
-!/AZ104/az104-practice.html
 
 # The question bank. There used to be three (A own / B 470Q / C Q606) plus a
 # bank-switcher in the engine; 2026-08-17 the user decided to focus on Q606 only
