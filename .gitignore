@@ -89,6 +89,12 @@
 !/AZ104/tools/refresh_counts.py
 !/AZ104/tools/clip.py
 
+# 答案關卡的另一半：check_answers.py 只驗 mc，hs/dl/dd 共 201 題靠這一支比對，
+# 比不到的（答案畫成圖）用 audit_findpage.py 問頁碼再出圖看。見 SPEC 1-0-1、1-0-2。
+!/AZ104/tools/audit_answers_full.py
+!/AZ104/tools/audit_findpage.py
+!/AZ104/tools/show_q.js
+
 # One-shot: how bank C was carved out of bank B. Kept so the split criterion
 # (diff against commit 391b0f7) stays auditable. See AZ104-SPEC.md 1-1-5.
 !/AZ104/tools/split_bank.py
