@@ -1,48 +1,30 @@
-# Ignore everything by default; only the core files below are tracked.
-/*
+# ⚠️ 這是**公開** repo，只負責發布。規則是「預設全擋，逐檔放行」——
+# 因為兩份練習頁都是單檔自足的（題目連正解與解析全部內嵌在 HTML 裡），
+# 只要不小心讓明文進來，GitHub Pages 就會把整份題庫公開出去。
+#
+# 2026-08-18 起這裡**只放三種東西**：
+#   1. index.html            選擇入口頁（不含題目，不需要密碼）
+#   2. AZ*/xxx-practice.html **加密後**的練習頁
+#   3. AZ*/README.md         說明
+#
+# 題庫明文、SPEC、全部工具都在另一個**私有** repo。
+# 理由：GitHub Pages 在個人帳號上沒有任何存取控制（官方：「即使 repo 是 private，
+# Pages 網站預設仍然公開在網際網路上」），而免費方案下 repo 一轉私有 Pages 會直接
+# 停用。唯一可行的是內容自己加密——而那要求明文不能待在同一個公開 repo，
+# 否則點進 repo 就繞過密碼了。
+#
+# ❌ 不要放行 banks/、tools/、*-SPEC.md，或未加密的練習頁。
+
+*
 !/.gitignore
 !/README.md
+!/index.html
 
-# Allow AZ900 directory to be traversed
 !/AZ900/
 /AZ900/*
-
-# Core files
-!/AZ900/AZ900-EXAM-TDD.md
+!/AZ900/README.md
 !/AZ900/az900-practice.html
-!/AZ900/AZ900-SPEC.md
 
-# Allow tools directory to be traversed
-!/AZ900/tools/
-/AZ900/tools/*
-
-# Verification/test scripts
-!/AZ900/tools/uitest.py
-!/AZ900/tools/uitest_order.py
-!/AZ900/tools/uitest_skip.py
-!/AZ900/tools/verify_a.py
-!/AZ900/tools/verify_b.py
-!/AZ900/tools/verify_c.py
-!/AZ900/tools/verify_d.py
-!/AZ900/tools/verify_e.py
-!/AZ900/tools/verify_f.py
-!/AZ900/tools/verify_hdr_sync.py
-!/AZ900/tools/vfy.py
-!/AZ900/tools/validate.js
-!/AZ900/tools/audit.js
-!/AZ900/tools/check_layout.js
-!/AZ900/tools/check_review.js
-!/AZ900/tools/check_star_flag.py
-!/AZ900/tools/test_shuffle.js
-
-# ── AZ-104 ──────────────────────────────────────────────────────────────────
-# ⚠️ 2026-08-17：AZ-104 的**原始碼與題庫明文已經搬到私有 repo**，這裡只留一個檔：
-# 加密後的練習頁。理由見 AZ104/README.md ——練習頁是單檔自足的，563 題連正解與解析
-# 全部內嵌在 HTML 裡，而 GitHub Pages 在個人帳號上**沒有任何存取控制**（官方：
-# 「即使 repo 是 private，Pages 網站預設仍然公開在網際網路上」）。所以公開的這一份
-# 必須是密文，明文一旦回到這個 repo，點進來就繞過密碼了。
-#
-# ❌ 不要把 banks/、tools/、AZ104-SPEC.md 或未加密的 az104-practice.html 加回來。
 !/AZ104/
 /AZ104/*
 !/AZ104/README.md
